@@ -32,9 +32,9 @@ export const ClientView = ({
           <div className="mb-12 max-w-md">
             <p className="text-xl mb-8">Bienvenido al portal de reservas de Rosaura</p>
             <button onClick={() => setCurrentScreen('fecha-personas')} className="w-full bg-green-700 hover:bg-green-800 font-semibold py-4 px-8 rounded-lg text-lg mb-4 transition-colors">Hacé tu reserva</button>
-            <button onClick={() => window.open('https://wa.me/5491123456789', '_blank')} className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold py-4 px-8 rounded-lg text-lg flex items-center justify-center gap-2 transition-colors"><MessageCircle size={20} />Comunicate con nosotros por WhatsApp</button>
+            <button onClick={() => window.open('https://wa.me/5492213995351', '_blank')} className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold py-4 px-8 rounded-lg text-lg flex items-center justify-center gap-2 transition-colors"><MessageCircle size={20} />Comunicate con nosotros por WhatsApp</button>
           </div>
-          <button onClick={() => setIsAdmin(true)} className="absolute bottom-4 text-sm opacity-50 hover:opacity-100">Admin</button>
+           <button onClick={onAdminClick} className="absolute bottom-4 text-sm opacity-50 hover:opacity-100">Admin</button>
         </div>
       </div>
     );
