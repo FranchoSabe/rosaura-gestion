@@ -53,7 +53,7 @@ export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
 
                 {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
-                <button type="submit" className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-3 px-6 rounded-lg transition-colors !mt-8">
+                <button type="submit" className="w-full bg-[#0c4900] hover:bg-green-900 text-white font-semibold py-3 px-6 rounded-lg transition-colors !mt-8">
                     Entrar
                 </button>
                 <button type="button" onClick={() => setScreen('landing')} className="w-full text-center text-gray-300 hover:text-white mt-4 text-sm">

@@ -11,6 +11,7 @@ import {
   auth 
 } from './firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { db } from './firebase';
 
 // --- CONFIGURACIÓN Y DATOS ---
 const LOGO_URL = '/logo.jpg';
@@ -40,10 +41,15 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState('landing');
   const [reservaData, setReservaData] = useState({
     fecha: '',
-    personas: 2,
+    personas: null,
     turno: '',
     horario: '',
-    cliente: { nombre: '', telefono: '', email: '', comentarios: '' }
+    cliente: { 
+      nombre: '', 
+      telefono: '', 
+      codigoPais: '54',
+      comentarios: '' 
+    }
   });
   const [availableSlots, setAvailableSlots] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -199,8 +205,8 @@ function App() {
       // Crear nuevo cliente
       const newClient = {
         nombre: reservaData.cliente.nombre,
-        telefono: reservaData.cliente.telefono,
-        email: reservaData.cliente.email || '',
+        telefono: `${reservaData.cliente.codigoPais}${reservaData.cliente.telefono}`,
+        comentarios: reservaData.cliente.comentarios || '',
         ultimaReserva: reservaData.fecha,
         listaNegra: false
       };
@@ -253,22 +259,24 @@ function App() {
   }
 
   return (
-    <ClientView
-      LOGO_URL={LOGO_URL}
-      BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}
-      onAdminClick={() => setCurrentScreen('login')}
-      reservaData={reservaData}
-      setReservaData={setReservaData}
-      currentScreen={currentScreen}
-      setCurrentScreen={setCurrentScreen}
-      availableSlots={availableSlots}
-      showConfirmation={showConfirmation}
-      setShowConfirmation={setShowConfirmation}
-      handleDateAndTurnoSubmit={handleDateAndTurnoSubmit}
-      handleHorarioSelect={handleHorarioSelect}
-      handleContactoSubmit={handleContactoSubmit}
-      formatDate={formatDate}
-    />
+    <div className="contenedor-central">
+      <ClientView
+        LOGO_URL={LOGO_URL}
+        BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}
+        onAdminClick={() => setCurrentScreen('login')}
+        reservaData={reservaData}
+        setReservaData={setReservaData}
+        currentScreen={currentScreen}
+        setCurrentScreen={setCurrentScreen}
+        availableSlots={availableSlots}
+        showConfirmation={showConfirmation}
+        setShowConfirmation={setShowConfirmation}
+        handleDateAndTurnoSubmit={handleDateAndTurnoSubmit}
+        handleHorarioSelect={handleHorarioSelect}
+        handleContactoSubmit={handleContactoSubmit}
+        formatDate={formatDate}
+      />
+    </div>
   );
 }
 

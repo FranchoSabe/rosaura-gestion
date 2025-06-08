@@ -1,36 +1,48 @@
 .custom-green-calendar {
-  background: rgba(29, 93, 17, 0.85) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(8px) !important;
   border-radius: 1rem !important;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.15) !important;
-  color: #fff !important;
-  border: 1px solid #1d5d11 !important;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 .custom-green-calendar .react-datepicker__header {
   background: transparent !important;
-  border-bottom: 1px solid #1d5d11 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 .custom-green-calendar .react-datepicker__current-month,
 .custom-green-calendar .react-datepicker__day-name {
-  color: #fff !important;
-  font-weight: bold;
+  color: white !important;
+  font-weight: 500;
 }
 
+/* Día seleccionado */
 .custom-green-calendar .react-datepicker__day--selected,
 .custom-green-calendar .react-datepicker__day--keyboard-selected {
-  background: #1d5d11 !important;
-  color: #fff !important;
+  background: white !important;
+  color: black !important;
   border-radius: 50% !important;
 }
 
+/* Días disponibles (no seleccionados) */
+.custom-green-calendar .react-datepicker__day:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected) {
+  background: transparent !important;
+  color: white !important;
+  font-weight: 500;
+  border-radius: 50% !important;
+  transition: background 0.2s, color 0.2s;
+}
+
+.custom-green-calendar .react-datepicker__day:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+/* Días no disponibles */
 .custom-green-calendar .react-datepicker__day--disabled {
-  color: #bdbdbd !important;
+  color: rgba(255, 255, 255, 0.3) !important;
   background: transparent !important;
   cursor: not-allowed !important;
 }
-
-.custom-green-calendar .react-datepicker__day:hover:not(.react-datepicker__day--disabled) {
-  background: rgba(29, 93, 17, 0.2) !important;
-  color: #1d5d11 !important;
-} 

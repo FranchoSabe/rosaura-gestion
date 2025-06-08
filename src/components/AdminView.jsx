@@ -112,96 +112,91 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
   const blacklistedClients = data.clientes.filter(c => c.listaNegra);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Panel de Administración</h1>
-                <p className="text-sm text-gray-500">Sesión iniciada como: <span className="font-semibold capitalize">{auth.user}</span> ({auth.role})</p>
-              </div>
-              <button onClick={onLogout} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
-                Cerrar Sesión
-              </button>
-            </div>
-            <div className="flex border-b border-gray-200">
-              <button onClick={() => setAdminView('today')} className={`px-4 py-3 font-semibold text-sm -mb-px ${adminView === 'today' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}>Hoy</button>
-              <button onClick={() => setAdminView('week')} className={`px-4 py-3 font-semibold text-sm -mb-px ${adminView === 'week' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}>Esta Semana</button>
-              {auth.role === 'admin' && (
-                <button onClick={() => setAdminView('clients')} className={`px-4 py-3 font-semibold text-sm -mb-px ${adminView === 'clients' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500 hover:text-gray-700'}`}>Clientes</button>
-              )}
-            </div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {adminView === 'today' && (
-          <div className="space-y-8">
-             <div>
-                <h2 className="text-xl font-semibold mb-4 text-gray-800">Reservas de Hoy: Mediodía</h2>
-                <ReservationsTable reservations={todayReservations.filter(r => r.turno === 'mediodia')} onSetBlacklist={onSetBlacklist} />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-4 text-gray-800">Reservas de Hoy: Noche</h2>
-                <ReservationsTable reservations={todayReservations.filter(r => r.turno === 'noche')} onSetBlacklist={onSetBlacklist} />
-              </div>
-          </div>
-        )}
-        {adminView === 'week' && (
-           <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Reservas de la Semana</h2>
-              {/* ... (código de la vista semana sin cambios) ... */}
-            </div>
-        )}
-        {adminView === 'clients' && (
-          <div className="space-y-8">
-            <div>
-                <h2 className="text-xl font-semibold mb-4 text-gray-800">Clientes Activos</h2>
-                <ClientsTable 
-                    clients={activeClients} 
-                    onSetBlacklist={onSetBlacklist} 
-                />
-            </div>
-            <div>
-                <button 
-                    onClick={() => setIsBlacklistVisible(!isBlacklistVisible)} 
-                    className="w-full flex justify-between items-center p-4 font-medium text-left text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none"
-                >
-                    <span>Lista Negra ({blacklistedClients.length} clientes)</span>
-                    <ChevronDown className={`transform transition-transform duration-200 ${isBlacklistVisible ? 'rotate-180' : ''}`} />
+    <div className="contenedor-central">
+      <div className="min-h-screen bg-gray-100">
+        <header className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center py-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Panel de Administración</h1>
+                  <p className="text-sm text-gray-500">Sesión iniciada como: <span className="font-semibold capitalize">{auth.user}</span> ({auth.role})</p>
+                </div>
+                <button onClick={onLogout} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                  Cerrar Sesión
                 </button>
-                {isBlacklistVisible && (
-                    <div className="mt-2 bg-white rounded-lg shadow overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead className="bg-red-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Nombre</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Teléfono</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-red-200">
-                                {blacklistedClients.map(cliente => (
-                                    <tr key={cliente.id}>
-                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{cliente.nombre}</td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">{cliente.telefono}</td>
-                                        <td className="px-6 py-4 text-sm font-medium">
-                                            <button 
-                                                onClick={() => onSetBlacklist(cliente.id, false)} 
-                                                className="text-green-600 hover:text-green-800 inline-flex items-center gap-1"
-                                            >
-                                                <Check size={14} /> Quitar de lista negra
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+              </div>
           </div>
-        )}
-      </main>
+        </header>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {adminView === 'today' && (
+            <div className="space-y-8">
+               <div>
+                  <h2 className="text-xl font-semibold mb-4 text-gray-800">Reservas de Hoy: Mediodía</h2>
+                  <ReservationsTable reservations={todayReservations.filter(r => r.turno === 'mediodia')} onSetBlacklist={onSetBlacklist} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 text-gray-800">Reservas de Hoy: Noche</h2>
+                  <ReservationsTable reservations={todayReservations.filter(r => r.turno === 'noche')} onSetBlacklist={onSetBlacklist} />
+                </div>
+            </div>
+          )}
+          {adminView === 'week' && (
+             <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-xl font-semibold mb-4 text-gray-800">Reservas de la Semana</h2>
+                {/* ... (código de la vista semana sin cambios) ... */}
+              </div>
+          )}
+          {adminView === 'clients' && (
+            <div className="space-y-8">
+              <div>
+                  <h2 className="text-xl font-semibold mb-4 text-gray-800">Clientes Activos</h2>
+                  <ClientsTable 
+                      clients={activeClients} 
+                      onSetBlacklist={onSetBlacklist} 
+                  />
+              </div>
+              <div>
+                  <button 
+                      onClick={() => setIsBlacklistVisible(!isBlacklistVisible)} 
+                      className="w-full flex justify-between items-center p-4 font-medium text-left text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none"
+                  >
+                      <span>Lista Negra ({blacklistedClients.length} clientes)</span>
+                      <ChevronDown className={`transform transition-transform duration-200 ${isBlacklistVisible ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isBlacklistVisible && (
+                      <div className="mt-2 bg-white rounded-lg shadow overflow-x-auto">
+                          <table className="min-w-full">
+                              <thead className="bg-red-50">
+                                  <tr>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Nombre</th>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Teléfono</th>
+                                      <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Acción</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-red-200">
+                                  {blacklistedClients.map(cliente => (
+                                      <tr key={cliente.id}>
+                                          <td className="px-6 py-4 text-sm font-medium text-gray-900">{cliente.nombre}</td>
+                                          <td className="px-6 py-4 text-sm text-gray-500">{cliente.telefono}</td>
+                                          <td className="px-6 py-4 text-sm font-medium">
+                                              <button 
+                                                  onClick={() => onSetBlacklist(cliente.id, false)} 
+                                                  className="text-[#0c4900] hover:text-green-900 inline-flex items-center gap-1"
+                                              >
+                                                  <Check size={14} /> Quitar de lista negra
+                                              </button>
+                                          </td>
+                                      </tr>
+                                  ))}
+                              </tbody>
+                          </table>
+                      </div>
+                  )}
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

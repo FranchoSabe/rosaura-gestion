@@ -40,3 +40,35 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Centrado y ancho fijo para el contenido principal */
+.contenedor-central {
+  max-width: 900px;
+  width: 100%;
+  margin: 40px auto;
+  min-height: 80vh;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 32px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .contenedor-central {
+    max-width: 98vw;
+    padding: 16px 4px;
+  }
+}
+
+body {
+  min-height: 100vh;
+  background: #f5f5f5;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

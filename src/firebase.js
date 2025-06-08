@@ -4,14 +4,13 @@ import { getAuth } from 'firebase/auth';
 
 // Tu configuración de Firebase
 const firebaseConfig = {
-  apiKey: "A1zaSyDHL9B1J7-dhJRzLgukznn9Cv9fwok-qIc",
-  authDomain: "rosaura-reservas.firebaseapp.com",
-  projectId: "rosaura-reservas",
-  storageBucket: "rosaura-reservas.appspot.com",
-  messagingSenderId: "710023225173",
-  appId: "1:710023225173:web:f7e0d7a3740267a09d9dc",
-  measurementId: "G-KSLE6F6NWW"
-};
+    apiKey: "AIzaSyDHL9Bj7-dhJFRzLgukznn9Cv9fwok-qIc",
+    authDomain: "rosaura-reservas.firebaseapp.com",
+    projectId: "rosaura-reservas",
+    storageBucket: "rosaura-reservas.firebasestorage.app",
+    messagingSenderId: "710023225173",
+    appId: "1:710023225173:web:f77e0d70a37402670a99dc",
+  };
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
