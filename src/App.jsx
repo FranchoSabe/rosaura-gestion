@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AdminView } from './components/AdminView';
 import { ClientView } from './components/ClientView';
+import { LoginView } from './components/LoginView';
 
 // --- CONFIGURACIÓN Y DATOS ---
 const LOGO_URL = '/logo.jpg';
@@ -115,6 +116,17 @@ function App() {
     return selectedDate >= today && selectedDate <= maxDate;
   };
 
+  const handleSetBlacklist = (clienteId, newStatus) => {
+    setData(prevData => ({
+      ...prevData,
+      clientes: prevData.clientes.map(cliente => 
+        cliente.id === clienteId 
+          ? { ...cliente, listaNegra: newStatus }
+          : cliente
+      )
+    }));
+  };
+
   const handleDateAndTurnoSubmit = () => {
     if (!isValidDate(reservaData.fecha)) {
       alert('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');
@@ -138,18 +150,16 @@ function App() {
     const validUser = ADMIN_CREDENTIALS.find(
       cred => cred.user === user && cred.pass === pass
     );
-    
+
     if (validUser) {
-      setAuth({ role: validUser.role });
-      setIsAdmin(true);
-      return true;
+      setAuth({ user: validUser.user, role: validUser.role });
+      return true; // Login exitoso
     }
-    return false;
+    return false; // Login fallido
   };
-  
+
   const handleLogout = () => {
     setAuth(null);
-    setIsAdmin(false);
   };
 
   const handleContactoSubmit = () => {
@@ -199,14 +209,36 @@ function App() {
     return date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  if (isAdmin) {
-    return <AdminView data={data} setIsAdmin={setIsAdmin} auth={auth} onLogout={handleLogout}/>;
+  // En App.jsx, reemplazá el bloque final
+
+  if (auth) {
+    // Si el usuario está autenticado, muestra el panel de admin
+    return <AdminView 
+        data={data} 
+        auth={auth} 
+        onLogout={handleLogout}
+        // Le pasamos la nueva función al panel
+        onSetBlacklist={handleSetBlacklist} 
+    />;
+  }
+  // Si no hay usuario, revisa en qué pantalla de cliente estamos
+  if (currentScreen === 'login') {
+    return <LoginView 
+        handleLogin={handleLogin} 
+        onBack={() => setCurrentScreen('landing')} 
+        BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL} 
+    />
   }
 
+  // Por defecto, muestra el flujo de cliente
   return (
     <ClientView
       LOGO_URL={LOGO_URL}
       BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}
+      // El botón de admin ahora simplemente cambia la pantalla a 'login'
+      onAdminClick={() => setCurrentScreen('login')}
+
+      // El resto es para el flujo de reserva
       reservaData={reservaData}
       setReservaData={setReservaData}
       currentScreen={currentScreen}
@@ -214,7 +246,6 @@ function App() {
       availableSlots={availableSlots}
       showConfirmation={showConfirmation}
       setShowConfirmation={setShowConfirmation}
-      setIsAdmin={setIsAdmin}
       handleDateAndTurnoSubmit={handleDateAndTurnoSubmit}
       handleHorarioSelect={handleHorarioSelect}
       handleContactoSubmit={handleContactoSubmit}
