@@ -1,7 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminView } from './components/AdminView';
 import { ClientView } from './components/ClientView';
 import { LoginView } from './components/LoginView';
+import { 
+  addReservation, 
+  addClient, 
+  updateClientBlacklist, 
+  subscribeToReservations, 
+  subscribeToClients,
+  auth 
+} from './firebase';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 // --- CONFIGURACIÓN Y DATOS ---
 const LOGO_URL = '/logo.jpg';
@@ -26,10 +35,8 @@ const INITIAL_DATA = {
 };
 
 function App() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [auth, setAuth] = useState(null); // null: no autenticado, {role: 'admin'/'mozo'}
-  const [data, setData] = useState(INITIAL_DATA);
-  
+  const [authState, setAuthState] = useState(null);
+  const [data, setData] = useState({ reservas: [], clientes: [] });
   const [currentScreen, setCurrentScreen] = useState('landing');
   const [reservaData, setReservaData] = useState({
     fecha: '',
@@ -41,7 +48,24 @@ function App() {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
-    const getAvailableSlots = (fecha, turno) => {
+  // Suscribirse a cambios en tiempo real
+  useEffect(() => {
+    const unsubscribeReservations = subscribeToReservations((reservas) => {
+      setData(prev => ({ ...prev, reservas }));
+    });
+
+    const unsubscribeClients = subscribeToClients((clientes) => {
+      setData(prev => ({ ...prev, clientes }));
+    });
+
+    // Limpiar suscripciones al desmontar
+    return () => {
+      unsubscribeReservations();
+      unsubscribeClients();
+    };
+  }, []);
+
+  const getAvailableSlots = (fecha, turno) => {
     const fechaObj = new Date(fecha + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
     if (dayOfWeek === 1) return []; // Lunes cerrado
@@ -83,7 +107,7 @@ function App() {
     return HORARIOS[turno] || [];
   };
 
-    const isValidDate = (fecha) => {
+  const isValidDate = (fecha) => {
     if (!fecha) return false;
     
     const today = new Date();
@@ -116,15 +140,39 @@ function App() {
     return selectedDate >= today && selectedDate <= maxDate;
   };
 
-  const handleSetBlacklist = (clienteId, newStatus) => {
-    setData(prevData => ({
-      ...prevData,
-      clientes: prevData.clientes.map(cliente => 
-        cliente.id === clienteId 
-          ? { ...cliente, listaNegra: newStatus }
-          : cliente
-      )
-    }));
+  const handleLogin = async (username, password) => {
+    try {
+      // Convertir username a email para Firebase Auth
+      const email = `${username}@rosaura.com`;
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Determinar el rol basado en el email
+      const role = username === 'admin' ? 'admin' : 'mozo';
+      setAuthState({ user: username, role });
+      return null; // Login exitoso
+    } catch (error) {
+      console.error("Error de login:", error);
+      return "Usuario o contraseña incorrectos";
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setAuthState(null);
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
+
+  const handleSetBlacklist = async (clienteId, newStatus) => {
+    try {
+      await updateClientBlacklist(clienteId, newStatus);
+    } catch (error) {
+      console.error("Error al actualizar lista negra:", error);
+      alert("Error al actualizar el estado del cliente");
+    }
   };
 
   const handleDateAndTurnoSubmit = () => {
@@ -146,61 +194,39 @@ function App() {
     setCurrentScreen('contacto');
   };
 
-  const handleLogin = (user, pass) => {
-    const validUser = ADMIN_CREDENTIALS.find(
-      cred => cred.user === user && cred.pass === pass
-    );
-
-    if (validUser) {
-      setAuth({ user: validUser.user, role: validUser.role });
-      return true; // Login exitoso
-    }
-    return false; // Login fallido
-  };
-
-  const handleLogout = () => {
-    setAuth(null);
-  };
-
-  const handleContactoSubmit = () => {
-    // Crear nueva reserva con datos del cliente
-    const newReservationId = Math.max(...data.reservas.map(r => r.id), 0) + 1;
-    const newClientId = Math.max(...data.clientes.map(c => c.id), 0) + 1;
-    
-    const newReservation = {
-      id: newReservationId,
-      fecha: reservaData.fecha,
-      turno: reservaData.turno,
-      horario: reservaData.horario,
-      personas: reservaData.personas,
-      cliente: {
-        id: newClientId,
+  const handleContactoSubmit = async () => {
+    try {
+      // Crear nuevo cliente
+      const newClient = {
         nombre: reservaData.cliente.nombre,
         telefono: reservaData.cliente.telefono,
-        email: reservaData.cliente.email || ''
-      }
-    };
-    
-    const newClient = {
-      id: newClientId,
-      nombre: reservaData.cliente.nombre,
-      telefono: reservaData.cliente.telefono,
-      email: reservaData.cliente.email || '',
-      totalReservas: 1,
-      ultimaReserva: reservaData.fecha,
-      listaNegra: false
-    };
-    
-    // Actualizar datos
-    setData({
-      reservas: [...data.reservas, newReservation],
-      clientes: [...data.clientes, newClient]
-    });
-    
-    setShowConfirmation(true);
-    // ===== AGREGAR ESTA LÍNEA =====
-    setCurrentScreen('confirmacion');
-    // ===== FIN DE AGREGAR =====
+        email: reservaData.cliente.email || '',
+        ultimaReserva: reservaData.fecha,
+        listaNegra: false
+      };
+
+      // Agregar cliente a la base de datos
+      const clientId = await addClient(newClient);
+
+      // Crear nueva reserva
+      const newReservation = {
+        fecha: reservaData.fecha,
+        turno: reservaData.turno,
+        horario: reservaData.horario,
+        personas: reservaData.personas,
+        clienteId: clientId,
+        cliente: newClient
+      };
+
+      // Agregar reserva a la base de datos
+      await addReservation(newReservation);
+      
+      setShowConfirmation(true);
+      setCurrentScreen('confirmacion');
+    } catch (error) {
+      console.error("Error al crear reserva:", error);
+      alert("Error al crear la reserva. Por favor, intenta nuevamente.");
+    }
   };
   
   const formatDate = (dateString) => {
@@ -209,36 +235,28 @@ function App() {
     return date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  // En App.jsx, reemplazá el bloque final
-
-  if (auth) {
-    // Si el usuario está autenticado, muestra el panel de admin
+  if (authState) {
     return <AdminView 
-        data={data} 
-        auth={auth} 
-        onLogout={handleLogout}
-        // Le pasamos la nueva función al panel
-        onSetBlacklist={handleSetBlacklist} 
+      data={data} 
+      auth={authState} 
+      onLogout={handleLogout}
+      onSetBlacklist={handleSetBlacklist} 
     />;
   }
-  // Si no hay usuario, revisa en qué pantalla de cliente estamos
+
   if (currentScreen === 'login') {
     return <LoginView 
-        handleLogin={handleLogin} 
-        onBack={() => setCurrentScreen('landing')} 
-        BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL} 
-    />
+      handleLogin={handleLogin} 
+      setScreen={setCurrentScreen} 
+      BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL} 
+    />;
   }
 
-  // Por defecto, muestra el flujo de cliente
   return (
     <ClientView
       LOGO_URL={LOGO_URL}
       BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}
-      // El botón de admin ahora simplemente cambia la pantalla a 'login'
       onAdminClick={() => setCurrentScreen('login')}
-
-      // El resto es para el flujo de reserva
       reservaData={reservaData}
       setReservaData={setReservaData}
       currentScreen={currentScreen}

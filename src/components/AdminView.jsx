@@ -1,7 +1,7 @@
 // src/components/AdminView.jsx
 
 import React, { useState } from 'react';
-import { ChevronDown, ThumbsDown, MessageCircle } from 'lucide-react';
+import { ChevronDown, ThumbsDown, MessageCircle, Check } from 'lucide-react';
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -56,6 +56,43 @@ const ReservationsTable = ({ reservations, onSetBlacklist }) => {
     );
 };
 
+// Componente reutilizable para la tabla de clientes
+const ClientsTable = ({ clients, onSetBlacklist }) => {
+    return (
+        <div className="bg-white rounded-lg shadow overflow-x-auto">
+            <table className="min-w-full">
+                <thead className="bg-gray-50">
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Reservas</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Última Visita</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    {clients.map(cliente => (
+                        <tr key={cliente.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">{cliente.nombre}</td>
+                            <td className="px-6 py-4 text-sm text-gray-500">{cliente.telefono}</td>
+                            <td className="px-6 py-4 text-sm text-gray-500">{cliente.totalReservas}</td>
+                            <td className="px-6 py-4 text-sm text-gray-500">{formatDate(cliente.ultimaReserva)}</td>
+                            <td className="px-6 py-4 text-sm font-medium">
+                                <button 
+                                    onClick={() => onSetBlacklist(cliente.id, true)}
+                                    className="text-red-600 hover:text-red-800 inline-flex items-center gap-1"
+                                    title="Añadir a lista negra"
+                                >
+                                    <ThumbsDown size={14} /> Añadir a lista negra
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
 
 export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
   const [adminView, setAdminView] = useState('today');
@@ -119,59 +156,49 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
           <div className="space-y-8">
             <div>
                 <h2 className="text-xl font-semibold mb-4 text-gray-800">Clientes Activos</h2>
-                <div className="bg-white rounded-lg shadow overflow-x-auto">
-                    <table className="min-w-full">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Reservas</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Última Visita</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {activeClients.map(cliente => (
-                                <tr key={cliente.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{cliente.nombre}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">{cliente.telefono}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">{cliente.totalReservas}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-500">{formatDate(cliente.ultimaReserva)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <ClientsTable 
+                    clients={activeClients} 
+                    onSetBlacklist={onSetBlacklist} 
+                />
             </div>
             <div>
-                <button onClick={() => setIsBlacklistVisible(!isBlacklistVisible)} className="w-full flex justify-between items-center p-4 font-medium text-left text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none">
+                <button 
+                    onClick={() => setIsBlacklistVisible(!isBlacklistVisible)} 
+                    className="w-full flex justify-between items-center p-4 font-medium text-left text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none"
+                >
                     <span>Lista Negra ({blacklistedClients.length} clientes)</span>
                     <ChevronDown className={`transform transition-transform duration-200 ${isBlacklistVisible ? 'rotate-180' : ''}`} />
                 </button>
                 {isBlacklistVisible && (
-                  <div className="mt-2 bg-white rounded-lg shadow overflow-x-auto">
-                     <table className="min-w-full">
-                        <thead className="bg-red-50">
-                           <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Nombre</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Teléfono</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Acción</th>
-                           </tr>
-                        </thead>
-                       <tbody className="divide-y divide-red-200">
-                         {blacklistedClients.map(cliente => (
-                            <tr key={cliente.id}>
-                               <td className="px-6 py-4 text-sm font-medium text-gray-900">{cliente.nombre}</td>
-                               <td className="px-6 py-4 text-sm text-gray-500">{cliente.telefono}</td>
-                               <td className="px-6 py-4 text-sm font-medium">
-                                   <button onClick={() => onSetBlacklist(cliente.id, false)} className="text-green-600 hover:text-green-800">Quitar de lista</button>
-                               </td>
-                            </tr>
-                         ))}
-                       </tbody>
-                     </table>
-                  </div>
+                    <div className="mt-2 bg-white rounded-lg shadow overflow-x-auto">
+                        <table className="min-w-full">
+                            <thead className="bg-red-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Nombre</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Teléfono</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-red-200">
+                                {blacklistedClients.map(cliente => (
+                                    <tr key={cliente.id}>
+                                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{cliente.nombre}</td>
+                                        <td className="px-6 py-4 text-sm text-gray-500">{cliente.telefono}</td>
+                                        <td className="px-6 py-4 text-sm font-medium">
+                                            <button 
+                                                onClick={() => onSetBlacklist(cliente.id, false)} 
+                                                className="text-green-600 hover:text-green-800 inline-flex items-center gap-1"
+                                            >
+                                                <Check size={14} /> Quitar de lista negra
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
-              </div>
+            </div>
           </div>
         )}
       </main>

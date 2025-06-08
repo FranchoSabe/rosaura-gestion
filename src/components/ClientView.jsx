@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Clock, Users, Phone, Mail, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import './datepicker-custom.css';
 
 const ReservationFlowLayout = ({ children, BACKGROUND_IMAGE_URL }) => (
     <div className="min-h-screen bg-cover bg-center text-white relative" style={{ backgroundImage: `url(${BACKGROUND_IMAGE_URL})` }}>
@@ -18,7 +21,7 @@ export const ClientView = ({
     currentScreen, setCurrentScreen, 
     availableSlots,
     showConfirmation, setShowConfirmation,
-    setIsAdmin,
+    onAdminClick,
     handleDateAndTurnoSubmit, handleHorarioSelect, handleContactoSubmit, 
     formatDate 
 }) => {
@@ -34,13 +37,23 @@ export const ClientView = ({
             <button onClick={() => setCurrentScreen('fecha-personas')} className="w-full bg-green-700 hover:bg-green-800 font-semibold py-4 px-8 rounded-lg text-lg mb-4 transition-colors">Hacé tu reserva</button>
             <button onClick={() => window.open('https://wa.me/5492213995351', '_blank')} className="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold py-4 px-8 rounded-lg text-lg flex items-center justify-center gap-2 transition-colors"><MessageCircle size={20} />Comunicate con nosotros por WhatsApp</button>
           </div>
-           <button onClick={onAdminClick} className="absolute bottom-4 text-sm opacity-50 hover:opacity-100">Admin</button>
+          <button onClick={onAdminClick} className="absolute bottom-4 text-sm opacity-50 hover:opacity-100">Admin</button>
         </div>
       </div>
     );
   }
 
   if (currentScreen === 'fecha-personas') {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 1);
+    const isDayDisabled = (date) => {
+      if (date.getDay() === 1) return true;
+      if (date > maxDate) return true;
+      if (date < today) return true;
+      return false;
+    };
     return (
       <ReservationFlowLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className="flex items-center mb-6">
@@ -50,7 +63,33 @@ export const ClientView = ({
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-200 mb-2"><Calendar size={16} className="inline mr-2" />Fecha</label>
-            <input type="date" value={reservaData.fecha} onChange={(e) => setReservaData({ ...reservaData, fecha: e.target.value })} className="w-full p-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white appearance-none" />
+            <DatePicker
+              selected={reservaData.fecha ? new Date(reservaData.fecha) : null}
+              onChange={date => setReservaData({ ...reservaData, fecha: date ? date.toISOString().split('T')[0] : '' })}
+              minDate={today}
+              maxDate={maxDate}
+              filterDate={date => !isDayDisabled(date)}
+              placeholderText="Seleccionar fecha"
+              dateFormat="yyyy-MM-dd"
+              calendarClassName="custom-green-calendar"
+              dayClassName={date =>
+                isDayDisabled(date)
+                  ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                  : reservaData.fecha && new Date(reservaData.fecha).toDateString() === date.toDateString()
+                    ? 'bg-[#1d5d11] text-white font-bold rounded-full'
+                    : 'text-[#1d5d11] hover:bg-[#1d5d11]/20 hover:text-[#1d5d11] font-semibold rounded-full transition-colors'
+              }
+              popperPlacement="bottom"
+              customInput={
+                <button
+                  className="w-full flex items-center justify-between bg-[#1d5d11] hover:bg-green-800 text-white font-semibold py-2 px-4 rounded-md text-base transition-colors border border-[#1d5d11] shadow"
+                  type="button"
+                >
+                  <span>{reservaData.fecha ? formatDate(reservaData.fecha) : 'Seleccionar fecha'}</span>
+                  <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+              }
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-200 mb-2">Turno</label>
