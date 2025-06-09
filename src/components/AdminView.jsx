@@ -39,14 +39,19 @@ const ReservationsTable = ({ reservations, onSetBlacklist }) => {
                                 <a href={`https://wa.me/${reserva.cliente.telefono}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-800 inline-flex items-center gap-1">
                                     <MessageCircle size={14} /> Contactar
                                 </a>
-                                <button 
-                                    onClick={() => onSetBlacklist(reserva.cliente.id, true)}
-                                    disabled={!isPastReservation(reserva.fecha, reserva.horario)}
-                                    className="text-red-600 hover:text-red-800 disabled:text-gray-300 disabled:cursor-not-allowed inline-flex items-center gap-1"
+                                <a 
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      if (window.confirm(`¿Estás seguro de que quieres agregar a ${reserva.cliente.nombre} a la lista negra por no asistir?`)) {
+                                        onSetBlacklist(reserva.clienteId, true);
+                                      }
+                                    }}
+                                    className={`inline-flex items-center gap-1 ${!isPastReservation(reserva.fecha, reserva.horario) ? 'text-gray-300 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
                                     title={!isPastReservation(reserva.fecha, reserva.horario) ? "Solo para reservas pasadas" : "Marcar como No Asistió y añadir a Lista Negra"}
                                 >
                                     <ThumbsDown size={14} /> No Asistió
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     )) : <tr><td colSpan="4" className="px-6 py-4 text-center text-gray-500">No hay reservas para mostrar.</td></tr>}
@@ -78,13 +83,22 @@ const ClientsTable = ({ clients, onSetBlacklist }) => {
                             <td className="px-6 py-4 text-sm text-gray-500">{cliente.totalReservas}</td>
                             <td className="px-6 py-4 text-sm text-gray-500">{formatDate(cliente.ultimaReserva)}</td>
                             <td className="px-6 py-4 text-sm font-medium">
-                                <button 
-                                    onClick={() => onSetBlacklist(cliente.id, true)}
+                                <a href={`https://wa.me/${cliente.telefono}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-800 inline-flex items-center gap-1 mr-4">
+                                    <MessageCircle size={14} /> Contactar
+                                </a>
+                                <a 
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      if (window.confirm(`¿Estás seguro de que quieres agregar a ${cliente.nombre} a la lista negra?`)) {
+                                        onSetBlacklist(cliente.id, true);
+                                      }
+                                    }}
                                     className="text-red-600 hover:text-red-800 inline-flex items-center gap-1"
                                     title="Añadir a lista negra"
                                 >
                                     <ThumbsDown size={14} /> Añadir a lista negra
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     ))}
@@ -112,7 +126,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
   const blacklistedClients = data.clientes.filter(c => c.listaNegra);
 
   return (
-    <div className="contenedor-central">
+    <div className="contenedor-admin">
       <div className="min-h-screen bg-gray-100">
         <header className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -127,6 +141,17 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
               </div>
           </div>
         </header>
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex border-b border-gray-200">
+              <button onClick={() => setAdminView('today')} className={`px-4 py-3 font-semibold text-sm -mb-px ${adminView === 'today' ? 'border-b-2 border-[#0c4900] text-[#0c4900]' : 'text-gray-500 hover:text-gray-700'}`}>Hoy</button>
+              <button onClick={() => setAdminView('week')} className={`px-4 py-3 font-semibold text-sm -mb-px ${adminView === 'week' ? 'border-b-2 border-[#0c4900] text-[#0c4900]' : 'text-gray-500 hover:text-gray-700'}`}>Esta Semana</button>
+              {auth.role === 'admin' && (
+                <button onClick={() => setAdminView('clients')} className={`px-4 py-3 font-semibold text-sm -mb-px ${adminView === 'clients' ? 'border-b-2 border-[#0c4900] text-[#0c4900]' : 'text-gray-500 hover:text-gray-700'}`}>Clientes</button>
+              )}
+            </div>
+          </div>
+        </div>
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {adminView === 'today' && (
             <div className="space-y-8">
@@ -158,7 +183,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
               <div>
                   <button 
                       onClick={() => setIsBlacklistVisible(!isBlacklistVisible)} 
-                      className="w-full flex justify-between items-center p-4 font-medium text-left text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 focus:outline-none"
+                      className="w-full bg-[#0c4900] hover:bg-green-900 border-2 border-transparent hover:border-[#0c4900] flex justify-between items-center p-4 font-medium text-left text-gray-700 rounded-lg transition-all"
                   >
                       <span>Lista Negra ({blacklistedClients.length} clientes)</span>
                       <ChevronDown className={`transform transition-transform duration-200 ${isBlacklistVisible ? 'rotate-180' : ''}`} />

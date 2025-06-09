@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
 import { User, Lock } from 'lucide-react';
-
-// Reutilizamos el layout para mantener la estética
-const ReservationFlowLayout = ({ children, BACKGROUND_IMAGE_URL }) => (
-    <div className="min-h-screen bg-cover bg-center text-white relative" style={{ backgroundImage: `url(${BACKGROUND_IMAGE_URL})` }}>
-      <div className="absolute inset-0 bg-black bg-opacity-60"></div>
-      <div className="relative z-10 flex justify-center items-center min-h-screen px-4">
-        <div className="w-full max-w-md bg-black bg-opacity-20 backdrop-blur-lg rounded-xl p-6 sm:p-8 border border-white border-opacity-20">
-          {children}
-        </div>
-      </div>
-    </div>
-);
+import ClientLayout from './ClientLayout';
 
 export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
     const [username, setUsername] = useState('');
@@ -27,7 +16,7 @@ export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
     };
 
     return (
-        <ReservationFlowLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+        <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
             <h1 className="text-3xl font-bold text-white text-center mb-6">Iniciar Sesión</h1>
             <form onSubmit={onSubmit} className="space-y-6">
                 <div>
@@ -60,6 +49,6 @@ export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
                     Volver al inicio
                 </button>
             </form>
-        </ReservationFlowLayout>
+        </ClientLayout>
     );
 };

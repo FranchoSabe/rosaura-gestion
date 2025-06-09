@@ -3,17 +3,7 @@ import { Calendar, Clock, Users, Phone, Mail, MessageCircle, ChevronLeft, Check,
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
-
-const ReservationFlowLayout = ({ children, BACKGROUND_IMAGE_URL }) => (
-    <div className="min-h-screen bg-cover bg-center text-white relative" style={{ backgroundImage: `url(${BACKGROUND_IMAGE_URL})` }}>
-      <div className="absolute inset-0 bg-black bg-opacity-60"></div>
-      <div className="relative z-10 flex justify-center items-start pt-16 sm:pt-24 min-h-screen px-4">
-        <div className="w-full max-w-md bg-black bg-opacity-20 backdrop-blur-lg rounded-xl p-6 sm:p-8 border border-white border-opacity-20">
-          {children}
-        </div>
-      </div>
-    </div>
-);
+import ClientLayout from './ClientLayout';
 
 export const ClientView = ({ 
     LOGO_URL, BACKGROUND_IMAGE_URL, 
@@ -28,18 +18,19 @@ export const ClientView = ({
 
   if (currentScreen === 'landing') {
     return (
-      <div className="min-h-screen bg-cover bg-center text-white relative" style={{ backgroundImage: `url(${BACKGROUND_IMAGE_URL})` }}>
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div className="relative z-10 min-h-screen flex flex-col justify-center items-center px-4 text-center">
-          <div className="mb-8">{LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-24 mx-auto" /> : <h1 className="text-4xl md:text-6xl font-bold mb-2" style={{ fontFamily: 'cursive' }}>Rosaura</h1>}</div>
-          <div className="mb-12 max-w-md">
-            <p className="text-xl mb-8">Bienvenido al portal de reservas de Rosaura</p>
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+        <div className="flex flex-col items-center w-full">
+          <div className="mb-8 w-full flex justify-center">
+            {LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-24" /> : <h1 className="text-4xl md:text-6xl font-bold mb-2" style={{ fontFamily: 'cursive' }}>Rosaura</h1>}
+          </div>
+          <div className="mb-12 w-full">
+            <p className="text-xl mb-8 text-center">Bienvenido al portal de reservas de Rosaura</p>
             <button onClick={() => setCurrentScreen('fecha-personas')} className={mainButtonClass}>Hacé tu reserva</button>
             <button onClick={() => window.open('https://wa.me/5492213995351', '_blank')} className={secondaryButtonClass}><MessageCircle size={20} />Comunicate con nosotros por WhatsApp</button>
           </div>
           <button onClick={onAdminClick} className={adminButtonClass}>Admin</button>
         </div>
-      </div>
+      </ClientLayout>
     );
   }
 
@@ -55,13 +46,13 @@ export const ClientView = ({
       return false;
     };
     return (
-      <ReservationFlowLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className="flex items-center mb-6">
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+        <div className="flex items-center mb-6 w-full">
           <button onClick={() => setCurrentScreen('landing')} className="text-gray-200 hover:text-white hover:border-[#0c4900] mr-4 border-2 border-transparent rounded-lg p-1 transition-all"><ChevronLeft size={24} /></button>
           <h1 className="text-2xl font-bold text-white">Tu Reserva</h1>
         </div>
-        <div className="space-y-6">
-          <div>
+        <div className="space-y-6 w-full">
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-200 mb-2"><Calendar size={16} className="inline mr-2" />Fecha</label>
             <DatePicker
               selected={reservaData.fecha ? new Date(reservaData.fecha) : null}
@@ -91,12 +82,12 @@ export const ClientView = ({
               }
             />
           </div>
-          <div>
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-200 mb-2">Turno</label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 w-full">
               <button 
                 onClick={() => setReservaData({...reservaData, turno: 'mediodia'})} 
-                className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${
+                className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all w-full ${
                   reservaData.turno === 'mediodia' 
                     ? 'bg-white text-black border-white hover:border-[#0c4900]' 
                     : 'border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white'
@@ -106,7 +97,7 @@ export const ClientView = ({
               </button>
               <button 
                 onClick={() => setReservaData({...reservaData, turno: 'noche'})} 
-                className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${
+                className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all w-full ${
                   reservaData.turno === 'noche' 
                     ? 'bg-white text-black border-white hover:border-[#0c4900]' 
                     : 'border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white'
@@ -116,14 +107,14 @@ export const ClientView = ({
               </button>
             </div>
           </div>
-          <div>
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-200 mb-2"><Users size={16} className="inline mr-2" />Cantidad de personas</label>
-            <div className="grid grid-cols-3 gap-2 mb-2">
+            <div className="grid grid-cols-3 gap-2 mb-2 w-full">
               {[1, 2, 3, 4, 5, 6].map(num => (
                 <button
                   key={num}
                   onClick={() => setReservaData({ ...reservaData, personas: num })}
-                  className={`p-3 rounded-lg border-2 flex items-center justify-center transition-all ${
+                  className={`p-3 rounded-lg border-2 flex items-center justify-center transition-all w-full ${
                     reservaData.personas === num 
                       ? 'bg-white text-black border-white hover:border-[#0c4900]' 
                       : 'border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white'
@@ -148,19 +139,19 @@ export const ClientView = ({
           <button 
             onClick={handleDateAndTurnoSubmit} 
             disabled={!reservaData.personas || !reservaData.fecha || !reservaData.turno}
-            className="w-full bg-[#0c4900] hover:bg-green-900 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            className="w-full bg-[#0c4900] hover:bg-green-900 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-600"
           >
             Consultar disponibilidad
           </button>
         </div>
-      </ReservationFlowLayout>
+      </ClientLayout>
     );
   }
   
   // --- PANTALLA DE HORARIO ---
   if (currentScreen === 'horario') {
     return (
-      <ReservationFlowLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className="flex items-center mb-6">
           <button onClick={() => setCurrentScreen('fecha-personas')} className="text-gray-200 hover:text-white hover:border-[#0c4900] mr-4 border-2 border-transparent rounded-lg p-1 transition-all"><ChevronLeft size={24} /></button>
           <h1 className="text-2xl font-bold text-white">Horario</h1>
@@ -191,14 +182,14 @@ export const ClientView = ({
             </div>
           )}
         </div>
-      </ReservationFlowLayout>
+      </ClientLayout>
     );
   }
 
   // --- PANTALLA DE CONTACTO ---
   if (currentScreen === 'contacto') {
     return (
-      <ReservationFlowLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className="flex items-center mb-6">
           <button onClick={() => setCurrentScreen('horario')} className="text-gray-200 hover:text-white hover:border-[#0c4900] mr-4 border-2 border-transparent rounded-lg p-1 transition-all"><ChevronLeft size={24} /></button>
           <h1 className="text-2xl font-bold text-white">Tus datos</h1>
@@ -216,7 +207,7 @@ export const ClientView = ({
                 ...reservaData,
                 cliente: {...reservaData.cliente, nombre: e.target.value}
               })}
-              className="w-full p-3 bg-white border border-[#0c4900] rounded-lg text-[#0c4900] placeholder-[#0c4900]/50 focus:border-[#0c4900] focus:ring-2 focus:ring-[#0c4900] focus:outline-none"
+              className="w-full p-3 bg-white border border-[#0c4900] rounded-lg text-[#0c4900] placeholder-[#0c4900]/50 focus:border-[#0c4900] focus:ring-2 focus:ring-green-600 focus:outline-none"
               placeholder="Tu nombre"
             />
           </div>
@@ -232,7 +223,7 @@ export const ClientView = ({
                   ...reservaData,
                   cliente: {...reservaData.cliente, codigoPais: e.target.value}
                 })}
-                className="w-24 p-3 bg-white border border-[#0c4900] rounded-lg text-[#0c4900] focus:border-[#0c4900] focus:ring-2 focus:ring-[#0c4900] focus:outline-none"
+                className="w-24 p-3 bg-white border border-[#0c4900] rounded-lg text-[#0c4900] focus:border-[#0c4900] focus:ring-2 focus:ring-green-600 focus:outline-none"
               >
                 <option value="54">+54 (AR)</option>
                 <option value="598">+598 (UY)</option>
@@ -261,7 +252,7 @@ export const ClientView = ({
                 }}
                 pattern="[0-9]*"
                 inputMode="numeric"
-                className="flex-1 p-3 bg-white border border-[#0c4900] rounded-lg text-[#0c4900] placeholder-[#0c4900]/50 focus:border-[#0c4900] focus:ring-2 focus:ring-[#0c4900] focus:outline-none"
+                className="flex-1 p-3 bg-white border border-[#0c4900] rounded-lg text-[#0c4900] placeholder-[#0c4900]/50 focus:border-[#0c4900] focus:ring-2 focus:ring-green-600 focus:outline-none"
                 placeholder="221 1234567"
               />
             </div>
@@ -278,7 +269,7 @@ export const ClientView = ({
                 ...reservaData,
                 cliente: {...reservaData.cliente, comentarios: e.target.value}
               })}
-              className="w-full p-3 bg-white border border-[#0c4900] rounded-lg text-[#0c4900] placeholder-[#0c4900]/50 focus:border-[#0c4900] focus:ring-2 focus:ring-[#0c4900] focus:outline-none min-h-[100px] resize-none"
+              className="w-full p-3 bg-white border border-[#0c4900] rounded-lg text-[#0c4900] placeholder-[#0c4900]/50 focus:border-[#0c4900] focus:ring-2 focus:ring-green-600 focus:outline-none min-h-[100px] resize-none"
               placeholder="Ej: Alergias, preferencias de mesa, ocasión especial, etc."
             />
           </div>
@@ -286,19 +277,19 @@ export const ClientView = ({
           <button
             onClick={handleContactoSubmit}
             disabled={!reservaData.cliente.nombre || !reservaData.cliente.telefono || reservaData.cliente.telefono.length < 8}
-            className="w-full bg-[#0c4900] hover:bg-green-900 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            className="w-full bg-[#0c4900] hover:bg-green-900 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-600"
           >
             Confirmar reserva
           </button>
         </div>
-      </ReservationFlowLayout>
+      </ClientLayout>
     );
   }
 
   // --- PANTALLA DE CONFIRMACIÓN ---
   if (currentScreen === 'confirmacion') {
     return (
-      <ReservationFlowLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className="text-center py-8">
           <Check className="mx-auto mb-6 text-green-500" size={64} />
           <h1 className="text-2xl font-bold mb-4">¡Reserva confirmada!</h1>
@@ -321,12 +312,12 @@ export const ClientView = ({
                 cliente: { nombre: '', telefono: '', comentarios: '' }
               });
             }} 
-            className="w-full bg-[#0c4900] hover:bg-green-900 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            className="w-full bg-[#0c4900] hover:bg-green-900 text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-600"
           >
             Volver al inicio
           </button>
         </div>
-      </ReservationFlowLayout>
+      </ClientLayout>
     );
   }
   
@@ -335,8 +326,8 @@ export const ClientView = ({
 
 // Cambiar clases de botones principales y secundarios
 // Botón principal
-const mainButtonClass = "w-full bg-[#0c4900] hover:bg-[#0c4900] hover:border-2 hover:border-white text-white font-semibold py-4 px-8 rounded-lg text-lg mb-4 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0c4900] focus:ring-offset-2";
+const mainButtonClass = "w-full bg-[#0c4900] hover:bg-[#0c4900] hover:border-2 hover:border-white text-white font-semibold py-4 px-8 rounded-lg text-lg mb-4 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2";
 // Botón secundario
-const secondaryButtonClass = "w-full border-2 border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white font-semibold py-4 px-8 rounded-lg text-lg flex items-center justify-center gap-2 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0c4900] focus:ring-offset-2";
+const secondaryButtonClass = "w-full border-2 border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white font-semibold py-4 px-8 rounded-lg text-lg flex items-center justify-center gap-2 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2";
 // Botón admin
 const adminButtonClass = "absolute bottom-4 text-sm opacity-50 hover:opacity-100 text-gray-200 hover:text-[#0c4900] border-2 border-transparent hover:border-[#0c4900] rounded-lg px-2 py-1 transition-all";
