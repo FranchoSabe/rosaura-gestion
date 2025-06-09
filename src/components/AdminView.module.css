@@ -1,0 +1,273 @@
+.header {
+  background-color: white;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.headerContent {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .headerContent {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .headerContent {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.headerFlex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.headerTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827;
+}
+
+.headerUser {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.headerUserName {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.logoutButton {
+  background-color: #dc2626;
+  color: white;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition-property: background-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.logoutButton:hover {
+  background-color: #b91c1c;
+}
+
+.tabsContainer {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tabsContent {
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .tabsContent {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .tabsContent {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.tabsList {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: -1px;
+}
+
+.tabActive {
+  composes: tab;
+  border-bottom: 2px solid #0c4900;
+  color: #0c4900;
+}
+
+.tabInactive {
+  composes: tab;
+  color: #6b7280;
+}
+
+.tabInactive:hover {
+  color: #374151;
+}
+
+.mainContent {
+  padding: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .mainContent {
+    padding: 2rem;
+  }
+}
+
+.table {
+  min-width: 100%;
+}
+
+.tableHeader {
+  background-color: #f9fafb;
+}
+
+.tableHeaderCell {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.tableBody {
+  background-color: white;
+}
+
+.tableRow {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tableRow:hover {
+  background-color: #f9fafb;
+}
+
+.tableCell {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.tableCellSecondary {
+  composes: tableCell;
+  color: #6b7280;
+}
+
+.actionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  margin-right: 1rem;
+}
+
+.actionLinkGreen {
+  composes: actionLink;
+  color: #059669;
+}
+
+.actionLinkGreen:hover {
+  color: #047857;
+}
+
+.actionLinkRed {
+  composes: actionLink;
+  color: #dc2626;
+}
+
+.actionLinkRed:hover {
+  color: #b91c1c;
+}
+
+.actionLinkDisabled {
+  composes: actionLink;
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.blacklistButton {
+  width: 100%;
+  background-color: #0c4900;
+  color: white;
+  border: 2px solid transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  font-weight: 500;
+  text-align: left;
+  border-radius: 0.5rem;
+  transition-property: all;
+}
+
+.blacklistButton:hover {
+  background-color: #065f46;
+  border-color: #0c4900;
+}
+
+.blacklistTable {
+  margin-top: 0.5rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+}
+
+.blacklistTableHeader {
+  background-color: #fef2f2;
+}
+
+.blacklistTableHeaderCell {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #991b1b;
+}
+
+.blacklistTableBody {
+  border-top: 1px solid #fee2e2;
+}
+
+.blacklistTableRow {
+  border-bottom: 1px solid #fee2e2;
+}
+
+.blacklistTableCell {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+}
+
+.blacklistTableCellName {
+  composes: blacklistTableCell;
+  font-weight: 500;
+  color: #111827;
+}
+
+.blacklistTableCellPhone {
+  composes: blacklistTableCell;
+  color: #6b7280;
+}
+
+.removeFromBlacklistButton {
+  color: #0c4900;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.removeFromBlacklistButton:hover {
+  color: #065f46;
+} 

@@ -6,6 +6,7 @@ import {
   addReservation, 
   addClient, 
   updateClientBlacklist, 
+  updateReservation,
   subscribeToReservations, 
   subscribeToClients,
   auth 
@@ -241,12 +242,22 @@ function App() {
     return date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
+  const handleUpdateReservation = async (updatedReservation) => {
+    try {
+      await updateReservation(updatedReservation);
+    } catch (error) {
+      console.error("Error al actualizar la reserva:", error);
+      alert("Error al actualizar la reserva. Por favor, intenta nuevamente.");
+    }
+  };
+
   if (authState) {
     return <AdminView 
       data={data} 
       auth={authState} 
       onLogout={handleLogout}
-      onSetBlacklist={handleSetBlacklist} 
+      onSetBlacklist={handleSetBlacklist}
+      onUpdateReservation={handleUpdateReservation}
     />;
   }
 

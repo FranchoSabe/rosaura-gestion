@@ -107,4 +107,21 @@ export const subscribeToClients = (callback) => {
     }));
     callback(clients);
   });
+};
+
+export const updateReservation = async (reservationData) => {
+  try {
+    const reservationRef = doc(db, "reservas", reservationData.id);
+    await updateDoc(reservationRef, {
+      fecha: reservationData.fecha,
+      horario: reservationData.horario,
+      personas: reservationData.personas,
+      cliente: reservationData.cliente,
+      updatedAt: new Date()
+    });
+    return true;
+  } catch (error) {
+    console.error("Error al actualizar reserva:", error);
+    throw error;
+  }
 }; 

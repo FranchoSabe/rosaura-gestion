@@ -1,0 +1,517 @@
+.mainButton {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.mainButton:hover {
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.mainButton:focus {
+  outline: none;
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  --tw-ring-color: rgb(22 163 74 / 0.5);
+  --tw-ring-offset-width: 2px;
+}
+
+.mainButton:disabled {
+  background-color: rgba(107, 114, 128, 0.4);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondaryButton {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  color: #e5e7eb;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.secondaryButton:hover {
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.secondaryButton:focus {
+  outline: none;
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  --tw-ring-color: rgb(22 163 74 / 0.5);
+  --tw-ring-offset-width: 2px;
+}
+
+.adminButton {
+  position: absolute;
+  bottom: 1rem;
+  font-size: 0.75rem;
+  color: rgba(156, 163, 175, 0.6);
+  border: none;
+  background: none;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.adminButton:hover {
+  color: rgba(12, 73, 0, 0.8);
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.backButton {
+  color: #e5e7eb;
+  margin-right: 0.65rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.375rem;
+  padding: 0.325rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.65);
+  transform-origin: left center;
+  vertical-align: middle;
+}
+
+.backButton:hover {
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(0.65) translateY(-2px);
+}
+
+.backButton svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.backButton + h1 {
+  vertical-align: middle;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 1.125rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.input:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.select {
+  width: 6rem;
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 1.125rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.select:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.select option {
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 1.125rem;
+  min-height: 100px;
+  resize: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.textarea:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+/* Estilos para títulos y etiquetas */
+label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  font-size: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+label svg {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  position: relative;
+  top: -1px;
+}
+
+:global(.text-2xl) {
+  font-size: 2rem !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+:global(.text-gray-200) {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 1rem !important;
+  margin-top: 0.25rem !important;
+}
+
+:global(.block.text-sm.font-medium.text-gray-200) {
+  color: white !important;
+  font-size: 1.25rem !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.75rem !important;
+  line-height: 1.5 !important;
+}
+
+:global(.block.text-sm.font-medium.text-gray-200) svg {
+  margin-right: 0.5rem !important;
+  vertical-align: -0.2em !important;
+}
+
+:global(.text-center.text-gray-200) {
+  color: white !important;
+  font-size: 1.25rem !important;
+  margin: 1rem 0 !important;
+}
+
+.dateContainer {
+  position: relative;
+  width: 100%;
+}
+
+.dateButton {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  font-size: 1.25rem;
+  min-height: 3.5rem;
+  line-height: 1.5;
+}
+
+.dateButtonSelected {
+  composes: dateButton;
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
+}
+
+.dateButtonSelected:hover {
+  transform: translateY(-2px);
+}
+
+.dateButtonUnselected {
+  composes: dateButton;
+  color: #e5e7eb;
+}
+
+.dateButtonUnselected:hover {
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.dateButton svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  position: relative;
+  top: 0 !important;
+}
+
+.turnoButton {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.turnoButtonSelected {
+  composes: turnoButton;
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
+}
+
+.turnoButtonSelected:hover {
+  transform: translateY(-2px);
+}
+
+.turnoButtonUnselected {
+  composes: turnoButton;
+  color: #e5e7eb;
+}
+
+.turnoButtonUnselected:hover {
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.turnoButton svg {
+  vertical-align: -0.2em !important;
+}
+
+.personasButton {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  font-size: 1.25rem;
+}
+
+.personasButtonSelected {
+  composes: personasButton;
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
+}
+
+.personasButtonSelected:hover {
+  transform: translateY(-2px);
+}
+
+.personasButtonUnselected {
+  composes: personasButton;
+  color: #e5e7eb;
+}
+
+.personasButtonUnselected:hover {
+  background-color: rgba(12, 73, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.confirmationContainer {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.confirmationIcon {
+  margin: 0 auto;
+  margin-bottom: 1.5rem;
+  color: #22c55e;
+}
+
+.confirmationTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.confirmationDetails {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.confirmationDetail {
+  margin-bottom: 0.5rem;
+}
+
+.confirmationDetail strong {
+  font-weight: bold;
+}
+
+/* Estilos para el calendario */
+:global(.react-datepicker-wrapper) {
+  width: 100%;
+}
+
+:global(.react-datepicker-popper) {
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  margin-top: 0.5rem !important;
+}
+
+:global(.react-datepicker) {
+  border: none !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+:global(.react-datepicker__triangle) {
+  display: none !important;
+}
+
+:global(.react-datepicker__header) {
+  background-color: #0c4900 !important;
+  border-bottom: none !important;
+  border-top-left-radius: 0.5rem !important;
+  border-top-right-radius: 0.5rem !important;
+  padding-top: 0.5rem !important;
+}
+
+:global(.react-datepicker__current-month) {
+  color: white !important;
+}
+
+:global(.react-datepicker__day-name) {
+  color: white !important;
+}
+
+:global(.react-datepicker__day--selected) {
+  background-color: #0c4900 !important;
+  color: white !important;
+}
+
+:global(.react-datepicker__day--keyboard-selected) {
+  background-color: rgba(12, 73, 0, 0.1) !important;
+  color: #0c4900 !important;
+}
+
+:global(.react-datepicker__day:hover) {
+  background-color: rgba(12, 73, 0, 0.1) !important;
+}
+
+:global(.react-datepicker__day--disabled) {
+  color: #ccc !important;
+}
+
+:global(.react-datepicker__day--disabled:hover) {
+  background-color: transparent !important;
+}
+
+.sectionTitle {
+  color: white;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sectionTitle svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  position: relative;
+  top: -1px;
+}
+
+.mainButton svg,
+.secondaryButton svg,
+.dateButton svg,
+.turnoButton svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  position: relative;
+  top: -1px;
+}
+
+/* Ajustar espaciado vertical general */
+:global(.space-y-6) {
+  gap: 1rem !important;
+}
+
+:global(.mb-6) {
+  margin-bottom: 1rem !important;
+}
+
+:global(.mb-2) {
+  margin-bottom: 0.5rem !important;
+}
+
+:global(.gap-4) {
+  gap: 0.75rem !important;
+}
+
+:global(.gap-2) {
+  gap: 0.5rem !important;
+} 
