@@ -44,6 +44,7 @@
 /* Centrado y ancho fijo para el contenido principal */
 .contenedor-central {
   max-width: 900px;
+  min-width: 900px;
   width: 100%;
   margin: 40px auto;
   min-height: 80vh;
@@ -55,6 +56,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 600px) {

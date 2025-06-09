@@ -129,7 +129,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
     <div className="contenedor-admin">
       <div className="min-h-screen bg-gray-100">
         <header className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center py-4">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Panel de Administración</h1>
@@ -142,7 +142,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
           </div>
         </header>
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex border-b border-gray-200">
               <button onClick={() => setAdminView('today')} className={`px-4 py-3 font-semibold text-sm -mb-px ${adminView === 'today' ? 'border-b-2 border-[#0c4900] text-[#0c4900]' : 'text-gray-500 hover:text-gray-700'}`}>Hoy</button>
               <button onClick={() => setAdminView('week')} className={`px-4 py-3 font-semibold text-sm -mb-px ${adminView === 'week' ? 'border-b-2 border-[#0c4900] text-[#0c4900]' : 'text-gray-500 hover:text-gray-700'}`}>Esta Semana</button>
@@ -152,7 +152,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist }) => {
             </div>
           </div>
         </div>
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="px-4 sm:px-6 lg:px-8 py-8">
           {adminView === 'today' && (
             <div className="space-y-8">
                <div>

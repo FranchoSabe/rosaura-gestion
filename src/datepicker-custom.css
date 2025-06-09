@@ -1,21 +1,35 @@
 .custom-green-calendar {
-  background: rgba(0, 0, 0, 0.2) !important;
-  backdrop-filter: blur(8px) !important;
-  border-radius: 1rem !important;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08) !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(4px) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
   color: white !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding: 1rem !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
 }
 
 .custom-green-calendar .react-datepicker__header {
   background: transparent !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding-bottom: 1rem !important;
 }
 
 .custom-green-calendar .react-datepicker__current-month,
 .custom-green-calendar .react-datepicker__day-name {
   color: white !important;
-  font-weight: 500;
+  font-weight: 500 !important;
+}
+
+.custom-green-calendar .react-datepicker__navigation {
+  color: white !important;
+}
+
+.custom-green-calendar .react-datepicker__navigation:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0.5rem !important;
 }
 
 /* Día seleccionado */
@@ -24,20 +38,22 @@
   background: white !important;
   color: black !important;
   border-radius: 50% !important;
+  font-weight: 600 !important;
 }
 
 /* Días disponibles (no seleccionados) */
 .custom-green-calendar .react-datepicker__day:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected) {
   background: transparent !important;
   color: white !important;
-  font-weight: 500;
+  font-weight: 500 !important;
   border-radius: 50% !important;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.2s ease !important;
 }
 
 .custom-green-calendar .react-datepicker__day:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected):hover {
   background: rgba(255, 255, 255, 0.1) !important;
   color: white !important;
+  transform: scale(1.1) !important;
 }
 
 /* Días no disponibles */
@@ -45,4 +61,96 @@
   color: rgba(255, 255, 255, 0.3) !important;
   background: transparent !important;
   cursor: not-allowed !important;
+}
+
+/* Forzar ancho completo del DatePicker */
+.react-datepicker-wrapper {
+  width: 100% !important;
+}
+
+.react-datepicker__input-container {
+  width: 100% !important;
+}
+
+.react-datepicker__input-container input {
+  width: 100% !important;
+}
+
+/* Controlar el ancho del calendario para que coincida con el botón */
+.react-datepicker-popper {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.react-datepicker {
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: auto !important;
+}
+
+/* Asegurar que el contenedor del calendario no exceda el ancho del botón */
+.react-datepicker-popper[data-placement^="bottom"] {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.react-datepicker-popper[data-placement^="top"] {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Forzar el ancho del popup para que coincida con el botón */
+.react-datepicker-popper {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle {
+  display: none !important;
+}
+
+.react-datepicker-popper[data-placement^="top"] .react-datepicker__triangle {
+  display: none !important;
+}
+
+/* Control específico del ancho del calendario sin afectar posicionamiento */
+.react-datepicker {
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: auto !important;
+}
+
+/* Asegurar que el contenedor del calendario use el ancho completo */
+.react-datepicker__month-container {
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+/* Controlar el ancho de las celdas del calendario para que se adapten */
+.react-datepicker__day {
+  width: auto !important;
+  min-width: 2rem !important;
+  max-width: 2.5rem !important;
+  height: auto !important;
+  min-height: 2rem !important;
+  max-height: 2.5rem !important;
+  line-height: 2rem !important;
+  margin: 0.1rem !important;
+}
+
+/* Ajustar el header del calendario */
+.react-datepicker__header {
+  padding: 0.5rem !important;
+}
+
+.react-datepicker__month {
+  margin: 0.5rem !important;
+}
+
+/* Ajustar los nombres de los días */
+.react-datepicker__day-name {
+  width: auto !important;
+  min-width: 2rem !important;
+  max-width: 2.5rem !important;
+  margin: 0.1rem !important;
 }

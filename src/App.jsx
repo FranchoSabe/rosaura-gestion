@@ -14,7 +14,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db } from './firebase';
 
 // --- CONFIGURACIÓN Y DATOS ---
-const LOGO_URL = '/logo.jpg';
+const LOGO_URL = '/logo.png';
 const BACKGROUND_IMAGE_URL = '/fondo.jpg';
 const HORARIOS = {
     mediodia: ['12:00', '12:30', '13:00', '13:30', '14:00'],
@@ -259,24 +259,22 @@ function App() {
   }
 
   return (
-    <div className="contenedor-central">
-      <ClientView
-        LOGO_URL={LOGO_URL}
-        BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}
-        onAdminClick={() => setCurrentScreen('login')}
-        reservaData={reservaData}
-        setReservaData={setReservaData}
-        currentScreen={currentScreen}
-        setCurrentScreen={setCurrentScreen}
-        availableSlots={availableSlots}
-        showConfirmation={showConfirmation}
-        setShowConfirmation={setShowConfirmation}
-        handleDateAndTurnoSubmit={handleDateAndTurnoSubmit}
-        handleHorarioSelect={handleHorarioSelect}
-        handleContactoSubmit={handleContactoSubmit}
-        formatDate={formatDate}
-      />
-    </div>
+    <ClientView
+      LOGO_URL={LOGO_URL}
+      BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}
+      onAdminClick={() => setCurrentScreen('login')}
+      reservaData={reservaData}
+      setReservaData={setReservaData}
+      currentScreen={currentScreen}
+      setCurrentScreen={setCurrentScreen}
+      availableSlots={availableSlots}
+      showConfirmation={showConfirmation}
+      setShowConfirmation={setShowConfirmation}
+      handleDateAndTurnoSubmit={handleDateAndTurnoSubmit}
+      handleHorarioSelect={handleHorarioSelect}
+      handleContactoSubmit={handleContactoSubmit}
+      formatDate={formatDate}
+    />
   );
 }
 

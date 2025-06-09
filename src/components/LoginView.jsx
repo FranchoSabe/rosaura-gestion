@@ -26,7 +26,7 @@ export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="w-full p-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white"
-                        placeholder="admin o mozo"
+                        placeholder="Usuario"
                     />
                 </div>
                 <div>
@@ -36,13 +36,13 @@ export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="w-full p-3 bg-gray-700 bg-opacity-50 border border-gray-600 rounded-lg text-white"
-                        placeholder="admin o mozo"
+                        placeholder="********"
                     />
                 </div>
 
                 {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
-                <button type="submit" className="w-full bg-[#0c4900] hover:bg-green-900 text-white font-semibold py-3 px-6 rounded-lg transition-colors !mt-8">
+                <button type="submit" className="w-full bg-[#0c4900] hover:bg-green-900 text-white font-semibold py-4 px-8 rounded-lg text-lg mb-4 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2">
                     Entrar
                 </button>
                 <button type="button" onClick={() => setScreen('landing')} className="w-full text-center text-gray-300 hover:text-white mt-4 text-sm">

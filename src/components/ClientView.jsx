@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Users, Phone, Mail, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon } from 'lucide-react';
+import { Calendar, Clock, Users, Phone, Mail, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, ChevronLeftSquareIcon, LucideChevronLeft } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
@@ -19,14 +19,18 @@ export const ClientView = ({
   if (currentScreen === 'landing') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className="flex flex-col items-center w-full">
-          <div className="mb-8 w-full flex justify-center">
-            {LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-24" /> : <h1 className="text-4xl md:text-6xl font-bold mb-2" style={{ fontFamily: 'cursive' }}>Rosaura</h1>}
+        <div>
+          <div className="mb-8 bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl">
+            <div className="text-center mb-6">
+              <p className="text-xl text-white font-medium">Bienvenido al portal de reservas de</p>
+            </div>
+            <div className="flex justify-center">
+              {LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-60" /> : <h1 className="text-4xl md:text-6xl font-bold mb-2" style={{ fontFamily: 'cursive' }}>Rosaura</h1>}
+            </div>
           </div>
-          <div className="mb-12 w-full">
-            <p className="text-xl mb-8 text-center">Bienvenido al portal de reservas de Rosaura</p>
+          <div className="mb-12">
             <button onClick={() => setCurrentScreen('fecha-personas')} className={mainButtonClass}>Hacé tu reserva</button>
-            <button onClick={() => window.open('https://wa.me/5492213995351', '_blank')} className={secondaryButtonClass}><MessageCircle size={20} />Comunicate con nosotros por WhatsApp</button>
+            <button onClick={() => window.open('https://wa.me/5492213995351', '_blank')} className={secondaryButtonClass}><MessageCircle size={20} className="text-green-500" />Envianos un WhatsApp</button>
           </div>
           <button onClick={onAdminClick} className={adminButtonClass}>Admin</button>
         </div>
@@ -47,44 +51,46 @@ export const ClientView = ({
     };
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className="flex items-center mb-6 w-full">
+        <div className="mb-6">
           <button onClick={() => setCurrentScreen('landing')} className="text-gray-200 hover:text-white hover:border-[#0c4900] mr-4 border-2 border-transparent rounded-lg p-1 transition-all"><ChevronLeft size={24} /></button>
-          <h1 className="text-2xl font-bold text-white">Tu Reserva</h1>
+          <h1 className="text-2xl font-bold text-white inline-block">Tu Reserva</h1>
         </div>
-        <div className="space-y-6 w-full">
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-200 mb-2"><Calendar size={16} className="inline mr-2" />Fecha</label>
-            <DatePicker
-              selected={reservaData.fecha ? new Date(reservaData.fecha) : null}
-              onChange={date => setReservaData({ ...reservaData, fecha: date ? date.toISOString().split('T')[0] : '' })}
-              minDate={today}
-              maxDate={maxDate}
-              filterDate={date => !isDayDisabled(date)}
-              placeholderText="Seleccionar fecha"
-              dateFormat="yyyy-MM-dd"
-              calendarClassName="custom-green-calendar"
-              dayClassName={date =>
-                isDayDisabled(date)
-                  ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                  : reservaData.fecha && new Date(reservaData.fecha).toDateString() === date.toDateString()
-                    ? 'bg-white text-black border-white'
-                    : 'text-[#0c4900] hover:bg-[#0c4900]/10 hover:text-[#0c4900] font-semibold rounded-full transition-colors'
-              }
-              popperPlacement="bottom"
-              customInput={
-                <button
-                  className={`w-full p-3 rounded-lg border-2 flex items-center justify-between transition-all ${reservaData.fecha ? 'bg-white text-black border-white' : 'border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white'}`}
-                  type="button"
-                >
-                  <span>{reservaData.fecha ? formatDate(reservaData.fecha) : 'Seleccionar fecha'}</span>
-                  <Calendar size={18} className="ml-2" />
-                </button>
-              }
-            />
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center"><Calendar size={18} className="mr-2" />Fecha</label>
+            <div className="w-full">
+              <DatePicker
+                selected={reservaData.fecha ? new Date(reservaData.fecha) : null}
+                onChange={date => setReservaData({ ...reservaData, fecha: date ? date.toISOString().split('T')[0] : '' })}
+                minDate={today}
+                maxDate={maxDate}
+                filterDate={date => !isDayDisabled(date)}
+                placeholderText="Seleccionar fecha"
+                dateFormat="yyyy-MM-dd"
+                calendarClassName="custom-green-calendar"
+                dayClassName={date =>
+                  isDayDisabled(date)
+                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                    : reservaData.fecha && new Date(reservaData.fecha).toDateString() === date.toDateString()
+                      ? 'bg-white text-black border-white'
+                      : 'text-[#0c4900] hover:bg-[#0c4900]/10 hover:text-[#0c4900] font-semibold rounded-full transition-colors'
+                }
+                popperPlacement="bottom"
+                customInput={
+                  <button
+                    className={`w-full p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${reservaData.fecha ? 'bg-white text-black border-white' : 'border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white'}`}
+                    type="button"
+                  >
+                    <Calendar size={18} />
+                    <span>{reservaData.fecha ? formatDate(reservaData.fecha) : 'Seleccionar fecha'}</span>
+                  </button>
+                }
+              />
+            </div>
           </div>
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-200 mb-2">Turno</label>
-            <div className="grid grid-cols-2 gap-4 w-full">
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center"><Clock size={18} className="mr-2" />Turno</label>
+            <div className="grid grid-cols-2 gap-4">
               <button 
                 onClick={() => setReservaData({...reservaData, turno: 'mediodia'})} 
                 className={`p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-all w-full ${
@@ -93,7 +99,7 @@ export const ClientView = ({
                     : 'border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white'
                 }`}
               >
-                <Sun size={18}/> Mediodía
+                <Sun size={18} className="text-yellow-500"/> Mediodía
               </button>
               <button 
                 onClick={() => setReservaData({...reservaData, turno: 'noche'})} 
@@ -103,13 +109,13 @@ export const ClientView = ({
                     : 'border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white'
                 }`}
               >
-                <Moon size={18}/> Noche
+                <Moon size={18} className="text-blue-500"/> Noche
               </button>
             </div>
           </div>
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-200 mb-2"><Users size={16} className="inline mr-2" />Cantidad de personas</label>
-            <div className="grid grid-cols-3 gap-2 mb-2 w-full">
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center"><Users size={16} className="mr-2" />Cantidad de personas</label>
+            <div className="grid grid-cols-3 gap-2 mb-2">
               {[1, 2, 3, 4, 5, 6].map(num => (
                 <button
                   key={num}
@@ -139,7 +145,7 @@ export const ClientView = ({
           <button 
             onClick={handleDateAndTurnoSubmit} 
             disabled={!reservaData.personas || !reservaData.fecha || !reservaData.turno}
-            className="w-full bg-[#0c4900] hover:bg-green-900 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="w-full bg-[#0c4900] hover:bg-green-900 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-lg text-lg mb-4 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2"
           >
             Consultar disponibilidad
           </button>
@@ -152,9 +158,9 @@ export const ClientView = ({
   if (currentScreen === 'horario') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className="flex items-center mb-6">
+        <div className="mb-6">
           <button onClick={() => setCurrentScreen('fecha-personas')} className="text-gray-200 hover:text-white hover:border-[#0c4900] mr-4 border-2 border-transparent rounded-lg p-1 transition-all"><ChevronLeft size={24} /></button>
-          <h1 className="text-2xl font-bold text-white">Horario</h1>
+          <h1 className="text-2xl font-bold text-white inline-block">Horario</h1>
         </div>
         <div className="space-y-4">
           <p className="text-center text-gray-200">Horarios disponibles para el {formatDate(reservaData.fecha)} - Turno {reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}</p>
@@ -164,7 +170,7 @@ export const ClientView = ({
                 <button 
                   key={slot} 
                   onClick={() => handleHorarioSelect(slot)}
-                  className={`p-4 rounded-lg border-2 ${
+                  className={`p-4 rounded-lg border-2 w-full ${
                     reservaData.horario === slot 
                       ? 'bg-white text-black border-white hover:border-[#0c4900]' 
                       : 'border-gray-600 text-gray-200 hover:border-[#0c4900] hover:text-white'
@@ -190,15 +196,14 @@ export const ClientView = ({
   if (currentScreen === 'contacto') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className="flex items-center mb-6">
+        <div className="mb-6">
           <button onClick={() => setCurrentScreen('horario')} className="text-gray-200 hover:text-white hover:border-[#0c4900] mr-4 border-2 border-transparent rounded-lg p-1 transition-all"><ChevronLeft size={24} /></button>
-          <h1 className="text-2xl font-bold text-white">Tus datos</h1>
+          <h1 className="text-2xl font-bold text-white inline-block">Tus datos</h1>
         </div>
-        
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              <User size={16} className="inline mr-2" />Nombre completo
+            <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center">
+              <User size={16} className="mr-2" />Nombre completo
             </label>
             <input
               type="text"
@@ -211,10 +216,9 @@ export const ClientView = ({
               placeholder="Tu nombre"
             />
           </div>
-          
           <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              <Phone size={16} className="inline mr-2" />Teléfono (WhatsApp)
+            <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center">
+              <Phone size={16} className="mr-2" />Teléfono (WhatsApp)
             </label>
             <div className="flex gap-2">
               <select
@@ -258,10 +262,9 @@ export const ClientView = ({
             </div>
             <p className="mt-1 text-sm text-gray-200">Ingresá el número sin el 0 inicial ni el 15</p>
           </div>
-          
           <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              <MessageCircle size={16} className="inline mr-2" />Aclaraciones (opcional)
+            <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center">
+              <MessageCircle size={16} className="mr-2" />Aclaraciones (opcional)
             </label>
             <textarea
               value={reservaData.cliente.comentarios}
@@ -273,11 +276,10 @@ export const ClientView = ({
               placeholder="Ej: Alergias, preferencias de mesa, ocasión especial, etc."
             />
           </div>
-          
           <button
             onClick={handleContactoSubmit}
             disabled={!reservaData.cliente.nombre || !reservaData.cliente.telefono || reservaData.cliente.telefono.length < 8}
-            className="w-full bg-[#0c4900] hover:bg-green-900 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="w-full bg-[#0c4900] hover:bg-green-900 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-lg text-lg mb-4 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2"
           >
             Confirmar reserva
           </button>
@@ -312,7 +314,7 @@ export const ClientView = ({
                 cliente: { nombre: '', telefono: '', comentarios: '' }
               });
             }} 
-            className="w-full bg-[#0c4900] hover:bg-green-900 text-white font-semibold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-600"
+            className="w-full bg-[#0c4900] hover:bg-green-900 text-white font-semibold py-4 px-8 rounded-lg text-lg mb-4 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2"
           >
             Volver al inicio
           </button>
