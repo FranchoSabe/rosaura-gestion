@@ -7,6 +7,7 @@ import {
   addClient, 
   updateClientBlacklist, 
   updateReservation,
+  searchReservation,
   subscribeToReservations, 
   subscribeToClients,
   auth 
@@ -149,13 +150,23 @@ function App() {
 
   const handleLogin = async (username, password) => {
     try {
-      // Convertir username a email para Firebase Auth
-      const email = `${username}@rosaura.com`;
+      let email;
+      let role;
+
+      // Determinar el rol basado en el nombre de usuario
+      if (username === 'admin') {
+        email = import.meta.env.VITE_ADMIN_EMAIL;
+        role = 'admin';
+      } else if (username === 'mozo') {
+        email = import.meta.env.VITE_MOZO_EMAIL;
+        role = 'mozo';
+      } else {
+        return "Usuario no válido";
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // Determinar el rol basado en el email
-      const role = username === 'admin' ? 'admin' : 'mozo';
       setAuthState({ user: username, role });
       return null; // Login exitoso
     } catch (error) {
@@ -251,6 +262,16 @@ function App() {
     }
   };
 
+  const handleSearchReservation = async (searchData) => {
+    try {
+      return await searchReservation(searchData);
+    } catch (error) {
+      console.error("Error al buscar reserva:", error);
+      alert("Error al buscar la reserva. Por favor, intenta nuevamente.");
+      return null;
+    }
+  };
+
   if (authState) {
     return <AdminView 
       data={data} 
@@ -285,6 +306,7 @@ function App() {
       handleHorarioSelect={handleHorarioSelect}
       handleContactoSubmit={handleContactoSubmit}
       formatDate={formatDate}
+      onSearchReservation={handleSearchReservation}
     />
   );
 }

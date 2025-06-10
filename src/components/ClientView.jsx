@@ -1,10 +1,131 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Users, Phone, Mail, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon } from 'lucide-react';
+import { Calendar, Clock, Users, Phone, Mail, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, Search, X } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
 import ClientLayout from './ClientLayout';
 import styles from './ClientView.module.css';
+
+const SearchReservationForm = ({ onSearch, onClose }) => {
+  const [searchData, setSearchData] = useState({
+    nombre: '',
+    telefono: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSearch(searchData);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-white">Buscar mi reserva</h2>
+        <button onClick={onClose} className="text-white hover:text-gray-300">
+          <X size={24} />
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-200 mb-2">
+            <User size={20} className="inline-block align-text-bottom mr-2" />Nombre completo
+          </label>
+          <input
+            type="text"
+            value={searchData.nombre}
+            onChange={(e) => setSearchData({ ...searchData, nombre: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="Ingresa tu nombre"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-200 mb-2">
+            <Phone size={20} className="inline-block align-text-bottom mr-2" />Teléfono
+          </label>
+          <input
+            type="tel"
+            value={searchData.telefono}
+            onChange={(e) => setSearchData({ ...searchData, telefono: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="Ingresa tu teléfono"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-150"
+        >
+          <Search size={20} className="inline-block align-text-bottom mr-2" />
+          Buscar Reserva
+        </button>
+      </form>
+    </div>
+  );
+};
+
+const ReservationDetails = ({ reservation, onClose, formatDate }) => {
+  const getWhatsAppCancelMessage = (reserva) => {
+    const fecha = formatDate(reserva.fecha);
+    const mensaje = `Hola! Quisiera cancelar mi reserva para el día ${fecha} a las ${reserva.horario} hs a nombre de ${reserva.cliente.nombre}`;
+    return encodeURIComponent(mensaje);
+  };
+
+  const getWhatsAppModifyMessage = (reserva) => {
+    const fecha = formatDate(reserva.fecha);
+    const mensaje = `Hola! Quisiera modificar mi reserva para el día ${fecha} a las ${reserva.horario} hs a nombre de ${reserva.cliente.nombre}`;
+    return encodeURIComponent(mensaje);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-white">Detalles de la Reserva</h2>
+        <button onClick={onClose} className="text-white hover:text-gray-300">
+          <X size={24} />
+        </button>
+      </div>
+      <div className="bg-white rounded-lg p-6 space-y-4">
+        <div>
+          <p className="text-sm text-gray-500">Nombre</p>
+          <p className="font-medium">{reservation.cliente.nombre}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Fecha</p>
+          <p className="font-medium">{formatDate(reservation.fecha)}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Horario</p>
+          <p className="font-medium">{reservation.horario}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Personas</p>
+          <p className="font-medium">{reservation.personas}</p>
+        </div>
+        <div className="pt-4 space-y-2">
+          <a
+            href={`https://wa.me/5492213995351?text=${getWhatsAppModifyMessage(reservation)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-150 flex items-center justify-center gap-2"
+          >
+            <MessageCircle size={20} />
+            Solicitar Modificación
+          </a>
+          <a
+            href={`https://wa.me/5492213995351?text=${getWhatsAppCancelMessage(reservation)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors duration-150 flex items-center justify-center gap-2"
+          >
+            <X size={20} />
+            Solicitar Cancelación
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const ClientView = ({ 
     LOGO_URL, BACKGROUND_IMAGE_URL, 
@@ -13,28 +134,88 @@ export const ClientView = ({
     availableSlots,
     showConfirmation, setShowConfirmation,
     onAdminClick,
-    handleDateAndTurnoSubmit, handleHorarioSelect, handleContactoSubmit, 
-    formatDate 
+    handleDateAndTurnoSubmit, handleHorarioSelect, handleContactoSubmit,
+    formatDate,
+    onSearchReservation 
 }) => {
+
+  const [showSearchForm, setShowSearchForm] = useState(false);
+  const [foundReservation, setFoundReservation] = useState(null);
+
+  const handleSearch = async (searchData) => {
+    const result = await onSearchReservation(searchData);
+    if (result) {
+      setFoundReservation(result);
+    } else {
+      alert('No se encontró ninguna reserva con los datos proporcionados.');
+    }
+  };
 
   if (currentScreen === 'landing') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div>
-          <div className="mb-8 bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl">
-            <div className="text-center mb-6">
-              <p className="text-xl text-white font-medium">Bienvenido al portal de reservas de</p>
+        <div className="flex flex-col min-h-screen">
+          <div className="flex-grow">
+            <div className="mt-8 mb-8 bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl">
+              <div className="text-center mb-6">
+                <p className="text-xl text-white font-medium">Bienvenido al portal de reservas de</p>
+              </div>
+              <div className="flex justify-center">
+                {LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-60" /> : <h1 className="text-4xl md:text-6xl font-bold mb-2" style={{ fontFamily: 'cursive' }}>Rosaura</h1>}
+              </div>
             </div>
-            <div className="flex justify-center">
-              {LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-60" /> : <h1 className="text-4xl md:text-6xl font-bold mb-2" style={{ fontFamily: 'cursive' }}>Rosaura</h1>}
+            <div className="space-y-4 mb-4">
+              <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.mainButton}>
+                Hacé tu reserva
+              </button>
+              <button 
+                onClick={() => window.open('https://wa.me/5492213995351', '_blank')} 
+                className={styles.secondaryButton}
+              >
+                <MessageCircle size={20} className="text-green-500" />
+                Envianos un WhatsApp
+              </button>
+              <button 
+                onClick={() => setShowSearchForm(true)} 
+                className={styles.secondaryButton}
+              >
+                <Search size={20} />
+                Gestionar mi reserva
+              </button>
             </div>
           </div>
-          <div className="mb-12">
-            <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.mainButton}>Hacé tu reserva</button>
-            <button onClick={() => window.open('https://wa.me/5492213995351', '_blank')} className={styles.secondaryButton}><MessageCircle size={20} className="text-green-500" />Envianos un WhatsApp</button>
+          <div className="mt-auto pb-4">
+            <button onClick={onAdminClick} className={styles.adminButton}>
+              Admin
+            </button>
           </div>
-          <button onClick={onAdminClick} className={styles.adminButton}>Admin</button>
         </div>
+
+        {showSearchForm && !foundReservation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full">
+              <SearchReservationForm
+                onSearch={handleSearch}
+                onClose={() => setShowSearchForm(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {foundReservation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full">
+              <ReservationDetails
+                reservation={foundReservation}
+                onClose={() => {
+                  setFoundReservation(null);
+                  setShowSearchForm(false);
+                }}
+                formatDate={formatDate}
+              />
+            </div>
+          </div>
+        )}
       </ClientLayout>
     );
   }

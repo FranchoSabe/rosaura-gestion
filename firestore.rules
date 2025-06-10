@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Función simple para verificar autenticación
+    function isAuth() {
+      return request.auth != null;
+    }
+    
+    // Función para verificar si es staff (admin o mozo)
+    function isStaff() {
+      return isAuth() && 
+        (request.auth.token.email in ['admin@rosaura.com', 'mozo@rosaura.com']);
+    }
+
+    // Reglas para reservas
+    match /reservas/{reservaId} {
+      // Cualquiera puede crear una reserva
+      allow create: if true;
+      // Solo staff puede leer todas las reservas
+      allow read: if isStaff();
+      // Solo staff puede modificar o eliminar
+      allow update, delete: if isStaff();
+    }
+
+    // Reglas para clientes
+    match /clientes/{clienteId} {
+      // Cualquiera puede registrarse
+      allow create: if true;
+      // Solo staff puede leer todos los clientes
+      allow read, write: if isStaff();
+    }
+  }
+} 

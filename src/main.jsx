@@ -1,10 +1,16 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
 import './index.css'
-import App from './App.jsx'
+import { checkRequiredEnvVars } from './utils/envCheck'
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+// Verificar variables de entorno antes de iniciar la aplicación
+if (!checkRequiredEnvVars()) {
+  console.error('La aplicación no puede iniciarse debido a la falta de variables de entorno necesarias.');
+} else {
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  )
+}

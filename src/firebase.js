@@ -2,15 +2,15 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
-// Tu configuración de Firebase
+// Configuración de Firebase usando variables de entorno
 const firebaseConfig = {
-    apiKey: "AIzaSyDHL9Bj7-dhJFRzLgukznn9Cv9fwok-qIc",
-    authDomain: "rosaura-reservas.firebaseapp.com",
-    projectId: "rosaura-reservas",
-    storageBucket: "rosaura-reservas.firebasestorage.app",
-    messagingSenderId: "710023225173",
-    appId: "1:710023225173:web:f77e0d70a37402670a99dc",
-  };
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
@@ -122,6 +122,46 @@ export const updateReservation = async (reservationData) => {
     return true;
   } catch (error) {
     console.error("Error al actualizar reserva:", error);
+    throw error;
+  }
+};
+
+export const searchReservation = async (searchData) => {
+  try {
+    const { nombre, telefono } = searchData;
+    
+    // Limpiar el número de teléfono para la búsqueda
+    const cleanedPhone = telefono.replace(/\D/g, '');
+    
+    // Obtener todas las reservas
+    const querySnapshot = await getDocs(collection(db, "reservas"));
+    
+    // Filtrar las reservas que coincidan con el nombre y teléfono
+    const reservations = querySnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .filter(reserva => {
+        const reservaNombre = reserva.cliente.nombre.toLowerCase();
+        const searchNombre = nombre.toLowerCase();
+        const reservaTelefono = reserva.cliente.telefono.replace(/\D/g, '');
+        
+        return reservaNombre.includes(searchNombre) && 
+               reservaTelefono.includes(cleanedPhone);
+      })
+      // Ordenar por fecha, mostrando primero las reservas más próximas
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+      // Filtrar solo las reservas futuras
+      .filter(reserva => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return new Date(reserva.fecha) >= today;
+      });
+
+    return reservations[0] || null; // Devolver la primera reserva encontrada o null
+  } catch (error) {
+    console.error("Error al buscar reserva:", error);
     throw error;
   }
 }; 
