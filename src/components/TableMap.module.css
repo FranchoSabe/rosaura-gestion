@@ -37,6 +37,96 @@
   color: white;
 }
 
+.futureIndicator {
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.dateSelector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selectorLabel {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.dateSelect {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.9em;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  min-width: 200px;
+}
+
+.dateSelect:hover {
+  border-color: #d1d5db;
+}
+
+.dateSelect:focus {
+  outline: none;
+  border-color: #0c4900;
+  box-shadow: 0 0 0 2px rgba(12, 73, 0, 0.1);
+}
+
+.turnoSelector {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.turnoButtonActive {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0c4900;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.turnoButtonInactive {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.turnoButtonInactive:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;
@@ -245,6 +335,46 @@
   border: 1px solid #e5e7eb;
 }
 
+/* Orden de reserva */
+.orderSection {
+  background: #f0fdf4;
+  border: 1px solid #16a34a;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.orderTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0c4900;
+  margin: 0 0 0.5rem 0;
+}
+
+.orderGrid {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.orderCategory {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.orderLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0c4900;
+  min-width: 3rem;
+}
+
+.orderSequence {
+  font-size: 0.75rem;
+  color: #374151;
+  font-family: monospace;
+}
+
 /* Información de impresión */
 .printInfo {
   padding: 1rem 2rem;
@@ -266,6 +396,28 @@
     flex-direction: column;
     gap: 1rem;
     align-items: flex-start;
+  }
+  
+  .controls {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .dateSelector {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .dateSelect {
+    flex: 1;
+    min-width: auto;
+  }
+  
+  .turnoSelector {
+    width: 100%;
+    justify-content: center;
   }
   
   .actions {
@@ -298,66 +450,264 @@
   }
 }
 
-/* Estilos para impresión */
+/* Estilos para impresión optimizados */
 @media print {
-  .container {
-    box-shadow: none;
-    border-radius: 0;
-  }
-  
-  .header {
-    background: #0c4900 !important;
-    color: white !important;
+  * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
   
-  .actions {
+  .container {
+    box-shadow: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .header {
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+    background: white !important;
+    color: black !important;
+    border-bottom: 2px solid black;
+  }
+  
+  .title {
+    font-size: 1.2rem;
+    color: black !important;
+  }
+  
+  .subtitle {
+    color: black !important;
+    opacity: 1;
+  }
+  
+  .controls, .actions {
     display: none;
   }
   
   .content {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: row;
     gap: 1rem;
+    padding: 0.5rem 1rem;
     page-break-inside: avoid;
   }
   
   .mapSection {
-    page-break-inside: avoid;
+    flex: 2;
     background: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    border: 1px solid black;
+    border-radius: 0;
+    padding: 0.5rem;
+    page-break-inside: avoid;
+  }
+  
+  .sectionTitle {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: black;
+  }
+  
+  .mapContainer {
+    border: 1px solid black;
+    border-radius: 0;
+    padding: 0.25rem;
   }
   
   .reservationsSection {
+    flex: 1;
+    background: white !important;
+    border: 1px solid black;
+    border-radius: 0;
+    padding: 0.5rem;
     page-break-inside: avoid;
+  }
+  
+  .orderSection {
+    display: none;
+  }
+  
+  .assignmentMode {
+    display: none;
   }
   
   .reservationCard {
-    page-break-inside: avoid;
-    background: #f9fafb !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    background: white !important;
+    border: 1px solid #ccc !important;
+    border-radius: 0;
+    margin-bottom: 0.25rem;
+    padding: 0.25rem;
+    box-shadow: none !important;
+    transform: none !important;
   }
   
   .reservationTime {
-    background: #0c4900 !important;
-    color: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    background: white !important;
+    color: black !important;
+    border: 1px solid black;
+    border-radius: 0;
+    padding: 0.1rem 0.25rem;
+    font-size: 0.8rem;
+    font-weight: bold;
   }
   
-  .tableNumber {
-    fill: #0c4900 !important;
+  .reservationName {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: black;
+  }
+  
+  .reservationInfo {
+    font-size: 0.8rem;
+    color: black;
+  }
+  
+  .assignedTable {
+    font-size: 0.7rem;
+    color: black;
+  }
+  
+  .reservationComments {
+    font-size: 0.7rem;
+    color: black;
+    font-style: italic;
   }
   
   .printInfo {
     background: transparent !important;
     border: none !important;
+    text-align: center;
+    font-size: 0.7rem;
+    margin-top: 0.5rem;
+    color: black;
   }
   
   @page {
-    margin: 1cm;
+    margin: 0.5cm;
     size: A4;
   }
-} 
+}
+
+/* Estilos para asignación manual */
+.mesaClickable {
+  cursor: pointer !important;
+}
+
+.mesaClickable:hover {
+  stroke-width: 3;
+  opacity: 0.8;
+}
+
+.assignmentMode {
+  background: #e0f2fe;
+  border: 2px solid #0284c7;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+.assignmentMode h4 {
+  margin: 0 0 8px 0;
+  color: #0284c7;
+  font-size: 1.1em;
+}
+
+.assignmentMode p {
+  margin: 4px 0;
+  font-size: 0.9em;
+}
+
+.reservationClickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reservationClickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.reservationSelected {
+  background: #dbeafe !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.assignedTable {
+  color: #059669;
+  font-weight: 600;
+  font-size: 0.85em;
+  margin-top: 4px;
+}
+
+.actionButtonCancel {
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease;
+}
+
+.actionButtonCancel:hover {
+  background: #b91c1c;
+}
+
+/* Estilos para lista compacta de impresión */
+.printReservationsList {
+  display: none;
+}
+
+.printReservationItem {
+  padding: 0.15rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  color: black;
+}
+
+/* Ajustes adicionales para impresión con nuevas funciones */
+@media print {
+  .dateSelector {
+    display: none;
+  }
+
+  .actionButtonCancel {
+    display: none;
+  }
+
+  .assignmentMode {
+    display: none;
+  }
+
+  .reservationCard {
+    background: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  
+  .printReservationsList {
+    display: block !important;
+    margin-top: 0.5rem;
+  }
+  
+  .printReservationItem {
+    page-break-inside: avoid;
+    margin-bottom: 0.1rem;
+    padding: 0.1rem 0;
+    border-bottom: 1px solid #ccc;
+    font-size: 0.9rem !important;
+    color: black !important;
+  }
+  
+  .reservationGrid {
+    display: none !important;
+  }
+}

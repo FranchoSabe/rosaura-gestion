@@ -893,7 +893,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateReserv
 
         {adminView === 'tablemap' && (
           <TableMap 
-            reservations={todayReservations}
+            reservations={data.reservas}
             formatDate={formatDate}
           />
         )}

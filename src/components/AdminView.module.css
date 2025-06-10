@@ -589,4 +589,20 @@
     transform: scale(1);
     opacity: 1;
   }
-} 
+}
+
+/* Estilos para impresión - ocultar header y navegación */
+@media print {
+  .header {
+    display: none !important;
+  }
+  
+  .tabsContainer {
+    display: none !important;
+  }
+  
+  .mainContent {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
