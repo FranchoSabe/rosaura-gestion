@@ -22,20 +22,6 @@ const HORARIOS = {
     mediodia: ['12:00', '12:30', '13:00', '13:30', '14:00'],
     noche: ['20:00', '20:30', '21:00', '21:30']
 };
-const ADMIN_CREDENTIALS = [
-  { user: "admin", pass: "admin123", role: "admin" },
-  { user: "mozo", pass: "mozo123", role: "mozo" }
-];
-const INITIAL_DATA = {
-  reservas: [
-    { id: 1, fecha: '2025-06-07', turno: 'mediodia', horario: '12:00', personas: 2, cliente: { id: 101, nombre: 'María García', telefono: '5491123456789' } },
-    { id: 2, fecha: '2025-06-07', turno: 'noche', horario: '20:00', personas: 4, cliente: { id: 102, nombre: 'Juan Pérez', telefono: '5491187654321' } }
-  ],
-  clientes: [
-    { id: 101, nombre: 'María García', telefono: '5491123456789', email: 'maria@email.com', totalReservas: 5, ultimaReserva: '2025-06-07', listaNegra: false },
-    { id: 102, nombre: 'Juan Pérez', telefono: '5491187654321', email: 'juan@email.com', totalReservas: 2, ultimaReserva: '2025-06-07', listaNegra: false }
-  ]
-};
 
 function App() {
   const [authState, setAuthState] = useState(null);

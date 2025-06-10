@@ -6,11 +6,17 @@ import { checkRequiredEnvVars } from './utils/envCheck'
 
 // Verificar variables de entorno antes de iniciar la aplicación
 if (!checkRequiredEnvVars()) {
-  console.error('La aplicación no puede iniciarse debido a la falta de variables de entorno necesarias.');
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <div style="padding: 20px; color: red; text-align: center;">
+      <h1>Error de Configuración</h1>
+      <p>Faltan variables de entorno necesarias. Por favor, revisa la configuración.</p>
+    </div>
+  `;
 } else {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <App />
-    </React.StrictMode>,
+    </React.StrictMode>
   )
 }
