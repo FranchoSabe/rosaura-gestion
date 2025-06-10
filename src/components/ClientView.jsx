@@ -19,34 +19,34 @@ const SearchReservationForm = ({ onSearch, onClose }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-white">Buscar mi reserva</h2>
+        <h2 className="text-xl text-white font-medium">Gestionar Reserva</h2>
         <button onClick={onClose} className="text-white hover:text-gray-300">
           <X size={24} />
         </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-200 mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             <Search size={20} className="inline-block align-text-bottom mr-2" />Código de Reserva
           </label>
           <input
             type="text"
             value={searchData.reservationId}
             onChange={(e) => setSearchData({ ...searchData, reservationId: e.target.value.toUpperCase() })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className={styles.input}
             placeholder="Ingresa el código de tu reserva (ej: ABC123)"
             required
             maxLength={6}
             pattern="[A-Z0-9]{6}"
             title="El código debe tener 6 caracteres (letras y números)"
           />
-          <p className="text-xs text-gray-300 mt-1">El código se encuentra en tu correo de confirmación</p>
+          <p className="text-sm text-white opacity-70 mt-1">Ingresa el código que recibiste en tu confirmación</p>
         </div>
         <button
           type="submit"
-          className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-150"
+          className={styles.mainButton}
         >
-          <Search size={20} className="inline-block align-text-bottom mr-2" />
+          <Search size={20} />
           Buscar Reserva
         </button>
       </form>
@@ -70,39 +70,42 @@ const ReservationDetails = ({ reservation, onClose, formatDate }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-white">Detalles de la Reserva</h2>
+        <h2 className="text-xl text-white font-medium">Detalles de la Reserva</h2>
         <button onClick={onClose} className="text-white hover:text-gray-300">
           <X size={24} />
         </button>
       </div>
-      <div className="bg-white rounded-lg p-6 space-y-4">
-        <div className="bg-gray-50 p-3 rounded-md text-center">
-          <p className="text-sm text-gray-500">ID de Reserva</p>
-          <p className="text-xl font-bold text-green-600">{reservation.reservationId}</p>
-          <p className="text-xs text-gray-400 mt-1">Guarda este ID para futuras consultas</p>
+      <div className="bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl space-y-6">
+        <div className="text-center">
+          <p className="text-sm text-white opacity-70">Código de Reserva</p>
+          <p className="text-3xl font-bold text-white my-2">{reservation.reservationId}</p>
         </div>
-        <div>
-          <p className="text-sm text-gray-500">Nombre</p>
-          <p className="font-medium">{reservation.cliente.nombre}</p>
+        
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-white opacity-70">Nombre</p>
+            <p className="font-medium text-white">{reservation.cliente.nombre}</p>
+          </div>
+          <div>
+            <p className="text-sm text-white opacity-70">Fecha</p>
+            <p className="font-medium text-white">{formatDate(reservation.fecha)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-white opacity-70">Horario</p>
+            <p className="font-medium text-white">{reservation.horario}</p>
+          </div>
+          <div>
+            <p className="text-sm text-white opacity-70">Personas</p>
+            <p className="font-medium text-white">{reservation.personas}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm text-gray-500">Fecha</p>
-          <p className="font-medium">{formatDate(reservation.fecha)}</p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-500">Horario</p>
-          <p className="font-medium">{reservation.horario}</p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-500">Personas</p>
-          <p className="font-medium">{reservation.personas}</p>
-        </div>
-        <div className="pt-4 space-y-2">
+
+        <div className="pt-4 space-y-3">
           <a
             href={`https://wa.me/5492213995351?text=${getWhatsAppModifyMessage(reservation)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-150 flex items-center justify-center gap-2"
+            className={styles.mainButton}
           >
             <MessageCircle size={20} />
             Solicitar Modificación
@@ -111,7 +114,7 @@ const ReservationDetails = ({ reservation, onClose, formatDate }) => {
             href={`https://wa.me/5492213995351?text=${getWhatsAppCancelMessage(reservation)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors duration-150 flex items-center justify-center gap-2"
+            className={styles.secondaryButton}
           >
             <X size={20} />
             Solicitar Cancelación
@@ -463,18 +466,22 @@ export const ClientView = ({
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className={styles.confirmationContainer}>
-          <Check className={styles.confirmationIcon} size={64} />
-          <h1 className={styles.confirmationTitle}>¡Reserva confirmada!</h1>
-          
-          <div className="bg-white p-6 rounded-lg text-center mb-6 shadow-lg">
-            <div className="mb-4">
-              <p className="text-lg text-gray-600">Tu código de reserva es</p>
-              <p className="text-4xl font-bold text-green-600 my-3">{reservaData.reservationId}</p>
-              <div className="bg-yellow-50 p-3 rounded-md mt-2">
-                <p className="text-sm text-yellow-800">
-                  <strong>¡Importante!</strong> Guarda este código para:
+          <div className="bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl space-y-6">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 bg-opacity-20 rounded-full mb-4">
+                <Check className="text-white" size={32} />
+              </div>
+              <h1 className="text-2xl text-white font-medium mb-2">¡Reserva confirmada!</h1>
+            </div>
+            
+            <div className="bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-20 text-center">
+              <p className="text-lg text-white opacity-70">Tu código de reserva es</p>
+              <p className="text-4xl font-bold text-white my-3">{reservaData.reservationId}</p>
+              <div className="bg-green-600 bg-opacity-20 p-3 rounded-xl mt-2 border border-green-500 border-opacity-20">
+                <p className="text-sm text-white font-medium">
+                  ¡Importante! Guarda este código para:
                 </p>
-                <ul className="text-sm text-yellow-700 list-disc list-inside mt-1">
+                <ul className="text-sm text-white opacity-70 list-disc list-inside mt-2 space-y-1">
                   <li>Consultar tu reserva</li>
                   <li>Solicitar cambios</li>
                   <li>Cancelar tu reserva</li>
@@ -482,43 +489,53 @@ export const ClientView = ({
               </div>
             </div>
             
-            <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm text-gray-500 mb-3">Detalles de tu reserva</p>
-              <div className="space-y-2 text-left">
-                <p className="text-sm"><strong>Fecha:</strong> {formatDate(reservaData.fecha)}</p>
-                <p className="text-sm"><strong>Horario:</strong> {reservaData.horario}</p>
-                <p className="text-sm"><strong>Personas:</strong> {reservaData.personas}</p>
-                <p className="text-sm"><strong>Nombre:</strong> {reservaData.cliente.nombre}</p>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-white opacity-70">Fecha</p>
+                <p className="font-medium text-white">{formatDate(reservaData.fecha)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white opacity-70">Horario</p>
+                <p className="font-medium text-white">{reservaData.horario}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white opacity-70">Personas</p>
+                <p className="font-medium text-white">{reservaData.personas}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white opacity-70">Nombre</p>
+                <p className="font-medium text-white">{reservaData.cliente.nombre}</p>
               </div>
             </div>
-          </div>
 
-          <div className="space-y-3">
-            <button 
-              onClick={() => {
-                setCurrentScreen('landing');
-                setReservaData({
-                  fecha: '',
-                  personas: 2,
-                  turno: '',
-                  horario: '',
-                  cliente: { nombre: '', telefono: '', comentarios: '' }
-                });
-              }} 
-              className={styles.mainButton}
-            >
-              Volver al inicio
-            </button>
-            <button
-              onClick={() => {
-                const mensaje = `Hola! Mi código de reserva es ${reservaData.reservationId}`;
-                window.open(`https://wa.me/5492213995351?text=${encodeURIComponent(mensaje)}`, '_blank');
-              }}
-              className={`${styles.secondaryButton} flex items-center justify-center gap-2`}
-            >
-              <MessageCircle size={20} />
-              Contactar por WhatsApp
-            </button>
+            <div className="space-y-3 pt-4">
+              <button 
+                onClick={() => {
+                  setCurrentScreen('landing');
+                  setReservaData({
+                    fecha: '',
+                    personas: 2,
+                    turno: '',
+                    horario: '',
+                    cliente: { nombre: '', telefono: '', comentarios: '' }
+                  });
+                }} 
+                className={styles.mainButton}
+              >
+                <Check size={20} />
+                Volver al inicio
+              </button>
+              <button
+                onClick={() => {
+                  const mensaje = `Hola! Mi código de reserva es ${reservaData.reservationId}`;
+                  window.open(`https://wa.me/5492213995351?text=${encodeURIComponent(mensaje)}`, '_blank');
+                }}
+                className={styles.secondaryButton}
+              >
+                <MessageCircle size={20} />
+                Contactar por WhatsApp
+              </button>
+            </div>
           </div>
         </div>
       </ClientLayout>
