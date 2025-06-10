@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronDown, ThumbsDown, MessageCircle, Check, Edit2, Trash2, CheckCircle, X, XCircle, AlertTriangle, Sun, Moon } from 'lucide-react';
 import styles from './AdminView.module.css';
 import FutureReservations from './FutureReservations';
+import TableMap from './TableMap';
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -774,6 +775,14 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateReserv
                 Clientes
               </button>
             )}
+            {auth.role === 'admin' && (
+              <button 
+                onClick={() => setAdminView('tablemap')} 
+                className={adminView === 'tablemap' ? styles.tabActive : styles.tabInactive}
+              >
+                Mapa de Mesas
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -880,6 +889,13 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateReserv
               )}
             </div>
           </div>
+        )}
+
+        {adminView === 'tablemap' && (
+          <TableMap 
+            reservations={todayReservations}
+            formatDate={formatDate}
+          />
         )}
       </div>
     </div>
