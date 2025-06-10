@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 // Configuración de Firebase usando variables de entorno
@@ -33,13 +33,31 @@ const generateReservationId = () => {
 export const addReservation = async (reservationData) => {
   try {
     const reservationId = generateReservationId();
-    const docRef = await addDoc(collection(db, "reservas"), {
-      ...reservationData,
+    console.log('Generando nueva reserva:', {
       reservationId,
+      ...reservationData
+    });
+
+    // Asegurarnos de que el ID esté en mayúsculas y los datos estén completos
+    const dataToSave = {
+      ...reservationData,
+      reservationId: reservationId.toUpperCase(),
       createdAt: new Date(),
       status: 'active'
+    };
+
+    console.log('Datos a guardar:', dataToSave);
+
+    const docRef = await addDoc(collection(db, "reservas"), dataToSave);
+
+    console.log('Reserva guardada en Firebase:', {
+      id: docRef.id,
+      reservationId: dataToSave.reservationId,
+      fecha: dataToSave.fecha,
+      horario: dataToSave.horario
     });
-    return { id: docRef.id, reservationId };
+
+    return { id: docRef.id, reservationId: dataToSave.reservationId };
   } catch (error) {
     console.error("Error al agregar reserva:", error);
     throw error;
@@ -121,16 +139,17 @@ export const subscribeToClients = (callback) => {
   });
 };
 
-export const updateReservation = async (reservationData) => {
+export const updateReservation = async (documentId, reservationData) => {
   try {
-    const reservationRef = doc(db, "reservas", reservationData.id);
-    await updateDoc(reservationRef, {
-      fecha: reservationData.fecha,
-      horario: reservationData.horario,
-      personas: reservationData.personas,
-      cliente: reservationData.cliente,
+    console.log('Actualizando reserva:', { documentId, reservationData });
+    
+    const docRef = doc(db, "reservas", documentId);
+    await updateDoc(docRef, {
+      ...reservationData,
       updatedAt: new Date()
     });
+
+    console.log('Reserva actualizada con éxito');
     return true;
   } catch (error) {
     console.error("Error al actualizar reserva:", error);
@@ -138,30 +157,78 @@ export const updateReservation = async (reservationData) => {
   }
 };
 
+export const deleteReservation = async (documentId) => {
+  try {
+    console.log('Eliminando reserva:', documentId);
+    
+    const docRef = doc(db, "reservas", documentId);
+    await deleteDoc(docRef);
+
+    console.log('Reserva eliminada con éxito');
+    return true;
+  } catch (error) {
+    console.error("Error al eliminar reserva:", error);
+    throw error;
+  }
+};
+
 export const searchReservation = async (searchData) => {
   try {
     const { reservationId } = searchData;
+    const searchId = (reservationId || '').toUpperCase().trim();
     
-    if (!reservationId) {
+    console.log('Buscando reserva con ID:', searchId);
+    
+    if (!searchId) {
       throw new Error('Se requiere el código de reserva');
     }
 
     const querySnapshot = await getDocs(collection(db, "reservas"));
-    const reservations = querySnapshot.docs
-      .map(doc => ({
+    const allReservations = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
         id: doc.id,
-        ...doc.data()
-      }))
-      .filter(reserva => reserva.reservationId === reservationId.toUpperCase())
+        ...data,
+        reservationId: (data.reservationId || '').toUpperCase().trim()
+      };
+    });
+
+    console.log('Todas las reservas:', allReservations.map(r => ({
+      id: r.id,
+      reservationId: r.reservationId,
+      fecha: r.fecha
+    })));
+
+    const reservations = allReservations
+      .filter(reserva => {
+        if (!reserva.reservationId) {
+          console.log('Reserva sin ID encontrada:', reserva);
+          return false;
+        }
+        const coincide = reserva.reservationId === searchId;
+        console.log('Comparando:', {
+          buscado: searchId,
+          actual: reserva.reservationId,
+          coincide
+        });
+        return coincide;
+      })
       .filter(reserva => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        return new Date(reserva.fecha) >= today;
+        const reservaDate = new Date(reserva.fecha);
+        const esValida = reservaDate >= today;
+        console.log('Validando fecha:', {
+          fecha: reserva.fecha,
+          esValida
+        });
+        return esValida;
       });
 
+    console.log('Reservas encontradas después de filtrar:', reservations);
     return reservations[0] || null;
   } catch (error) {
     console.error("Error al buscar reserva:", error);
     throw error;
   }
-}; 
+};

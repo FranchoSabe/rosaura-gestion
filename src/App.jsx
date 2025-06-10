@@ -7,6 +7,7 @@ import {
   addClient, 
   updateClientBlacklist, 
   updateReservation,
+  deleteReservation,
   searchReservation,
   subscribeToReservations, 
   subscribeToClients,
@@ -20,7 +21,7 @@ const LOGO_URL = '/logo.png';
 const BACKGROUND_IMAGE_URL = '/fondo.jpg';
 const HORARIOS = {
     mediodia: ['12:00', '12:30', '13:00', '13:30', '14:00'],
-    noche: ['20:00', '20:30', '21:00', '21:30']
+    noche: ['20:00', '20:15', '20:30', '20:45', '21:00', '21:15', '21:30']
 };
 
 function App() {
@@ -65,40 +66,118 @@ function App() {
     if (dayOfWeek === 1) return []; // Lunes cerrado
     if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos solo mediodía
     
-    // Capacidad por tipo de mesa
-    const capacidad = {
-      'pequena': { max: 4, size: 2 },  // 4 mesas para 1-2 personas
-      'mediana': { max: 4, size: 4 },  // 4 mesas para 3-4 personas
-      'grande': { max: 1, size: 6 }    // 1 mesa para 5-6 personas
-    };
-    
     // Obtener reservas existentes para esta fecha/turno
     const reservasDelDia = data.reservas.filter(
       r => r.fecha === fecha && r.turno === turno
     );
     
-    // Contar mesas ocupadas por tipo
-    const mesasOcupadas = {
-      pequena: 0,
-      mediana: 0,
-      grande: 0
-    };
-    
-    reservasDelDia.forEach(reserva => {
-      if (reserva.personas <= 2) mesasOcupadas.pequena++;
-      else if (reserva.personas <= 4) mesasOcupadas.mediana++;
-      else mesasOcupadas.grande++;
+    // Filtrar horarios disponibles basándose en capacidad por horario
+    const horariosDisponibles = HORARIOS[turno].filter(horario => {
+      // Capacidad por tipo de mesa (normal)
+      let capacidad = {
+        'pequena': { max: 4, size: 2 },  // 4 mesas para 1-2 personas
+        'mediana': { max: 4, size: 4 },  // 4 mesas para 3-4 personas
+        'grande': { max: 1, size: 6 }    // 1 mesa para 5-6 personas
+      };
+
+      // Reglas especiales para las 21:30
+      if (horario === '21:30') {
+        // Para 5 o más personas: no disponible
+        if (reservaData.personas >= 5) {
+          return false;
+        }
+        // Capacidad reducida a la mitad para mesas pequeñas y medianas
+        capacidad = {
+          'pequena': { max: 2, size: 2 },  // Reducido de 4 a 2
+          'mediana': { max: 2, size: 4 },  // Reducido de 4 a 2
+          'grande': { max: 0, size: 6 }    // No disponible para grupos grandes
+        };
+      }
+      
+      // Contar mesas ocupadas por tipo para este horario específico
+      const reservasDelHorario = reservasDelDia.filter(r => r.horario === horario);
+      const mesasOcupadas = {
+        pequena: 0,
+        mediana: 0,
+        grande: 0
+      };
+      
+      reservasDelHorario.forEach(reserva => {
+        if (reserva.personas <= 2) mesasOcupadas.pequena++;
+        else if (reserva.personas <= 4) mesasOcupadas.mediana++;
+        else mesasOcupadas.grande++;
+      });
+      
+      // Verificar si hay capacidad disponible para el tamaño de reserva actual
+      const hayCapacidad = 
+        (reservaData.personas <= 2 && mesasOcupadas.pequena < capacidad.pequena.max) ||
+        (reservaData.personas <= 4 && mesasOcupadas.mediana < capacidad.mediana.max) ||
+        (reservaData.personas > 4 && mesasOcupadas.grande < capacidad.grande.max);
+      
+      return hayCapacidad;
     });
     
-    // Verificar si hay capacidad disponible para el tamaño de reserva actual
-    const hayCapacidad = 
-      (reservaData.personas <= 2 && mesasOcupadas.pequena < capacidad.pequena.max) ||
-      (reservaData.personas <= 4 && mesasOcupadas.mediana < capacidad.mediana.max) ||
-      (reservaData.personas > 4 && mesasOcupadas.grande < capacidad.grande.max);
+    return horariosDisponibles;
+  };
+
+  const getAvailableSlotsForEdit = (fecha, turno, personas, excludeReservationId) => {
+    const fechaObj = new Date(fecha + "T00:00:00");
+    const dayOfWeek = fechaObj.getDay();
+    if (dayOfWeek === 1) return []; // Lunes cerrado
+    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos solo mediodía
     
-    if (!hayCapacidad) return [];
+    // Obtener reservas existentes para esta fecha/turno, excluyendo la que estamos editando
+    const reservasDelDia = data.reservas.filter(
+      r => r.fecha === fecha && r.turno === turno && r.id !== excludeReservationId
+    );
     
-    return HORARIOS[turno] || [];
+    // Filtrar horarios disponibles basándose en capacidad por horario
+    const horariosDisponibles = HORARIOS[turno].filter(horario => {
+      // Capacidad por tipo de mesa (normal)
+      let capacidad = {
+        'pequena': { max: 4, size: 2 },  // 4 mesas para 1-2 personas
+        'mediana': { max: 4, size: 4 },  // 4 mesas para 3-4 personas
+        'grande': { max: 1, size: 6 }    // 1 mesa para 5-6 personas
+      };
+
+      // Reglas especiales para las 21:30
+      if (horario === '21:30') {
+        // Para 5 o más personas: no disponible
+        if (personas >= 5) {
+          return false;
+        }
+        // Capacidad reducida a la mitad para mesas pequeñas y medianas
+        capacidad = {
+          'pequena': { max: 2, size: 2 },  // Reducido de 4 a 2
+          'mediana': { max: 2, size: 4 },  // Reducido de 4 a 2
+          'grande': { max: 0, size: 6 }    // No disponible para grupos grandes
+        };
+      }
+      
+      // Contar mesas ocupadas por tipo para este horario específico
+      const reservasDelHorario = reservasDelDia.filter(r => r.horario === horario);
+      const mesasOcupadas = {
+        pequena: 0,
+        mediana: 0,
+        grande: 0
+      };
+      
+      reservasDelHorario.forEach(reserva => {
+        if (reserva.personas <= 2) mesasOcupadas.pequena++;
+        else if (reserva.personas <= 4) mesasOcupadas.mediana++;
+        else mesasOcupadas.grande++;
+      });
+      
+      // Verificar si hay capacidad disponible para el tamaño de reserva actual
+      const hayCapacidad = 
+        (personas <= 2 && mesasOcupadas.pequena < capacidad.pequena.max) ||
+        (personas <= 4 && mesasOcupadas.mediana < capacidad.mediana.max) ||
+        (personas > 4 && mesasOcupadas.grande < capacidad.grande.max);
+      
+      return hayCapacidad;
+    });
+    
+    return horariosDisponibles;
   };
 
   const isValidDate = (fecha) => {
@@ -180,7 +259,12 @@ function App() {
   };
 
   const handleDateAndTurnoSubmit = () => {
-    if (!isValidDate(reservaData.fecha)) {
+    // Convertir fecha a string si es necesario
+    const fechaString = reservaData.fecha instanceof Date 
+      ? reservaData.fecha.toISOString().split('T')[0] 
+      : reservaData.fecha;
+      
+    if (!isValidDate(fechaString)) {
       alert('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');
       return;
     }
@@ -188,7 +272,7 @@ function App() {
       alert('Por favor, seleccioná un turno.');
       return;
     }
-    const slots = getAvailableSlots(reservaData.fecha, reservaData.turno);
+    const slots = getAvailableSlots(fechaString, reservaData.turno);
     setAvailableSlots(slots);
     setCurrentScreen('horario');
   };
@@ -200,21 +284,28 @@ function App() {
 
   const handleContactoSubmit = async () => {
     try {
+      // Convertir fecha a string si es necesario
+      const fechaString = reservaData.fecha instanceof Date 
+        ? reservaData.fecha.toISOString().split('T')[0] 
+        : reservaData.fecha;
+        
       // Crear nuevo cliente
       const newClient = {
         nombre: reservaData.cliente.nombre,
         telefono: `${reservaData.cliente.codigoPais}${reservaData.cliente.telefono}`,
         comentarios: reservaData.cliente.comentarios || '',
-        ultimaReserva: reservaData.fecha,
+        ultimaReserva: fechaString,
         listaNegra: false
       };
+
+      console.log('Creando nuevo cliente:', newClient);
 
       // Agregar cliente a la base de datos
       const clientId = await addClient(newClient);
 
       // Crear nueva reserva
       const newReservation = {
-        fecha: reservaData.fecha,
+        fecha: fechaString,
         turno: reservaData.turno,
         horario: reservaData.horario,
         personas: reservaData.personas,
@@ -222,16 +313,23 @@ function App() {
         cliente: newClient
       };
 
+      console.log('Creando nueva reserva:', newReservation);
+
       // Agregar reserva a la base de datos
       const { id, reservationId } = await addReservation(newReservation);
       
+      console.log('Reserva creada con éxito:', { id, reservationId });
+      
       // Actualizar los datos de la reserva con el ID
-      setReservaData(prev => ({
-        ...prev,
+      const updatedReservaData = {
+        ...reservaData,
         id,
         reservationId
-      }));
+      };
       
+      console.log('Actualizando estado con nueva reserva:', updatedReservaData);
+      
+      setReservaData(updatedReservaData);
       setShowConfirmation(true);
       setCurrentScreen('confirmacion');
     } catch (error) {
@@ -240,18 +338,56 @@ function App() {
     }
   };
   
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString + "T00:00:00");
+  const formatDate = (dateInput) => {
+    if (!dateInput) return '';
+    
+    let date;
+    if (dateInput instanceof Date) {
+      // Si ya es un objeto Date, usarlo directamente
+      date = dateInput;
+    } else {
+      // Si es un string, convertirlo a Date
+      date = new Date(dateInput + "T00:00:00");
+    }
+    
     return date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  const handleUpdateReservation = async (updatedReservation) => {
+  const handleUpdateReservation = async (reservationId, updatedData) => {
     try {
-      await updateReservation(updatedReservation);
+      const fechaString = updatedData.fecha instanceof Date ? updatedData.fecha.toISOString().split('T')[0] : updatedData.fecha;
+
+      if (!isValidDate(fechaString)) {
+        throw new Error('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');
+      }
+
+      const slots = getAvailableSlotsForEdit(
+        fechaString,
+        updatedData.turno,
+        updatedData.personas,
+        reservationId
+      );
+
+      if (!slots.includes(updatedData.horario)) {
+        throw new Error('El horario seleccionado no está disponible. Por favor, elige otro horario.');
+      }
+
+      const reservationUpdate = {
+        ...updatedData,
+        fecha: fechaString,
+        cliente: {
+          ...updatedData.cliente,
+          ultimaReserva: fechaString
+        },
+      };
+      
+      delete reservationUpdate.id;
+
+      await updateReservation(reservationId, reservationUpdate);
+      return true;
     } catch (error) {
-      console.error("Error al actualizar la reserva:", error);
-      alert("Error al actualizar la reserva. Por favor, intenta nuevamente.");
+      console.error("Error al actualizar reserva:", error);
+      throw error;
     }
   };
 
@@ -265,6 +401,16 @@ function App() {
     }
   };
 
+  const handleDeleteReservation = async (documentId) => {
+    try {
+      await deleteReservation(documentId);
+      return true;
+    } catch (error) {
+      console.error("Error al eliminar reserva:", error);
+      throw error;
+    }
+  };
+
   if (authState) {
     return <AdminView 
       data={data} 
@@ -272,6 +418,11 @@ function App() {
       onLogout={handleLogout}
       onSetBlacklist={handleSetBlacklist}
       onUpdateReservation={handleUpdateReservation}
+      onDeleteReservation={handleDeleteReservation}
+      getAvailableSlotsForEdit={getAvailableSlotsForEdit}
+      isValidDate={isValidDate}
+      formatDate={formatDate}
+      HORARIOS={HORARIOS}
     />;
   }
 
@@ -299,7 +450,9 @@ function App() {
       handleHorarioSelect={handleHorarioSelect}
       handleContactoSubmit={handleContactoSubmit}
       formatDate={formatDate}
-      onSearchReservation={handleSearchReservation}
+      handleSearchReservation={handleSearchReservation}
+      handleUpdateReservation={handleUpdateReservation}
+      handleDeleteReservation={handleDeleteReservation}
     />
   );
 }

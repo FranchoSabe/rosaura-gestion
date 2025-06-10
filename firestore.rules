@@ -12,14 +12,34 @@ service cloud.firestore {
         (request.auth.token.email in ['admin@rosaura.com', 'mozo@rosaura.com']);
     }
 
+    // Función para verificar si el usuario es "dueño" de la reserva (no autenticado)
+    function isOwner() {
+      // 1. La data de la actualización debe contener el ID de la reserva.
+      let hasId = 'reservationId' in request.resource.data;
+      // 2. El ID de la reserva en la data debe coincidir con el que ya existe en el documento.
+      let idMatches = request.resource.data.reservationId == resource.data.reservationId;
+      // 3. Solo se permite modificar un conjunto específico de campos.
+      //    Esto previene que se modifique el ID de la reserva u otros campos sensibles.
+      let allowedUpdate = request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['fecha', 'horario', 'personas', 'cliente', 'updatedAt', 'turno']);
+      
+      return hasId && idMatches && allowedUpdate;
+    }
+
     // Reglas para reservas
     match /reservas/{reservaId} {
       // Permitir lectura pública de reservas
       allow read: if true;
+      
       // Cualquiera puede crear una reserva
       allow create: if true;
-      // Solo staff puede modificar o eliminar
-      allow update, delete: if isStaff();
+      
+      // Staff puede modificar o eliminar cualquier reserva
+      // Clientes pueden modificar su propia reserva usando el reservationId
+      allow update: if isStaff() || isOwner();
+      
+      // Solo staff puede eliminar
+      allow delete: if isStaff();
     }
 
     // Reglas para clientes

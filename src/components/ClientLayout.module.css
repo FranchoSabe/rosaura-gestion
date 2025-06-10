@@ -2,14 +2,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: 100vh;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   gap: 1.5rem;
   max-width: 500px;
   margin: 0 auto;
-  height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .logo {
