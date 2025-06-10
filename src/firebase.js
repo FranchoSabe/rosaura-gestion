@@ -19,15 +19,27 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
+// Función para generar ID único de reserva
+const generateReservationId = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 // Funciones de utilidad para manejar datos
 export const addReservation = async (reservationData) => {
   try {
+    const reservationId = generateReservationId();
     const docRef = await addDoc(collection(db, "reservas"), {
       ...reservationData,
+      reservationId,
       createdAt: new Date(),
       status: 'active'
     });
-    return docRef.id;
+    return { id: docRef.id, reservationId };
   } catch (error) {
     console.error("Error al agregar reserva:", error);
     throw error;
@@ -128,38 +140,26 @@ export const updateReservation = async (reservationData) => {
 
 export const searchReservation = async (searchData) => {
   try {
-    const { nombre, telefono } = searchData;
+    const { reservationId } = searchData;
     
-    // Limpiar el número de teléfono para la búsqueda
-    const cleanedPhone = telefono.replace(/\D/g, '');
-    
-    // Obtener todas las reservas
+    if (!reservationId) {
+      throw new Error('Se requiere el código de reserva');
+    }
+
     const querySnapshot = await getDocs(collection(db, "reservas"));
-    
-    // Filtrar las reservas que coincidan con el nombre y teléfono
     const reservations = querySnapshot.docs
       .map(doc => ({
         id: doc.id,
         ...doc.data()
       }))
-      .filter(reserva => {
-        const reservaNombre = reserva.cliente.nombre.toLowerCase();
-        const searchNombre = nombre.toLowerCase();
-        const reservaTelefono = reserva.cliente.telefono.replace(/\D/g, '');
-        
-        return reservaNombre.includes(searchNombre) && 
-               reservaTelefono.includes(cleanedPhone);
-      })
-      // Ordenar por fecha, mostrando primero las reservas más próximas
-      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
-      // Filtrar solo las reservas futuras
+      .filter(reserva => reserva.reservationId === reservationId.toUpperCase())
       .filter(reserva => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return new Date(reserva.fecha) >= today;
       });
 
-    return reservations[0] || null; // Devolver la primera reserva encontrada o null
+    return reservations[0] || null;
   } catch (error) {
     console.error("Error al buscar reserva:", error);
     throw error;

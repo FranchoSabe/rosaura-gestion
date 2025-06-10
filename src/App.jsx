@@ -223,7 +223,14 @@ function App() {
       };
 
       // Agregar reserva a la base de datos
-      await addReservation(newReservation);
+      const { id, reservationId } = await addReservation(newReservation);
+      
+      // Actualizar los datos de la reserva con el ID
+      setReservaData(prev => ({
+        ...prev,
+        id,
+        reservationId
+      }));
       
       setShowConfirmation(true);
       setCurrentScreen('confirmacion');

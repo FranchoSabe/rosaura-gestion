@@ -8,8 +8,7 @@ import styles from './ClientView.module.css';
 
 const SearchReservationForm = ({ onSearch, onClose }) => {
   const [searchData, setSearchData] = useState({
-    nombre: '',
-    telefono: ''
+    reservationId: ''
   });
 
   const handleSubmit = (e) => {
@@ -28,29 +27,20 @@ const SearchReservationForm = ({ onSearch, onClose }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-200 mb-2">
-            <User size={20} className="inline-block align-text-bottom mr-2" />Nombre completo
+            <Search size={20} className="inline-block align-text-bottom mr-2" />Código de Reserva
           </label>
           <input
             type="text"
-            value={searchData.nombre}
-            onChange={(e) => setSearchData({ ...searchData, nombre: e.target.value })}
+            value={searchData.reservationId}
+            onChange={(e) => setSearchData({ ...searchData, reservationId: e.target.value.toUpperCase() })}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Ingresa tu nombre"
+            placeholder="Ingresa el código de tu reserva (ej: ABC123)"
             required
+            maxLength={6}
+            pattern="[A-Z0-9]{6}"
+            title="El código debe tener 6 caracteres (letras y números)"
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-200 mb-2">
-            <Phone size={20} className="inline-block align-text-bottom mr-2" />Teléfono
-          </label>
-          <input
-            type="tel"
-            value={searchData.telefono}
-            onChange={(e) => setSearchData({ ...searchData, telefono: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Ingresa tu teléfono"
-            required
-          />
+          <p className="text-xs text-gray-300 mt-1">El código se encuentra en tu correo de confirmación</p>
         </div>
         <button
           type="submit"
@@ -67,13 +57,13 @@ const SearchReservationForm = ({ onSearch, onClose }) => {
 const ReservationDetails = ({ reservation, onClose, formatDate }) => {
   const getWhatsAppCancelMessage = (reserva) => {
     const fecha = formatDate(reserva.fecha);
-    const mensaje = `Hola! Quisiera cancelar mi reserva para el día ${fecha} a las ${reserva.horario} hs a nombre de ${reserva.cliente.nombre}`;
+    const mensaje = `Hola! Quisiera cancelar mi reserva #${reserva.reservationId} para el día ${fecha} a las ${reserva.horario} hs a nombre de ${reserva.cliente.nombre}`;
     return encodeURIComponent(mensaje);
   };
 
   const getWhatsAppModifyMessage = (reserva) => {
     const fecha = formatDate(reserva.fecha);
-    const mensaje = `Hola! Quisiera modificar mi reserva para el día ${fecha} a las ${reserva.horario} hs a nombre de ${reserva.cliente.nombre}`;
+    const mensaje = `Hola! Quisiera modificar mi reserva #${reserva.reservationId} para el día ${fecha} a las ${reserva.horario} hs a nombre de ${reserva.cliente.nombre}`;
     return encodeURIComponent(mensaje);
   };
 
@@ -86,6 +76,11 @@ const ReservationDetails = ({ reservation, onClose, formatDate }) => {
         </button>
       </div>
       <div className="bg-white rounded-lg p-6 space-y-4">
+        <div className="bg-gray-50 p-3 rounded-md text-center">
+          <p className="text-sm text-gray-500">ID de Reserva</p>
+          <p className="text-xl font-bold text-green-600">{reservation.reservationId}</p>
+          <p className="text-xs text-gray-400 mt-1">Guarda este ID para futuras consultas</p>
+        </div>
         <div>
           <p className="text-sm text-gray-500">Nombre</p>
           <p className="font-medium">{reservation.cliente.nombre}</p>
@@ -470,29 +465,61 @@ export const ClientView = ({
         <div className={styles.confirmationContainer}>
           <Check className={styles.confirmationIcon} size={64} />
           <h1 className={styles.confirmationTitle}>¡Reserva confirmada!</h1>
-          <div className={styles.confirmationDetails}>
-            <p className={styles.confirmationDetail}><strong>Fecha:</strong> {formatDate(reservaData.fecha)}</p>
-            <p className={styles.confirmationDetail}><strong>Turno:</strong> {reservaData.turno === 'mediodia' ? 'Mediodía' : 'Noche'}</p>
-            <p className={styles.confirmationDetail}><strong>Horario:</strong> {reservaData.horario}</p>
-            <p className={styles.confirmationDetail}><strong>Personas:</strong> {reservaData.personas}</p>
-            <p className={styles.confirmationDetail}><strong>Nombre:</strong> {reservaData.cliente.nombre}</p>
-            <p className={styles.confirmationDetail}><strong>Teléfono:</strong> {reservaData.cliente.telefono}</p>
+          
+          <div className="bg-white p-6 rounded-lg text-center mb-6 shadow-lg">
+            <div className="mb-4">
+              <p className="text-lg text-gray-600">Tu código de reserva es</p>
+              <p className="text-4xl font-bold text-green-600 my-3">{reservaData.reservationId}</p>
+              <div className="bg-yellow-50 p-3 rounded-md mt-2">
+                <p className="text-sm text-yellow-800">
+                  <strong>¡Importante!</strong> Guarda este código para:
+                </p>
+                <ul className="text-sm text-yellow-700 list-disc list-inside mt-1">
+                  <li>Consultar tu reserva</li>
+                  <li>Solicitar cambios</li>
+                  <li>Cancelar tu reserva</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-200 pt-4">
+              <p className="text-sm text-gray-500 mb-3">Detalles de tu reserva</p>
+              <div className="space-y-2 text-left">
+                <p className="text-sm"><strong>Fecha:</strong> {formatDate(reservaData.fecha)}</p>
+                <p className="text-sm"><strong>Horario:</strong> {reservaData.horario}</p>
+                <p className="text-sm"><strong>Personas:</strong> {reservaData.personas}</p>
+                <p className="text-sm"><strong>Nombre:</strong> {reservaData.cliente.nombre}</p>
+              </div>
+            </div>
           </div>
-          <button 
-            onClick={() => {
-              setCurrentScreen('landing');
-              setReservaData({
-                fecha: '',
-                personas: 2,
-                turno: '',
-                horario: '',
-                cliente: { nombre: '', telefono: '', comentarios: '' }
-              });
-            }} 
-            className={styles.mainButton}
-          >
-            Volver al inicio
-          </button>
+
+          <div className="space-y-3">
+            <button 
+              onClick={() => {
+                setCurrentScreen('landing');
+                setReservaData({
+                  fecha: '',
+                  personas: 2,
+                  turno: '',
+                  horario: '',
+                  cliente: { nombre: '', telefono: '', comentarios: '' }
+                });
+              }} 
+              className={styles.mainButton}
+            >
+              Volver al inicio
+            </button>
+            <button
+              onClick={() => {
+                const mensaje = `Hola! Mi código de reserva es ${reservaData.reservationId}`;
+                window.open(`https://wa.me/5492213995351?text=${encodeURIComponent(mensaje)}`, '_blank');
+              }}
+              className={`${styles.secondaryButton} flex items-center justify-center gap-2`}
+            >
+              <MessageCircle size={20} />
+              Contactar por WhatsApp
+            </button>
+          </div>
         </div>
       </ClientLayout>
     );

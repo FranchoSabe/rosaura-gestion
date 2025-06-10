@@ -14,20 +14,22 @@ service cloud.firestore {
 
     // Reglas para reservas
     match /reservas/{reservaId} {
+      // Permitir lectura pública de reservas
+      allow read: if true;
       // Cualquiera puede crear una reserva
       allow create: if true;
-      // Solo staff puede leer todas las reservas
-      allow read: if isStaff();
       // Solo staff puede modificar o eliminar
       allow update, delete: if isStaff();
     }
 
     // Reglas para clientes
     match /clientes/{clienteId} {
+      // Permitir lectura pública de clientes
+      allow read: if true;
       // Cualquiera puede registrarse
       allow create: if true;
-      // Solo staff puede leer todos los clientes
-      allow read, write: if isStaff();
+      // Solo staff puede modificar
+      allow update, delete: if isStaff();
     }
   }
 } 
