@@ -55,6 +55,59 @@ const SearchReservationForm = ({ onSearch, onClose }) => {
   );
 };
 
+const ReservationConfirmationModal = ({ reservation, onClose, formatDate }) => {
+  if (!reservation) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-black bg-opacity-90 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full">
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 bg-opacity-20 rounded-full mb-4">
+            <Check className="text-green-400" size={32} />
+          </div>
+          
+          <h2 className="text-xl font-bold text-white mb-4">Recibimos tu solicitud</h2>
+          
+          <div className="bg-green-600 bg-opacity-20 p-4 rounded-xl border border-green-400 border-opacity-40">
+            <p className="text-white text-center">
+              En breve recibirás un mensaje de WhatsApp nuestro con la confirmación de tu reserva.
+            </p>
+            <p className="text-white text-center font-semibold mt-2">
+              ¡Muchas Gracias!
+            </p>
+          </div>
+
+          <div className="space-y-2 text-left bg-black bg-opacity-40 p-4 rounded-lg">
+            <div>
+              <p className="text-sm text-white opacity-70">Código de Reserva</p>
+              <p className="font-bold text-lg text-white">{reservation.reservationId}</p>
+            </div>
+            <div>
+              <p className="text-sm text-white opacity-70">Fecha</p>
+              <p className="font-medium text-white">{formatDate(reservation.fecha)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-white opacity-70">Horario</p>
+              <p className="font-medium text-white">{reservation.horario}</p>
+            </div>
+            <div>
+              <p className="text-sm text-white opacity-70">Personas</p>
+              <p className="font-medium text-white">{reservation.personas}</p>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="w-full bg-green-600 bg-opacity-80 text-white py-3 px-4 rounded-xl hover:bg-opacity-100 transition-all duration-200 font-semibold"
+          >
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ClientView = ({ 
     LOGO_URL, BACKGROUND_IMAGE_URL,
     onAdminClick,
@@ -64,7 +117,8 @@ export const ClientView = ({
     showConfirmation, setShowConfirmation,
     handleDateAndTurnoSubmit, handleHorarioSelect, handleContactoSubmit,
     formatDate,
-    handleSearchReservation, handleDeleteReservation
+    handleSearchReservation, handleDeleteReservation,
+    showReservationModal, setShowReservationModal
 }) => {
 
   const [showSearchForm, setShowSearchForm] = useState(false);
@@ -461,27 +515,8 @@ export const ClientView = ({
             <div className="inline-flex items-center justify-center w-14 h-14 bg-green-600 bg-opacity-20 rounded-full mb-3">
               <Check className="text-white" size={28} />
             </div>
-            <p className="text-xl text-white opacity-80 font-medium">Tu reserva fue confirmada</p>
+            <p className="text-xl text-white opacity-80 font-medium">Tu código de reserva es:</p>
             <p className="text-5xl font-bold text-white my-2">{reservaData.reservationId}</p>
-          </div>
-          
-          <div className="bg-green-600 bg-opacity-60 p-3 rounded-xl border border-green-400 border-opacity-80 shadow-lg">
-            <p className="text-lg text-white font-bold text-center mb-2">
-              ¡Importante! Con este código puedes:
-            </p>
-            <div className="space-y-1">
-              <div className="w-full text-base text-white opacity-80 flex items-center justify-center gap-2 py-1 px-3">
-                <Search size={18} />
-                Consultar tu reserva
-              </div>
-              <button
-                onClick={() => handleCancelReservation(reservaData)}
-                className="w-full text-base text-white opacity-80 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2 py-1 px-3 rounded-lg hover:bg-white hover:bg-opacity-10"
-              >
-                <X size={18} />
-                Cancelar tu reserva
-              </button>
-            </div>
           </div>
           
           <div className="space-y-2">
@@ -503,25 +538,43 @@ export const ClientView = ({
             </div>
           </div>
 
-          <button 
-            onClick={() => {
-              setCurrentScreen('landing');
-              setReservaData({
-                fecha: '',
-                personas: 2,
-                turno: '',
-                horario: '',
-                cliente: { nombre: '', telefono: '', comentarios: '' }
-              });
-              setFoundReservation(null);
-              setShowSearchForm(false);
-            }} 
-            className={styles.mainButton}
-          >
-            <Check size={20} />
-            Volver al inicio
-          </button>
+          <div className="space-y-3 pt-4">
+            <button
+              onClick={() => handleCancelReservation(reservaData)}
+              className="w-full flex items-center justify-center gap-2 bg-black bg-opacity-40 text-white py-3 px-4 rounded-xl hover:bg-opacity-60 transition-all duration-200"
+            >
+              <X size={18} />
+              Cancelar tu reserva
+            </button>
+            
+            <button 
+              onClick={() => {
+                setCurrentScreen('landing');
+                setReservaData({
+                  fecha: '',
+                  personas: 2,
+                  turno: '',
+                  horario: '',
+                  cliente: { nombre: '', telefono: '', comentarios: '' }
+                });
+                setFoundReservation(null);
+                setShowSearchForm(false);
+              }} 
+              className={styles.mainButton}
+            >
+              <Check size={20} />
+              Volver al inicio
+            </button>
+          </div>
         </div>
+
+        {showReservationModal && (
+          <ReservationConfirmationModal
+            reservation={reservaData}
+            onClose={() => setShowReservationModal(false)}
+            formatDate={formatDate}
+          />
+        )}
       </ClientLayout>
     );
   }

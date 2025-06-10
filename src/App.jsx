@@ -30,18 +30,14 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState('landing');
   const [reservaData, setReservaData] = useState({
     fecha: '',
-    personas: null,
+    personas: 0,
     turno: '',
     horario: '',
-    cliente: { 
-      nombre: '', 
-      telefono: '', 
-      codigoPais: '54',
-      comentarios: '' 
-    }
+    cliente: { nombre: '', telefono: '', comentarios: '', codigoPais: '54' }
   });
   const [availableSlots, setAvailableSlots] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showReservationModal, setShowReservationModal] = useState(false);
 
   // Suscribirse a cambios en tiempo real
   useEffect(() => {
@@ -330,7 +326,7 @@ function App() {
       console.log('Actualizando estado con nueva reserva:', updatedReservaData);
       
       setReservaData(updatedReservaData);
-      setShowConfirmation(true);
+      setShowReservationModal(true);
       setCurrentScreen('confirmacion');
     } catch (error) {
       console.error("Error al crear reserva:", error);
@@ -453,6 +449,8 @@ function App() {
       handleSearchReservation={handleSearchReservation}
       handleUpdateReservation={handleUpdateReservation}
       handleDeleteReservation={handleDeleteReservation}
+      showReservationModal={showReservationModal}
+      setShowReservationModal={setShowReservationModal}
     />
   );
 }
