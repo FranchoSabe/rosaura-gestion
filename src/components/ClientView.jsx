@@ -270,7 +270,7 @@ export const ClientView = ({
             setCurrentScreen('landing');
             setReservaData({
               fecha: '',
-              personas: null,
+              personas: '',
               turno: '',
               horario: '',
               cliente: { 
