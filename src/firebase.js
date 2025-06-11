@@ -232,3 +232,141 @@ export const searchReservation = async (searchData) => {
     throw error;
   }
 };
+
+// === FUNCIONES PARA LISTA DE ESPERA ===
+
+// Función para agregar una reserva a la lista de espera
+export const addWaitingReservation = async (reservationData) => {
+  try {
+    const waitingId = generateReservationId();
+    console.log('Agregando a lista de espera:', {
+      waitingId,
+      ...reservationData
+    });
+
+    const dataToSave = {
+      ...reservationData,
+      waitingId: waitingId.toUpperCase(),
+      createdAt: new Date(),
+      status: 'waiting',
+      notified: false
+    };
+
+    console.log('Datos a guardar en lista de espera:', dataToSave);
+
+    const docRef = await addDoc(collection(db, "lista_espera"), dataToSave);
+
+    console.log('Reserva agregada a lista de espera:', {
+      id: docRef.id,
+      waitingId: dataToSave.waitingId,
+      fecha: dataToSave.fecha,
+      turno: dataToSave.turno
+    });
+
+    return { id: docRef.id, waitingId: dataToSave.waitingId };
+  } catch (error) {
+    console.error("Error al agregar a lista de espera:", error);
+    throw error;
+  }
+};
+
+// Función para obtener todas las reservas en espera
+export const getWaitingReservations = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "lista_espera"));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error("Error al obtener reservas en espera:", error);
+    throw error;
+  }
+};
+
+// Suscripción en tiempo real a lista de espera
+export const subscribeToWaitingReservations = (callback) => {
+  return onSnapshot(
+    collection(db, "lista_espera"), 
+    (snapshot) => {
+      const waitingReservations = snapshot.docs.map(doc => {
+        return {
+          id: doc.id,
+          ...doc.data()
+        };
+      });
+      
+      callback(waitingReservations);
+    }, 
+    (error) => {
+      console.error('❌ Error en suscripción a lista de espera:', error);
+      // En caso de error, intentar obtener datos de forma manual
+      getWaitingReservations()
+        .then(data => {
+          callback(data);
+        })
+        .catch(manualError => {
+          console.error('❌ Error también en obtención manual:', manualError);
+          callback([]); // Devolver array vacío como último recurso
+        });
+    }
+  );
+};
+
+// Función para convertir una reserva en espera a reserva confirmada
+export const confirmWaitingReservation = async (waitingReservationId, waitingData) => {
+  try {
+    console.log('Confirmando reserva desde lista de espera:', waitingReservationId);
+    
+    // 1. Crear la reserva confirmada
+    const { id, reservationId } = await addReservation({
+      fecha: waitingData.fecha,
+      turno: waitingData.turno,
+      horario: waitingData.horario,
+      personas: waitingData.personas,
+      clienteId: waitingData.clienteId,
+      cliente: waitingData.cliente
+    });
+
+    // 2. Eliminar de la lista de espera
+    const waitingDocRef = doc(db, "lista_espera", waitingReservationId);
+    await deleteDoc(waitingDocRef);
+
+    console.log('Reserva confirmada desde lista de espera:', { id, reservationId });
+    return { id, reservationId };
+  } catch (error) {
+    console.error("Error al confirmar reserva desde lista de espera:", error);
+    throw error;
+  }
+};
+
+// Función para eliminar una reserva de la lista de espera
+export const deleteWaitingReservation = async (waitingReservationId) => {
+  try {
+    console.log('Eliminando reserva de lista de espera:', waitingReservationId);
+    
+    const waitingDocRef = doc(db, "lista_espera", waitingReservationId);
+    await deleteDoc(waitingDocRef);
+
+    console.log('Reserva eliminada de lista de espera');
+    return true;
+  } catch (error) {
+    console.error("Error al eliminar reserva de lista de espera:", error);
+    throw error;
+  }
+};
+
+// Función para marcar una reserva en espera como notificada
+export const markWaitingAsNotified = async (waitingReservationId) => {
+  try {
+    const waitingDocRef = doc(db, "lista_espera", waitingReservationId);
+    await updateDoc(waitingDocRef, {
+      notified: true,
+      notifiedAt: new Date()
+    });
+    return true;
+  } catch (error) {
+    console.error("Error al marcar como notificada:", error);
+    throw error;
+  }
+};

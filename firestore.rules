@@ -51,5 +51,14 @@ service cloud.firestore {
       // Solo staff puede modificar
       allow update, delete: if isStaff();
     }
+
+    // Reglas para lista de espera
+    match /lista_espera/{waitingId} {
+      // Cualquiera puede crear una reserva en lista de espera
+      allow create: if true;
+      
+      // Solo staff puede leer, modificar o eliminar de la lista de espera
+      allow read, update, delete: if isStaff();
+    }
   }
 } 

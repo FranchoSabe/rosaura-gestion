@@ -122,7 +122,8 @@ export const ClientView = ({
     handleDateAndTurnoSubmit, handleHorarioSelect, handleContactoSubmit,
     formatDate,
     handleSearchReservation, handleDeleteReservation,
-    showReservationModal, setShowReservationModal
+    showReservationModal, setShowReservationModal,
+    showWaitingListModal, setShowWaitingListModal
 }) => {
 
   const [showSearchForm, setShowSearchForm] = useState(false);
@@ -553,7 +554,17 @@ export const ClientView = ({
             Volver
           </button>
           <div className={styles.formContainer}>
-            <h1 className={styles.title}>Datos de contacto</h1>
+            <h1 className={styles.title}>
+              {reservaData.willGoToWaitingList ? 'Lista de Espera - Tus datos' : 'Datos de contacto'}
+            </h1>
+            {reservaData.willGoToWaitingList && (
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+                <p className="text-sm">
+                  <strong>No hay cupos disponibles</strong> para esta fecha y turno. 
+                  Ingresá tus datos y te avisaremos por WhatsApp si se libera un lugar.
+                </p>
+              </div>
+            )}
             <form onSubmit={(e) => {
               e.preventDefault();
               if (reservaData.isModifying) {
@@ -640,7 +651,7 @@ export const ClientView = ({
                 disabled={!reservaData.cliente.nombre || !reservaData.cliente.telefono || reservaData.cliente.telefono.length < 8}
                 className={styles.mainButton}
               >
-                {reservaData.isModifying ? 'Guardar cambios' : 'Confirmar reserva'}
+                {reservaData.isModifying ? 'Guardar cambios' : (reservaData.willGoToWaitingList ? 'Agregar a lista de espera' : 'Confirmar reserva')}
               </button>
             </form>
           </div>
@@ -716,6 +727,95 @@ export const ClientView = ({
             onClose={() => setShowReservationModal(false)}
             formatDate={formatDate}
           />
+        )}
+      </ClientLayout>
+    );
+  }
+
+  if (currentScreen === 'lista-espera') {
+    return (
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+        <div className="space-y-4">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-yellow-600 bg-opacity-20 rounded-full mb-3">
+              <Clock className="text-white" size={28} />
+            </div>
+            <h1 className="text-xl text-white opacity-80 font-medium">Sin cupo disponible</h1>
+            <p className="text-lg text-white my-2">¡Pero no te preocupes!</p>
+          </div>
+          
+          <div className="bg-black bg-opacity-40 rounded-xl p-4 space-y-3">
+            <div>
+              <p className="text-base text-white opacity-70 font-medium">Tu solicitud</p>
+              <p className="font-semibold text-lg text-white">{formatDate(reservaData.fecha)}</p>
+              <p className="text-white">{reservaData.turno === 'mediodia' ? 'Mediodía' : 'Noche'} • {reservaData.personas} personas</p>
+              <p className="text-white">Horario preferido: {reservaData.horario}</p>
+            </div>
+            <div>
+              <p className="text-base text-white opacity-70 font-medium">Código de espera</p>
+              <p className="font-semibold text-lg text-white">{reservaData.waitingId}</p>
+            </div>
+          </div>
+
+          <div className="bg-green-600 bg-opacity-20 rounded-xl p-4">
+            <h3 className="text-white font-medium mb-2">📱 Te avisamos por WhatsApp</h3>
+            <p className="text-white text-sm opacity-90">
+              Si se libera un cupo para tu fecha y turno, te enviaremos un mensaje de WhatsApp al número {reservaData.cliente.codigoPais} {reservaData.cliente.telefono} para que confirmes tu reserva.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-4">
+            <button
+              onClick={() => {
+                const mensaje = `Hola! Me comunico por mi solicitud en lista de espera #${reservaData.waitingId} para el día ${formatDate(reservaData.fecha)} turno ${reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}`;
+                window.open(`https://wa.me/5492213995351?text=${encodeURIComponent(mensaje)}`, '_blank');
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-green-600 bg-opacity-20 text-white py-3 px-4 rounded-xl hover:bg-opacity-30 transition-all duration-200"
+            >
+              <MessageCircle size={18} />
+              Contactanos por WhatsApp
+            </button>
+            
+            <button 
+              onClick={() => {
+                setCurrentScreen('landing');
+                setReservaData({
+                  fecha: '',
+                  personas: 2,
+                  turno: '',
+                  horario: '',
+                  cliente: { nombre: '', telefono: '', comentarios: '', codigoPais: '54' }
+                });
+                setShowWaitingListModal(false);
+              }} 
+              className={styles.mainButton}
+            >
+              <Check size={20} />
+              Volver al inicio
+            </button>
+          </div>
+        </div>
+
+        {showWaitingListModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-yellow-600 bg-opacity-20 rounded-full">
+                  <Clock className="text-white" size={28} />
+                </div>
+                <h3 className="text-xl text-white font-medium">Agregado a lista de espera</h3>
+                <p className="text-white opacity-80">
+                  Te hemos agregado a nuestra lista de espera. Si se libera un cupo, te contactaremos por WhatsApp.
+                </p>
+                <button
+                  onClick={() => setShowWaitingListModal(false)}
+                  className="w-full bg-green-600 bg-opacity-20 text-white py-3 px-4 rounded-xl hover:bg-opacity-30 transition-all duration-200"
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </ClientLayout>
     );
