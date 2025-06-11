@@ -237,14 +237,25 @@ export const ClientView = ({
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className={`${styles.screenContainer} flex flex-col min-h-screen`}>
           <div className="flex-grow">
-            <div className={`${styles.logoContainer} mt-8 mb-8 bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl`}>
-              <div className={`${styles.welcomeText} text-center mb-6`}>
-                <p className="text-xl text-white font-medium">Bienvenido a la Web de reservas de</p>
-              </div>
-              <div className="flex justify-center">
-                {LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-60" /> : <h1 className={styles.logoText}>Rosaura</h1>}
-              </div>
+            {/* Nueva sección hero profesional */}
+            <div className={styles.heroSection}>
+              <p className={styles.heroWelcome}>Bienvenido a</p>
+              {LOGO_URL ? (
+                <img src={LOGO_URL} alt="Rosaura Logo" className="h-60 mx-auto" />
+              ) : (
+                <h1 className={styles.heroTitle}>
+                  <span className="letter">R</span>
+                  <span className="letter">o</span>
+                  <span className="letter">s</span>
+                  <span className="letter">a</span>
+                  <span className="letter">u</span>
+                  <span className="letter">r</span>
+                  <span className="letter">a</span>
+                </h1>
+              )}
+              <p className={styles.heroSubtitle}>Reservas online</p>
             </div>
+            
             <div className={`${styles.buttonContainer} space-y-4 mb-4`}>
               <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.mainButton}>
                 <Calendar size={20} />
