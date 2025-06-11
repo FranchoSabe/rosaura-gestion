@@ -726,6 +726,35 @@ label svg {
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
+/* Calendario sin blur en móvil */
+@media (max-width: 640px) {
+  :global(.react-datepicker) {
+    backdrop-filter: none !important;
+  }
+}
+
+/* Ajustar tamaño del calendario en el modal */
+:global(.react-datepicker.react-datepicker--time-only) {
+  width: 100% !important;
+}
+
+:global(.custom-green-calendar) {
+  width: 100% !important;
+  max-width: 100% !important;
+  font-size: 0.875rem !important;
+}
+
+:global(.custom-green-calendar .react-datepicker__month-container) {
+  width: 100% !important;
+}
+
+:global(.custom-green-calendar .react-datepicker__day) {
+  width: 2rem !important;
+  height: 2rem !important;
+  line-height: 2rem !important;
+  margin: 0.125rem !important;
+}
+
 :global(.react-datepicker__triangle) {
   display: none !important;
 }
@@ -941,6 +970,24 @@ label svg {
     backdrop-filter: none;
   }
   
+  /* Formulario de datos (contacto) sin blur en móvil */
+  .input {
+    backdrop-filter: none;
+  }
+  
+  .select {
+    backdrop-filter: none;
+  }
+  
+  .textarea {
+    backdrop-filter: none;
+  }
+  
+  /* Elementos de confirmación sin blur en móvil */
+  .confirmationDetails {
+    backdrop-filter: none;
+  }
+  
   /* Animaciones táctiles específicas para móviles */
   .mainButton:active {
     animation: buttonTouchCompress 0.15s ease-out, buttonTouchOpacity 0.15s ease-out;
@@ -1025,6 +1072,15 @@ label svg {
   
   /* Asegurar que todos los botones mantengan la transparencia en pantallas pequeñas */
   .dateButton, .turnoButton, .personasButton {
+    backdrop-filter: none;
+  }
+  
+  /* Asegurar que el formulario mantenga la transparencia en pantallas muy pequeñas */
+  .input, .select, .textarea {
+    backdrop-filter: none;
+  }
+  
+  .confirmationDetails {
     backdrop-filter: none;
   }
 }

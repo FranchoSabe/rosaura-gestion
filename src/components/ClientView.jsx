@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Users, Phone, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, Search, X, Edit2 } from 'lucide-react';
-import DatePicker from 'react-datepicker';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
+
+// Registrar el locale español
+registerLocale('es', es);
 import ClientLayout from './ClientLayout';
 import styles from './ClientView.module.css';
 import ReservationDetails from './ReservationDetails';
@@ -125,6 +129,7 @@ export const ClientView = ({
   const [foundReservation, setFoundReservation] = useState(null);
   const [isModifying, setIsModifying] = useState(false);
   const [editingReservationId, setEditingReservationId] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleSearch = async (searchData) => {
     const result = await handleSearchReservation(searchData);
@@ -188,8 +193,8 @@ export const ClientView = ({
     let dayCount = 0;
     let i = 0;
     
-    // Generar hasta 6 días disponibles (sin lunes)
-    while (dayCount < 6 && i < 14) {
+    // Generar hasta 5 días disponibles (sin lunes) para hacer espacio a "más fechas"
+    while (dayCount < 5 && i < 14) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       
@@ -363,17 +368,16 @@ export const ClientView = ({
                       </button>
                   );
                 })}
+                <button
+                  onClick={() => {
+                    setShowDatePicker(true);
+                  }}
+                  className={`${styles.dateButtonUnselected} flex flex-col items-center py-3 relative`}
+                >
+                  <span className="text-sm font-medium">+ Fechas</span>
+                  <Calendar size={16} className="text-gray-400 mt-1" />
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  // Mostrar un modal o formulario más avanzado para fechas futuras
-                  alert('Para reservas más adelante, por favor contactanos por WhatsApp');
-                }}
-                className={styles.secondaryButton}
-              >
-                <Calendar size={16} />
-                <span>Más fechas</span>
-              </button>
             </div>
           </div>
           <div className={styles.formSection}>
@@ -430,6 +434,64 @@ export const ClientView = ({
             Consultar disponibilidad
           </button>
         </div>
+
+        {/* Modal del calendario completo */}
+        {showDatePicker && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-black bg-opacity-90 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-20 shadow-2xl max-w-sm w-full mx-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl text-white font-medium">Seleccionar fecha</h2>
+                <button 
+                  onClick={() => setShowDatePicker(false)} 
+                  className="text-white hover:text-gray-300"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="w-full">
+                <DatePicker
+                  selected={reservaData.fecha}
+                  onChange={(date) => {
+                    if (date) {
+                      const selectedDate = new Date(date);
+                      selectedDate.setHours(0, 0, 0, 0);
+                      
+                      // Verificar que no sea lunes
+                      if (selectedDate.getDay() !== 1) {
+                        setReservaData({ ...reservaData, fecha: selectedDate });
+                        setShowDatePicker(false);
+                      } else {
+                        alert('Los lunes permanecemos cerrados. Por favor selecciona otro día.');
+                      }
+                    }
+                  }}
+                  minDate={new Date()}
+                  maxDate={(() => {
+                    const maxDate = new Date();
+                    maxDate.setMonth(maxDate.getMonth() + 1);
+                    return maxDate;
+                  })()}
+                  filterDate={(date) => {
+                    // Filtrar lunes
+                    return date.getDay() !== 1;
+                  }}
+                  inline
+                  locale="es"
+                  dateFormat="dd/MM/yyyy"
+                  calendarClassName="custom-green-calendar"
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="mt-4 text-center">
+                <p className="text-sm text-white opacity-70">
+                  Los lunes permanecemos cerrados
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </ClientLayout>
     );
   }
