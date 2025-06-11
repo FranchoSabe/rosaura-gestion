@@ -233,12 +233,12 @@
 }
 
 .secondaryButton:hover {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.35) 0%, rgba(30, 64, 175, 0.15) 100%);
-  border-color: rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.45) 0%, rgba(12, 73, 0, 0.2) 100%);
+  border-color: rgba(34, 197, 94, 0.4);
   transform: translateY(-1px);
   box-shadow: 
     0 5px 14px 0 rgba(0, 0, 0, 0.3),
-    0 1px 6px 0 rgba(59, 130, 246, 0.15),
+    0 1px 6px 0 rgba(34, 197, 94, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   color: white;
@@ -927,20 +927,10 @@ label svg {
     transition: all 0.1s ease;
   }
   
-  /* Botones de turno y personas también más grandes en móvil */
-  .turnoButton {
-    padding: 1.2rem 1rem;
-    min-height: 56px;
-  }
-  
+  /* Animaciones táctiles para botones de turno y personas en móvil */
   .turnoButton:active {
     animation: buttonTouchCompress 0.15s ease-out;
     transform: translateY(1px) scale(0.98);
-  }
-  
-  .personasButton {
-    padding: 1rem;
-    min-height: 50px;
   }
   
   .personasButton:active {
@@ -965,11 +955,12 @@ label svg {
   
   .secondaryButton:hover {
     transform: none;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.35) 100%);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.45) 0%, rgba(12, 73, 0, 0.2) 100%);
+    border-color: rgba(34, 197, 94, 0.4);
     box-shadow: 
-      0 4px 12px 0 rgba(0, 0, 0, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      0 5px 14px 0 rgba(0, 0, 0, 0.3),
+      0 1px 6px 0 rgba(34, 197, 94, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
       inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   }
   

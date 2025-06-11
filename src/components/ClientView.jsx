@@ -194,6 +194,7 @@ export const ClientView = ({
             </div>
             <div className={`${styles.buttonContainer} space-y-4 mb-4`}>
               <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.mainButton}>
+                <Calendar size={20} />
                 Hacé tu reserva
               </button>
               <button 
