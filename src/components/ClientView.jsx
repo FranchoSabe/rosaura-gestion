@@ -317,29 +317,33 @@ export const ClientView = ({
     
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className="mb-6">
-          <button onClick={() => {
-            setCurrentScreen('landing');
-            setReservaData({
-              fecha: '',
-              personas: '',
-              turno: '',
-              horario: '',
-              cliente: { 
-                nombre: '', 
-                telefono: '', 
-                codigoPais: '54',
-                comentarios: '' 
-              }
-            });
-          }} className={styles.backButton}><ChevronLeft size={16} /></button>
-          <h1 className="text-xl font-bold text-white inline-block">Seleccionar fecha</h1>
-        </div>
         <div className="space-y-6">
           <div className={styles.formSection}>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              <Calendar size={20} className="inline-block align-text-bottom mr-2" />Fecha
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-200 flex items-center">
+                <Calendar size={20} className="inline-block align-text-bottom mr-2" />Fecha
+              </label>
+              <button 
+                onClick={() => {
+                  setCurrentScreen('landing');
+                  setReservaData({
+                    fecha: '',
+                    personas: '',
+                    turno: '',
+                    horario: '',
+                    cliente: { 
+                      nombre: '', 
+                      telefono: '', 
+                      codigoPais: '54',
+                      comentarios: '' 
+                    }
+                  });
+                }} 
+                className="text-green-700 text-lg font-medium hover:text-green-500 transition-colors"
+              >
+                Volver
+              </button>
+            </div>
             <div className="space-y-2">
               <div className="grid grid-cols-3 gap-3">
                 {weekDays.map((day) => {
@@ -353,13 +357,10 @@ export const ClientView = ({
                       className={`${isSelected ? styles.dateButtonSelected : styles.dateButtonUnselected} 
                         flex flex-col items-center py-3 relative`}
                       type="button"
-                    >
-                      <span className="text-sm font-medium">{day.label}</span>
-                      <span className="text-xs opacity-75">{formatDayDisplay(day.date)}</span>
-                      {day.isToday && (
-                        <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full"></div>
-                      )}
-                    </button>
+                                          >
+                        <span className="text-sm font-medium">{day.label}</span>
+                        <span className="text-xs opacity-75">{formatDayDisplay(day.date)}</span>
+                      </button>
                   );
                 })}
               </div>
