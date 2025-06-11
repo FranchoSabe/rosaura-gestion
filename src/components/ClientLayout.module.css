@@ -9,6 +9,7 @@
   max-width: 500px;
   margin: 0 auto;
   overflow-y: auto;
+  position: relative;
 }
 
 .logo {
@@ -16,6 +17,13 @@
   color: white;
   margin: 0;
   line-height: 1;
+  font-family: 'Daniel', cursive;
+  background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 50%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.02em;
 }
 
 .welcomeText {
@@ -24,20 +32,42 @@
   margin: 0;
   text-align: center;
   line-height: 1.2;
+  font-weight: 500;
+  opacity: 0.95;
 }
 
 .logoContainer {
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  padding: 1.5rem 2rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+  backdrop-filter: blur(16px);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
   width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.logoContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+  transition: left 0.8s ease;
+}
+
+.logoContainer:hover::before {
+  left: 100%;
 }
 
 .background {
@@ -51,6 +81,17 @@
   background-position: center;
   background-repeat: no-repeat;
   background-color: #000;
+  animation: backgroundEntrance 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.2) 70%);
 }
 
 .overlay {
@@ -59,7 +100,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.5) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  backdrop-filter: blur(1px);
 }
 
 .content {
@@ -67,4 +114,92 @@
   max-width: 28rem;
   z-index: 10;
   position: relative;
+  padding: 1rem;
+}
+
+/* Animaciones sutiles para elementos que aparecen */
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content > * {
+  animation: contentFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Efectos de glassmorphism mejorados */
+.glassEffect {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Media queries para responsividad */
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem 1rem;
+    gap: 1rem;
+  }
+  
+  .logoContainer {
+    padding: 1.5rem;
+    border-radius: 1rem;
+  }
+  
+  .logo {
+    font-size: 3rem;
+  }
+  
+  .welcomeText {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.75rem;
+  }
+  
+  .logoContainer {
+    padding: 1.25rem;
+  }
+  
+  .logo {
+    font-size: 2.5rem;
+  }
+}
+
+/* Efectos hover sutiles */
+@media (hover: hover) {
+  .logoContainer:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 
+      0 32px 64px -12px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Animación de entrada suave para la imagen de fondo */
+@keyframes backgroundEntrance {
+  from {
+    opacity: 0;
+    transform: scale(1.05);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
 } 

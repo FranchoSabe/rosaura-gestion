@@ -1,75 +1,227 @@
+/* Animaciones y transiciones profesionales */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Clases para animaciones de pantalla */
+.screenContainer {
+  animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.logoContainer {
+  animation: fadeInScale 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.welcomeText {
+  animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+.buttonContainer {
+  animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+}
+
+.formSection {
+  animation: slideInFromLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.formSection:nth-child(even) {
+  animation: slideInFromRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Modal animations */
+.modalOverlay {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalContent {
+  animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .mainButton {
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.7) 100%);
+  backdrop-filter: blur(16px);
   color: white;
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
+  padding: 1.1rem 1.5rem;
+  border-radius: 1rem;
   font-size: 1.25rem;
   margin-bottom: 0.75rem;
-  transition: all 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 4px 12px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+  min-height: 54px;
+}
+
+.mainButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
+  transition: left 0.6s;
+}
+
+.mainButton:hover::before {
+  left: 100%;
 }
 
 .mainButton:hover {
-  background-color: rgba(12, 73, 0, 0.6);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(12, 73, 0, 0.3) 100%);
+  border-color: rgba(34, 197, 94, 0.4);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 
+    0 6px 16px 0 rgba(0, 0, 0, 0.4),
+    0 2px 8px 0 rgba(34, 197, 94, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.mainButton:active {
+  transform: translateY(-1px) scale(1.01);
+  transition: all 0.1s ease;
 }
 
 .mainButton:focus {
   outline: none;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-  --tw-ring-color: rgb(22 163 74 / 0.5);
-  --tw-ring-offset-width: 2px;
+  box-shadow: 
+    0 12px 40px 0 rgba(0, 0, 0, 0.5),
+    0 6px 20px 0 rgba(12, 73, 0, 0.4),
+    0 0 0 3px rgba(22, 163, 74, 0.3);
 }
 
 .mainButton:disabled {
-  background-color: rgba(107, 114, 128, 0.4);
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.4) 0%, rgba(75, 85, 99, 0.3) 100%);
   cursor: not-allowed;
   transform: none;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
 .secondaryButton {
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  color: #e5e7eb;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.7) 100%);
+  backdrop-filter: blur(16px);
+  color: #f3f4f6;
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
+  padding: 1.1rem 1.5rem;
+  border-radius: 1rem;
   font-size: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  transition: all 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 4px 12px 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  /* Mejor separación para móviles */
+  min-height: 54px;
+}
+
+.secondaryButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  transition: left 0.6s;
+}
+
+.secondaryButton:hover::before {
+  left: 100%;
 }
 
 .secondaryButton:hover {
-  background-color: rgba(12, 73, 0, 0.6);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(30, 64, 175, 0.3) 100%);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 
+    0 6px 16px 0 rgba(0, 0, 0, 0.4),
+    0 2px 8px 0 rgba(59, 130, 246, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: white;
 }
 
-.secondaryButton:focus {
-  outline: none;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-  --tw-ring-color: rgb(22 163 74 / 0.5);
-  --tw-ring-offset-width: 2px;
-}
+
 
 .adminButton {
   position: absolute;
@@ -78,45 +230,50 @@
   color: rgba(156, 163, 175, 0.6);
   border: none;
   background: none;
-  padding: 0.25rem 0.5rem;
-  transition: all 0.2s ease;
+  padding: 0.5rem 1rem;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   opacity: 0.7;
+  border-radius: 0.5rem;
 }
 
 .adminButton:hover {
-  color: rgba(12, 73, 0, 0.8);
+  color: rgba(12, 73, 0, 0.9);
   opacity: 1;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
 }
 
 .backButton {
   color: #e5e7eb;
-  margin-right: 0.65rem;
-  background-color: rgba(0, 0, 0, 0.4);
+  margin-right: 0.75rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.375rem;
-  padding: 0.325rem;
-  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transform: scale(0.65);
+  transform: scale(0.9);
   transform-origin: left center;
   vertical-align: middle;
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
 .backButton:hover {
-  background-color: rgba(12, 73, 0, 0.6);
+  background: linear-gradient(135deg, rgba(12, 73, 0, 0.6) 0%, rgba(0, 0, 0, 0.6) 100%);
   border-color: rgba(255, 255, 255, 0.4);
-  transform: scale(0.65) translateY(-2px);
+  transform: scale(0.9) translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.3);
 }
 
 .backButton svg {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .backButton + h1 {
@@ -125,74 +282,91 @@
 
 .input {
   width: 100%;
-  padding: 0.75rem;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   color: white;
   font-size: 1.125rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .input:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(22, 163, 74, 0.6);
   outline: none;
   transform: translateY(-1px);
+  box-shadow: 
+    0 10px 35px 0 rgba(0, 0, 0, 0.4),
+    0 0 0 3px rgba(22, 163, 74, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .select {
   width: 6rem;
-  padding: 0.75rem;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   color: white;
   font-size: 1.125rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .select:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(22, 163, 74, 0.6);
   outline: none;
   transform: translateY(-1px);
+  box-shadow: 
+    0 10px 35px 0 rgba(0, 0, 0, 0.4),
+    0 0 0 3px rgba(22, 163, 74, 0.2);
 }
 
 .select option {
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(0, 0, 0, 0.95);
   color: white;
 }
 
 .textarea {
   width: 100%;
-  padding: 0.75rem;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   color: white;
   font-size: 1.125rem;
-  min-height: 100px;
+  min-height: 120px;
   resize: none;
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .textarea::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .textarea:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(22, 163, 74, 0.6);
   outline: none;
   transform: translateY(-1px);
+  box-shadow: 
+    0 10px 35px 0 rgba(0, 0, 0, 0.4),
+    0 0 0 3px rgba(22, 163, 74, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Estilos para títulos y etiquetas */
@@ -204,6 +378,7 @@ label {
   margin-bottom: 0.75rem !important;
   color: white !important;
   font-weight: 500 !important;
+  animation: slideInFromLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 label svg {
@@ -251,30 +426,52 @@ label svg {
 
 .dateButton {
   width: 100%;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   font-size: 1.25rem;
   min-height: 3.5rem;
   line-height: 1.5;
+  position: relative;
+  overflow: hidden;
+}
+
+.dateButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s;
+}
+
+.dateButton:hover::before {
+  left: 100%;
 }
 
 .dateButtonSelected {
   composes: dateButton;
-  background-color: rgba(12, 73, 0, 0.6);
+  background: linear-gradient(135deg, rgba(12, 73, 0, 0.6) 0%, rgba(22, 163, 74, 0.4) 100%);
   border-color: rgba(255, 255, 255, 0.4);
   color: white;
+  box-shadow: 
+    0 10px 35px 0 rgba(0, 0, 0, 0.4),
+    0 4px 16px 0 rgba(12, 73, 0, 0.3);
 }
 
 .dateButtonSelected:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.01);
 }
 
 .dateButtonUnselected {
@@ -283,9 +480,10 @@ label svg {
 }
 
 .dateButtonUnselected:hover {
-  background-color: rgba(12, 73, 0, 0.6);
+  background: linear-gradient(135deg, rgba(12, 73, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
   border-color: rgba(255, 255, 255, 0.4);
   transform: translateY(-2px);
+  color: white;
 }
 
 .dateButton svg {
@@ -296,31 +494,53 @@ label svg {
 }
 
 .turnoButton {
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   width: 100%;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   font-size: 1.25rem;
   line-height: 1.5;
+  position: relative;
+  overflow: hidden;
+}
+
+.turnoButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  transition: left 0.6s;
+}
+
+.turnoButton:hover::before {
+  left: 100%;
 }
 
 .turnoButtonSelected {
   composes: turnoButton;
-  background-color: rgba(12, 73, 0, 0.6);
+  background: linear-gradient(135deg, rgba(12, 73, 0, 0.6) 0%, rgba(22, 163, 74, 0.4) 100%);
   border-color: rgba(255, 255, 255, 0.4);
   color: white;
+  box-shadow: 
+    0 10px 35px 0 rgba(0, 0, 0, 0.4),
+    0 4px 16px 0 rgba(12, 73, 0, 0.3);
 }
 
 .turnoButtonSelected:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.01);
 }
 
 .turnoButtonUnselected {
@@ -329,9 +549,10 @@ label svg {
 }
 
 .turnoButtonUnselected:hover {
-  background-color: rgba(12, 73, 0, 0.6);
+  background: linear-gradient(135deg, rgba(12, 73, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
   border-color: rgba(255, 255, 255, 0.4);
   transform: translateY(-2px);
+  color: white;
 }
 
 .turnoButton svg {
@@ -339,30 +560,52 @@ label svg {
 }
 
 .personasButton {
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   width: 100%;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   font-size: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.personasButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  transition: left 0.6s;
+}
+
+.personasButton:hover::before {
+  left: 100%;
 }
 
 .personasButtonSelected {
   composes: personasButton;
-  background-color: rgba(12, 73, 0, 0.6);
+  background: linear-gradient(135deg, rgba(12, 73, 0, 0.6) 0%, rgba(22, 163, 74, 0.4) 100%);
   border-color: rgba(255, 255, 255, 0.4);
   color: white;
+  box-shadow: 
+    0 10px 35px 0 rgba(0, 0, 0, 0.4),
+    0 4px 16px 0 rgba(12, 73, 0, 0.3);
 }
 
 .personasButtonSelected:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
 }
 
 .personasButtonUnselected {
@@ -371,45 +614,62 @@ label svg {
 }
 
 .personasButtonUnselected:hover {
-  background-color: rgba(12, 73, 0, 0.6);
+  background: linear-gradient(135deg, rgba(12, 73, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
   border-color: rgba(255, 255, 255, 0.4);
   transform: translateY(-2px);
+  color: white;
 }
 
 .confirmationContainer {
   text-align: center;
   padding: 2rem 0;
+  animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .confirmationIcon {
   margin: 0 auto;
   margin-bottom: 1.5rem;
   color: #22c55e;
+  animation: pulse 2s infinite;
 }
 
 .confirmationTitle {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
 .confirmationDetails {
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 0.5rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   text-align: left;
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
 }
 
 .confirmationDetail {
   margin-bottom: 0.5rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.confirmationDetail:last-child {
+  border-bottom: none;
 }
 
 .confirmationDetail strong {
   font-weight: bold;
+  color: #22c55e;
 }
 
-/* Estilos para el calendario */
+/* Estilos para el calendario mejorados */
 :global(.react-datepicker-wrapper) {
   width: 100%;
 }
@@ -419,12 +679,17 @@ label svg {
   left: 50% !important;
   transform: translateX(-50%) !important;
   margin-top: 0.5rem !important;
+  z-index: 1000 !important;
 }
 
 :global(.react-datepicker) {
   border: none !important;
-  border-radius: 0.5rem !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  border-radius: 1rem !important;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
 }
 
 :global(.react-datepicker__triangle) {
@@ -432,41 +697,56 @@ label svg {
 }
 
 :global(.react-datepicker__header) {
-  background-color: #0c4900 !important;
+  background: linear-gradient(135deg, rgba(12, 73, 0, 0.8) 0%, rgba(22, 163, 74, 0.6) 100%) !important;
   border-bottom: none !important;
-  border-top-left-radius: 0.5rem !important;
-  border-top-right-radius: 0.5rem !important;
-  padding-top: 0.5rem !important;
+  border-top-left-radius: 1rem !important;
+  border-top-right-radius: 1rem !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
 }
 
 :global(.react-datepicker__current-month) {
   color: white !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
 }
 
 :global(.react-datepicker__day-name) {
-  color: white !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 500 !important;
 }
 
 :global(.react-datepicker__day--selected) {
-  background-color: #0c4900 !important;
+  background: linear-gradient(135deg, #0c4900 0%, #16a34a 100%) !important;
   color: white !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
 }
 
 :global(.react-datepicker__day--keyboard-selected) {
-  background-color: rgba(12, 73, 0, 0.1) !important;
+  background: rgba(12, 73, 0, 0.2) !important;
   color: #0c4900 !important;
+  border-radius: 0.5rem !important;
 }
 
 :global(.react-datepicker__day:hover) {
-  background-color: rgba(12, 73, 0, 0.1) !important;
+  background: rgba(12, 73, 0, 0.3) !important;
+  border-radius: 0.5rem !important;
+  color: white !important;
 }
 
 :global(.react-datepicker__day--disabled) {
-  color: #ccc !important;
+  color: rgba(255, 255, 255, 0.3) !important;
 }
 
 :global(.react-datepicker__day--disabled:hover) {
-  background-color: transparent !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+:global(.react-datepicker__day) {
+  margin: 0.2rem !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .sectionTitle {
@@ -476,6 +756,8 @@ label svg {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  font-weight: 600;
+  animation: slideInFromLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sectionTitle svg {
@@ -493,25 +775,196 @@ label svg {
   height: 1.5rem;
   position: relative;
   top: -1px;
+  transition: transform 0.2s ease;
+}
+
+.mainButton:hover svg,
+.secondaryButton:hover svg {
+  transform: scale(1.1);
+}
+
+/* Efectos hover para iconos */
+.turnoButton:hover svg {
+  transform: rotate(10deg) scale(1.1);
+}
+
+.personasButton:hover svg {
+  transform: scale(1.2);
 }
 
 /* Ajustar espaciado vertical general */
 :global(.space-y-6) {
-  gap: 1rem !important;
+  gap: 1.5rem !important;
 }
 
 :global(.mb-6) {
-  margin-bottom: 1rem !important;
+  margin-bottom: 1.5rem !important;
 }
 
 :global(.mb-2) {
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.75rem !important;
 }
 
 :global(.gap-4) {
-  gap: 0.75rem !important;
+  gap: 1rem !important;
 }
 
 :global(.gap-2) {
-  gap: 0.5rem !important;
+  gap: 0.75rem !important;
+}
+
+/* Estilos para la tipografía del logo */
+.logoText {
+  font-family: 'Daniel', cursive;
+  font-size: 4.5rem;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 50%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.02em;
+  animation: fadeInScale 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Microanimaciones para móviles - experiencia táctil mejorada */
+@keyframes buttonTouchCompress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+@keyframes buttonTouchOpacity {
+  0% { opacity: 1; }
+  50% { opacity: 0.85; }
+  100% { opacity: 1; }
+}
+
+@media (max-width: 640px) {
+  .logoText {
+    font-size: 3.5rem;
+  }
+  
+  /* Mejoras para botones en móviles */
+  .mainButton {
+    padding: 1.5rem 1.5rem;
+    min-height: 64px;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .secondaryButton {
+    padding: 1.3rem 1.5rem;
+    min-height: 60px;
+    font-size: 1.25rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  /* Animaciones táctiles específicas para móviles */
+  .mainButton:active {
+    animation: buttonTouchCompress 0.15s ease-out, buttonTouchOpacity 0.15s ease-out;
+    transform: translateY(1px) scale(0.98);
+    transition: all 0.1s ease;
+  }
+  
+  .secondaryButton:active {
+    animation: buttonTouchCompress 0.15s ease-out, buttonTouchOpacity 0.15s ease-out;
+    transform: translateY(1px) scale(0.98);
+    transition: all 0.1s ease;
+  }
+  
+  /* Botones de turno y personas también más grandes en móvil */
+  .turnoButton {
+    padding: 1.2rem 1rem;
+    min-height: 56px;
+  }
+  
+  .turnoButton:active {
+    animation: buttonTouchCompress 0.15s ease-out;
+    transform: translateY(1px) scale(0.98);
+  }
+  
+  .personasButton {
+    padding: 1rem;
+    min-height: 50px;
+  }
+  
+  .personasButton:active {
+    animation: buttonTouchCompress 0.15s ease-out;
+    transform: translateY(1px) scale(0.98);
+  }
+  
+  /* Remover hover effects en móviles pero mantener estilos base mejorados */
+  .mainButton:hover {
+    transform: none;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.7) 100%);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 
+      0 4px 12px 0 rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .mainButton:hover::before {
+    left: -100%;
+  }
+  
+  .secondaryButton:hover {
+    transform: none;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.7) 100%);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 
+      0 4px 12px 0 rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .secondaryButton:hover::before {
+    left: -100%;
+  }
+}
+
+/* Media query para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .mainButton, .secondaryButton {
+    margin-bottom: 1.2rem;
+    padding: 1.6rem 1.2rem;
+    border-radius: 1.2rem;
+  }
+  
+  .buttonContainer {
+    gap: 1.2rem;
+  }
+  
+  /* Espaciado mejorado entre botones */
+  .mainButton {
+    margin-bottom: 1.4rem;
+  }
+}
+
+/* Efectos de loading sutiles */
+.loadingShimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Estilos para estados de carga */
+.button:disabled {
+  position: relative;
+  overflow: hidden;
+}
+
+.button:disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shimmer 1.5s infinite;
 } 

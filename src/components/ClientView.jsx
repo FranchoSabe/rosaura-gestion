@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Users, Phone, Mail, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, Search, X, Edit2 } from 'lucide-react';
+import { Calendar, Clock, Users, Phone, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, Search, X, Edit2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
@@ -182,17 +182,17 @@ export const ClientView = ({
   if (currentScreen === 'landing') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className="flex flex-col min-h-screen">
+        <div className={`${styles.screenContainer} flex flex-col min-h-screen`}>
           <div className="flex-grow">
-            <div className="mt-8 mb-8 bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl">
-              <div className="text-center mb-6">
-                <p className="text-xl text-white font-medium">Bienvenido al portal de reservas de</p>
+            <div className={`${styles.logoContainer} mt-8 mb-8 bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl`}>
+              <div className={`${styles.welcomeText} text-center mb-6`}>
+                <p className="text-xl text-white font-medium">Bienvenido a la Web de reservas de</p>
               </div>
               <div className="flex justify-center">
-                {LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-60" /> : <h1 className="text-4xl md:text-6xl font-bold mb-2" style={{ fontFamily: 'cursive' }}>Rosaura</h1>}
+                {LOGO_URL ? <img src={LOGO_URL} alt="Rosaura Logo" className="h-60" /> : <h1 className={styles.logoText}>Rosaura</h1>}
               </div>
             </div>
-            <div className="space-y-4 mb-4">
+            <div className={`${styles.buttonContainer} space-y-4 mb-4`}>
               <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.mainButton}>
                 Hacé tu reserva
               </button>
@@ -220,8 +220,8 @@ export const ClientView = ({
         </div>
 
         {showSearchForm && !foundReservation && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full">
+          <div className={`${styles.modalOverlay} fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4`}>
+            <div className={`${styles.modalContent} bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full`}>
               <SearchReservationForm
                 onSearch={handleSearch}
                 onClose={() => setShowSearchForm(false)}
@@ -231,8 +231,8 @@ export const ClientView = ({
         )}
 
         {foundReservation && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full">
+          <div className={`${styles.modalOverlay} fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4`}>
+            <div className={`${styles.modalContent} bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full`}>
               <ReservationDetails
                 reservation={foundReservation}
                 onClose={() => {
@@ -283,7 +283,7 @@ export const ClientView = ({
           <h1 className="text-xl font-bold text-white inline-block">Seleccionar fecha</h1>
         </div>
         <div className="space-y-6">
-          <div>
+          <div className={styles.formSection}>
             <label className="block text-sm font-medium text-gray-200 mb-2">
               <Calendar size={20} className="inline-block align-text-bottom mr-2" />Fecha
             </label>
@@ -309,7 +309,7 @@ export const ClientView = ({
               />
             </div>
           </div>
-          <div>
+          <div className={styles.formSection}>
             <label className="block text-sm font-medium text-gray-200 mb-2">
               <Clock size={20} className="inline-block align-text-bottom mr-2" />Turno
             </label>
@@ -328,7 +328,7 @@ export const ClientView = ({
               </button>
             </div>
           </div>
-          <div>
+          <div className={styles.formSection}>
             <label className="block text-sm font-medium text-gray-200 mb-2">
               <Users size={20} className="inline-block align-text-bottom mr-2" />Cantidad de personas
             </label>
@@ -370,6 +370,7 @@ export const ClientView = ({
   if (currentScreen === 'horario') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+        <div className={`${styles.screenContainer}`}>
         <div className="mb-6">
           <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.backButton}><ChevronLeft size={16} /></button>
           <h1 className="text-xl font-bold text-white inline-block">Horarios</h1>
@@ -397,6 +398,7 @@ export const ClientView = ({
               <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.secondaryButton}>Volver a seleccionar fecha</button>
             </div>
           )}
+        </div>
         </div>
       </ClientLayout>
     );

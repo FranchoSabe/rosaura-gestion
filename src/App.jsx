@@ -17,7 +17,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db } from './firebase';
 
 // --- CONFIGURACIÓN Y DATOS ---
-const LOGO_URL = '/logo.png';
+const LOGO_URL = null; // Usamos texto con tipografía Daniel en lugar de imagen
 const BACKGROUND_IMAGE_URL = '/fondo.jpg';
 const HORARIOS = {
     mediodia: ['12:00', '12:30', '13:00', '13:30', '14:00'],
