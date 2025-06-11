@@ -179,6 +179,54 @@ export const ClientView = ({
     window.open(`https://wa.me/5492213995351?text=${encodeURIComponent(mensaje)}`, '_blank');
   };
 
+  // Helper function para generar días disponibles de la semana
+  const generateWeekDays = () => {
+    const days = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let dayCount = 0;
+    let i = 0;
+    
+    // Generar hasta 6 días disponibles (sin lunes)
+    while (dayCount < 6 && i < 14) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      // Verificar si el día está disponible (no es lunes)
+      const isMonday = date.getDay() === 1;
+      if (!isMonday) {
+        days.push({
+          date: date,
+          dateString: date.toISOString().split('T')[0],
+          label: getDayLabel(date, i),
+          isToday: i === 0,
+          isTomorrow: i === 1
+        });
+        dayCount++;
+      }
+      i++;
+    }
+    
+    return days;
+  };
+
+  // Helper function para obtener la etiqueta del día
+  const getDayLabel = (date, dayIndex) => {
+    if (dayIndex === 0) return 'Hoy';
+    if (dayIndex === 1) return 'Mañana';
+    
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    return dayNames[date.getDay()];
+  };
+
+  // Helper function para formatear fecha para mostrar día y número
+  const formatDayDisplay = (date) => {
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    return `${day}/${month}`;
+  };
+
   if (currentScreen === 'landing') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
@@ -257,12 +305,16 @@ export const ClientView = ({
     today.setHours(0, 0, 0, 0);
     const maxDate = new Date();
     maxDate.setMonth(maxDate.getMonth() + 1);
+    
+    const weekDays = generateWeekDays();
+    
     const isDayDisabled = (date) => {
       if (date.getDay() === 1) return true;
       if (date > maxDate) return true;
       if (date < today) return true;
       return false;
     };
+    
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className="mb-6">
@@ -288,26 +340,39 @@ export const ClientView = ({
             <label className="block text-sm font-medium text-gray-200 mb-2">
               <Calendar size={20} className="inline-block align-text-bottom mr-2" />Fecha
             </label>
-            <div className={styles.dateContainer}>
-              <DatePicker
-                selected={reservaData.fecha ? new Date(reservaData.fecha) : null}
-                onChange={date => setReservaData({ ...reservaData, fecha: date })}
-                minDate={today}
-                maxDate={maxDate}
-                filterDate={date => !isDayDisabled(date)}
-                placeholderText="Seleccionar fecha"
-                dateFormat="yyyy-MM-dd"
-                popperPlacement="bottom"
-                calendarClassName="custom-green-calendar"
-                customInput={
-                  <button
-                    className={reservaData.fecha ? styles.dateButtonSelected : styles.dateButtonUnselected}
-                    type="button"
-                  >
-                    <span>{reservaData.fecha ? formatDate(reservaData.fecha) : 'Seleccionar fecha'}</span>
-                  </button>
-                }
-              />
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-3">
+                {weekDays.map((day) => {
+                  const isSelected = reservaData.fecha && 
+                    new Date(reservaData.fecha).toDateString() === day.date.toDateString();
+                  
+                  return (
+                    <button
+                      key={day.dateString}
+                      onClick={() => setReservaData({ ...reservaData, fecha: day.date })}
+                      className={`${isSelected ? styles.dateButtonSelected : styles.dateButtonUnselected} 
+                        flex flex-col items-center py-3 relative`}
+                      type="button"
+                    >
+                      <span className="text-sm font-medium">{day.label}</span>
+                      <span className="text-xs opacity-75">{formatDayDisplay(day.date)}</span>
+                      {day.isToday && (
+                        <div className="absolute top-1 right-1 w-2 h-2 bg-green-400 rounded-full"></div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => {
+                  // Mostrar un modal o formulario más avanzado para fechas futuras
+                  alert('Para reservas más adelante, por favor contactanos por WhatsApp');
+                }}
+                className={styles.secondaryButton}
+              >
+                <Calendar size={16} />
+                <span>Más fechas</span>
+              </button>
             </div>
           </div>
           <div className={styles.formSection}>
