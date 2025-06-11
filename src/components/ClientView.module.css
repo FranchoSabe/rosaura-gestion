@@ -911,12 +911,13 @@ label svg {
     margin-bottom: 1.2rem !important;
   }
   
-  /* Mejoras para botones en móviles */
+  /* Mejoras para botones en móviles - SIN blur para mantener transparencia */
   .mainButton {
     padding: 1.5rem 1.5rem;
     min-height: 64px;
     font-size: 1.3rem;
     margin-bottom: 1rem;
+    backdrop-filter: none;
   }
   
   .secondaryButton {
@@ -924,6 +925,20 @@ label svg {
     min-height: 60px;
     font-size: 1.25rem;
     margin-bottom: 0.8rem;
+    backdrop-filter: none;
+  }
+  
+  /* Botones de fecha, turno y personas sin blur en móvil */
+  .dateButton {
+    backdrop-filter: none;
+  }
+  
+  .turnoButton {
+    backdrop-filter: none;
+  }
+  
+  .personasButton {
+    backdrop-filter: none;
   }
   
   /* Animaciones táctiles específicas para móviles */
@@ -996,6 +1011,7 @@ label svg {
     margin-bottom: 1.2rem;
     padding: 1.6rem 1.2rem;
     border-radius: 1.2rem;
+    backdrop-filter: none;
   }
   
   .buttonContainer {
@@ -1005,6 +1021,11 @@ label svg {
   /* Espaciado mejorado entre botones */
   .mainButton {
     margin-bottom: 1.4rem;
+  }
+  
+  /* Asegurar que todos los botones mantengan la transparencia en pantallas pequeñas */
+  .dateButton, .turnoButton, .personasButton {
+    backdrop-filter: none;
   }
 }
 
