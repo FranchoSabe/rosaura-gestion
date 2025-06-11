@@ -81,7 +81,7 @@
   background-position: center;
   background-repeat: no-repeat;
   background-color: #000;
-  animation: backgroundEntrance 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: backgroundEntrance 4.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .background::before {
