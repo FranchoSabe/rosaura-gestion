@@ -156,7 +156,8 @@ function App() {
     return horariosDisponibles;
   };
 
-  const isValidDate = (fecha, turno = null) => {
+  const isValidDate = (fecha, turno = null, adminOverride = false) => {
+    if (adminOverride) return true;
     if (!fecha) return false;
     
     const today = new Date();
@@ -398,11 +399,11 @@ function App() {
     return date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  const handleUpdateReservation = async (reservationId, updatedData) => {
+  const handleUpdateReservation = async (reservationId, updatedData, adminOverride = false) => {
     try {
       const fechaString = updatedData.fecha instanceof Date ? updatedData.fecha.toISOString().split('T')[0] : updatedData.fecha;
 
-      if (!isValidDate(fechaString, updatedData.turno)) {
+      if (!isValidDate(fechaString, updatedData.turno, adminOverride)) {
         throw new Error('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');
       }
 
@@ -413,7 +414,7 @@ function App() {
         reservationId
       );
 
-      if (!slots.includes(updatedData.horario)) {
+      if (!adminOverride && !slots.includes(updatedData.horario)) {
         throw new Error('El horario seleccionado no está disponible. Por favor, elige otro horario.');
       }
 
@@ -519,6 +520,34 @@ function App() {
     }
   };
 
+  // === FUNCIONES PARA BLOQUEOS DE MESAS ===
+  
+  const handleSaveBlockedTables = async (fecha, turno, blockedTablesArray) => {
+    try {
+      // Aquí deberías implementar la lógica para guardar en tu base de datos
+      // Por ahora, usaremos localStorage como ejemplo
+      const key = `blockedTables_${fecha}_${turno}`;
+      localStorage.setItem(key, JSON.stringify(blockedTablesArray));
+      return true;
+    } catch (error) {
+      console.error("Error al guardar bloqueos de mesas:", error);
+      throw error;
+    }
+  };
+
+  const handleLoadBlockedTables = async (fecha, turno) => {
+    try {
+      // Aquí deberías implementar la lógica para cargar desde tu base de datos
+      // Por ahora, usaremos localStorage como ejemplo
+      const key = `blockedTables_${fecha}_${turno}`;
+      const saved = localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      console.error("Error al cargar bloqueos de mesas:", error);
+      return null;
+    }
+  };
+
   if (authState) {
     return <AdminView 
       data={data} 
@@ -533,6 +562,8 @@ function App() {
       onMarkAsNotified={handleMarkAsNotified}
       onContactWaitingClient={handleContactWaitingClient}
       onRejectWaitingReservation={handleRejectWaitingReservation}
+      onSaveBlockedTables={handleSaveBlockedTables}
+      onLoadBlockedTables={handleLoadBlockedTables}
       getAvailableSlotsForEdit={getAvailableSlotsForEdit}
       getAvailableSlots={getAvailableSlots}
       isValidDate={isValidDate}

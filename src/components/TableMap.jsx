@@ -1,52 +1,21 @@
 import React, { useState } from 'react';
 import { Printer, Download, Sun, Moon, X } from 'lucide-react';
 import styles from './TableMap.module.css';
-
-// Configuración del mapa de mesas - Layout real de Rosaura (comprimido)
-const TABLES_LAYOUT = [
-  // Zona superior (alineadas verticalmente - horizontales para 4 personas)
-  { id: 12, x: 50, y: 40, width: 80, height: 50, capacity: 4 }, // rectangular horizontal
-  { id: 13, x: 140, y: 40, width: 80, height: 50, capacity: 4 }, // rectangular horizontal
-  
-  // Zona superior-media (mesas modulares cuadradas para 2 personas)
-  { id: 21, x: 50, y: 110, width: 50, height: 50, capacity: 2 }, // cuadrada
-  { id: 11, x: 50, y: 170, width: 50, height: 50, capacity: 2 }, // cuadrada (alineada con 10)
-  { id: 24, x: 140, y: 110, width: 50, height: 50, capacity: 2 }, // cuadrada
-  { id: 14, x: 200, y: 110, width: 50, height: 50, capacity: 2 }, // cuadrada (a la derecha de 24)
-  
-  // Zona central (después de la división principal)
-  // Columna izquierda: 10, 9, 8 alineadas verticalmente (rectangulares horizontales como 12 y 13)
-  { id: 10, x: 50, y: 230, width: 80, height: 50, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
-  { id: 9, x: 50, y: 290, width: 80, height: 50, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
-  { id: 8, x: 50, y: 350, width: 50, height: 50, capacity: 2 }, // cuadrada (igual que 2)
-  
-  // Columna central: 6 y 7 verticales
-  { id: 6, x: 150, y: 230, width: 50, height: 80, capacity: 4 }, // rectangular vertical (igual tamaño que 12 y 13 pero vertical)
-  { id: 7, x: 150, y: 320, width: 60, height: 90, capacity: 6 }, // rectangular vertical más grande (sin cambios)
-  
-  // Columna derecha: 5, 4, 3, 2 alineadas verticalmente
-  { id: 5, x: 230, y: 195, width: 50, height: 80, capacity: 4 }, // rectangular vertical (igual tamaño que 12 y 13 pero vertical)
-  { id: 4, x: 230, y: 285, width: 50, height: 80, capacity: 4 }, // rectangular vertical (igual tamaño que 12 y 13 pero vertical)
-  { id: 3, x: 230, y: 375, width: 50, height: 80, capacity: 4 }, // rectangular vertical (igual tamaño que 12 y 13 pero vertical)
-  { id: 2, x: 230, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada (sin cambios)
-  
-  // Mesas inferiores a la misma altura que mesa 2 (más compacto)
-  { id: 1, x: 120, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada (igual que 2) - reposicionada
-  { id: 31, x: 180, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada (igual que 2) - reposicionada
-];
-
-// Reglas de orden de reserva de mesas
-const RESERVATION_ORDER = {
-  2: [1, 31, 2, 8], // Mesas para 2 personas
-  4: [3, 4, 5, 6],  // Mesas para 4 personas
-  6: [7]            // Mesa para 6 personas
-};
+import { TABLES_LAYOUT, RESERVATION_ORDER, DEFAULT_BLOCKED_TABLES, calculateAutoAssignments, setsAreEqual } from '../utils/mesaLogic';
 
 const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSelector = true }) => {
   const [selectedTurno, setSelectedTurno] = useState('mediodia');
   const [tableAssignments, setTableAssignments] = useState({}); // {reservationId: tableId}
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [assignmentMode, setAssignmentMode] = useState(false);
+  const [blockedTables, setBlockedTables] = useState(() => {
+    // Inicializar con bloqueos por defecto
+    const defaultBlocked = new Set();
+    Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
+      defaultBlocked.add(tableId);
+    });
+    return defaultBlocked;
+  });
   
   // Obtener fecha actual en formato local
   const getTodayString = () => {
@@ -119,48 +88,55 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
     [selectedDateReservations, selectedTurno]
   );
 
-  // Auto-asignación de mesas basada en el orden de prioridad
-  const autoAssignTables = (reservations) => {
-    const assignments = {};
-    const occupiedTables = new Set();
+  // Auto-asignación de mesas basada en el orden de prioridad y bloqueos dinámicos
+  const autoAssignTables = (reservations, currentBlockedTables) => {
+    const { assignments, blockedTables: newBlocked } = calculateAutoAssignments(reservations, currentBlockedTables);
+    if (!setsAreEqual(currentBlockedTables, newBlocked)) {
+      setBlockedTables(newBlocked);
+    }
+    return assignments;
+  };
+  
+  // Función para redistribuir bloqueos según ocupación
+  const redistribuirBloqueos = (assignments, occupiedTables, blockedTables) => {
+    // Contar mesas ocupadas por capacidad
+    const occupiedCount = { 2: 0, 4: 0, 6: 0 };
+    const availableCount = { 2: 0, 4: 0, 6: 0 };
     
-    // Ordenar reservas por horario
-    const sortedReservations = [...reservations].sort((a, b) => a.horario.localeCompare(b.horario));
-    
-    for (const reserva of sortedReservations) {
-      const capacity = reserva.personas;
-      let targetCapacity = capacity;
-      
-      // Si es para 5 personas, usar mesa de 6
-      if (capacity === 5) targetCapacity = 6;
-      
-      // Si no hay mesas exactas, usar la siguiente capacidad disponible
-      let availableOrder = RESERVATION_ORDER[targetCapacity];
-      if (!availableOrder) {
-        // Buscar en capacidades mayores
-        for (const cap of [4, 6]) {
-          if (cap >= capacity && RESERVATION_ORDER[cap]) {
-            availableOrder = RESERVATION_ORDER[cap];
-            break;
-          }
-        }
+    TABLES_LAYOUT.forEach(table => {
+      if (occupiedTables.has(table.id)) {
+        occupiedCount[table.capacity]++;
+      } else if (!blockedTables.has(table.id)) {
+        availableCount[table.capacity]++;
       }
-      
-      if (availableOrder) {
-        // Buscar la primera mesa disponible en el orden
-        for (const tableId of availableOrder) {
-          if (!occupiedTables.has(tableId)) {
-            assignments[reserva.id] = tableId;
-            occupiedTables.add(tableId);
-            break;
-          }
+    });
+    
+    // Lógica específica: Si se ocupa mesa 21 (última de 2 disponibles)
+    if (occupiedTables.has(21) && availableCount[2] === 0) {
+      // Bloquear mesa 3 y desbloquear mesas modulares 14 y 24
+      blockedTables.add(3);
+      blockedTables.delete(14);
+      blockedTables.delete(24);
+    }
+    
+    // Mantener siempre 12 cupos para walk-ins ajustando bloqueos según demanda
+    const totalWalkInCupos = Array.from(blockedTables).reduce((total, tableId) => {
+      const table = TABLES_LAYOUT.find(t => t.id === tableId);
+      return total + (table ? table.capacity : 0);
+    }, 0);
+    
+    // Si hay menos de 12 cupos, agregar más bloqueos
+    if (totalWalkInCupos < 12) {
+      // Intentar bloquear mesas según disponibilidad
+      for (const tableId of [3, 12, 13]) {
+        if (!occupiedTables.has(tableId) && !blockedTables.has(tableId)) {
+          blockedTables.add(tableId);
+          break;
         }
       }
     }
-    
-    return assignments;
   };
-
+  
   // Resetear modo de asignación cuando cambia la fecha
   React.useEffect(() => {
     setSelectedReservation(null);
@@ -169,13 +145,37 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
 
   // Calcular asignaciones automáticas cuando cambian las reservas o el turno
   React.useEffect(() => {
-    const autoAssignments = autoAssignTables(reservasTurnoSeleccionado);
+    const autoAssignments = autoAssignTables(reservasTurnoSeleccionado, blockedTables);
     setTableAssignments(autoAssignments);
-  }, [reservasTurnoSeleccionado]);
+  }, [reservasTurnoSeleccionado, blockedTables]);
+
+  // Forzar aplicación de bloqueos por defecto al cambiar fecha/turno
+  React.useEffect(() => {
+    // Reinicializar bloqueos por defecto cuando no hay reservas
+    if (reservasTurnoSeleccionado.length === 0) {
+      const defaultBlocked = new Set();
+      Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
+        defaultBlocked.add(tableId);
+      });
+      setBlockedTables(defaultBlocked);
+    }
+  }, [selectedDate, selectedTurno, reservasTurnoSeleccionado.length]);
 
   // Función para determinar si una mesa está ocupada
   const isMesaOcupada = (mesaId) => {
     return Object.values(tableAssignments).includes(mesaId);
+  };
+  
+  // Función para determinar si una mesa está bloqueada
+  const isMesaBloqueada = (mesaId) => {
+    return blockedTables.has(mesaId);
+  };
+  
+  // Función para obtener el estado de una mesa
+  const getMesaStatus = (mesaId) => {
+    if (isMesaOcupada(mesaId)) return 'occupied';
+    if (isMesaBloqueada(mesaId)) return 'blocked';
+    return 'available';
   };
 
   // Función para obtener la reserva asignada a una mesa
@@ -232,9 +232,43 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
 
   // Función para reiniciar asignaciones automáticas
   const resetToAutoAssignment = () => {
-    const autoAssignments = autoAssignTables(reservasTurnoSeleccionado);
+    const autoAssignments = autoAssignTables(reservasTurnoSeleccionado, blockedTables);
     setTableAssignments(autoAssignments);
     cancelAssignment();
+  };
+  
+  // Función para alternar bloqueo de una mesa
+  const toggleTableBlock = (tableId) => {
+    const newBlockedTables = new Set(blockedTables);
+    if (newBlockedTables.has(tableId)) {
+      newBlockedTables.delete(tableId);
+    } else {
+      // Solo bloquear si no está ocupada
+      if (!isMesaOcupada(tableId)) {
+        newBlockedTables.add(tableId);
+      }
+    }
+    setBlockedTables(newBlockedTables);
+  };
+  
+  // Función para resetear bloqueos a valores por defecto
+  const resetToDefaultBlocks = () => {
+    const defaultBlocked = new Set();
+    Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
+      defaultBlocked.add(tableId);
+    });
+    setBlockedTables(defaultBlocked);
+    // Recalcular asignaciones con nuevos bloqueos
+    const autoAssignments = autoAssignTables(reservasTurnoSeleccionado, defaultBlocked);
+    setTableAssignments(autoAssignments);
+  };
+  
+  // Función para calcular cupos disponibles para walk-ins
+  const getWalkInCupos = () => {
+    return Array.from(blockedTables).reduce((total, tableId) => {
+      const table = TABLES_LAYOUT.find(t => t.id === tableId);
+      return total + (table ? table.capacity : 0);
+    }, 0);
   };
 
   // Función para imprimir/exportar
@@ -305,6 +339,10 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
               <span>🔄</span>
               Auto-Asignar
             </button>
+            <button onClick={resetToDefaultBlocks} className={styles.actionButton}>
+              <span>🔒</span>
+              Reset Bloqueos
+            </button>
             {assignmentMode && (
               <button onClick={cancelAssignment} className={styles.actionButtonCancel}>
                 <span>✗</span>
@@ -322,7 +360,24 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
       <div className={styles.content}>
         {/* Mapa de Mesas */}
         <div className={styles.mapSection}>
-          <h3 className={styles.sectionTitle}>Disposición de Mesas</h3>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className={styles.sectionTitle}>Disposición de Mesas</h3>
+            <div className="flex items-center gap-4">
+              {/* Indicador de cupos walk-in */}
+              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                getWalkInCupos() < 8 ? 'bg-red-100 text-red-800' : 
+                getWalkInCupos() < 10 ? 'bg-yellow-100 text-yellow-800' : 
+                'bg-green-100 text-green-800'
+              }`}>
+                🚶 Walk-ins: {getWalkInCupos()} cupos
+              </div>
+              {assignmentMode && (
+                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                  🎯 Modo Asignación
+                </div>
+              )}
+            </div>
+          </div>
           <div className={styles.mapContainer}>
             <svg 
               viewBox="0 0 350 600" 
@@ -338,7 +393,16 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
               
                              {/* Mesas */}
                {TABLES_LAYOUT.map(table => {
-                 const isOcupada = isMesaOcupada(table.id);
+                 const status = getMesaStatus(table.id);
+                 const isOcupada = status === 'occupied';
+                 const isBloqueada = status === 'blocked';
+                 
+                 // Colores según estado
+                 const getStrokeColor = () => {
+                   if (isOcupada) return "#dc2626"; // Rojo para ocupadas
+                   if (isBloqueada) return "#f59e0b"; // Naranja para bloqueadas
+                   return "#0c4900"; // Verde para libres
+                 };
                  
                  return (
                    <g key={table.id}>
@@ -349,20 +413,20 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
                        width={table.width}
                        height={table.height}
                        fill="#ffffff"
-                       stroke={isOcupada ? "#dc2626" : "#0c4900"}
+                       stroke={getStrokeColor()}
                        strokeWidth="2"
                        rx="3"
                        className={`${styles.table} ${assignmentMode ? styles.mesaClickable : ''}`}
-                       onClick={() => handleTableClick(table.id)}
+                       onClick={() => assignmentMode ? handleTableClick(table.id) : toggleTableBlock(table.id)}
                        style={{
-                         cursor: assignmentMode ? 'pointer' : 'default'
+                         cursor: assignmentMode ? 'pointer' : 'pointer'
                        }}
                      />
                      
                      {/* Número de mesa dentro del recuadro */}
                      <text
                        x={table.x + table.width / 2}
-                       y={table.y + table.height / 2 + (isOcupada ? -5 : 6)}
+                       y={table.y + table.height / 2 + ((isOcupada || isBloqueada) ? -5 : 6)}
                        textAnchor="middle"
                        className={styles.tableNumberInside}
                        fontSize="16"
@@ -372,20 +436,32 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
                        {table.id}
                      </text>
                      
-                     {/* X para mesas ocupadas */}
+                     {/* Símbolos según estado */}
                      {isOcupada && (
                        <text
                          x={table.x + table.width / 2}
                          y={table.y + table.height / 2 + 15}
                          textAnchor="middle"
-                         fontSize="24"
+                         fontSize="20"
                          fontWeight="bold"
                          fill="#dc2626"
                        >
-                         ✗
+                         ➕
                        </text>
                      )}
                      
+                     {isBloqueada && (
+                       <text
+                         x={table.x + table.width / 2}
+                         y={table.y + table.height / 2 + 15}
+                         textAnchor="middle"
+                         fontSize="20"
+                         fontWeight="bold"
+                         fill="#f59e0b"
+                       >
+                         ❌
+                       </text>
+                     )}
 
                    </g>
                  );
@@ -396,8 +472,9 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
                  <rect x="30" y="575" width="15" height="12" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
                  <text x="50" y="583" className={styles.legendText} fontSize="9">Libre</text>
                  <rect x="80" y="575" width="15" height="12" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
-                 <text x="100" y="583" className={styles.legendText} fontSize="9">Ocupada</text>
-                 <text x="140" y="583" className={styles.legendText} fontSize="9">✗ = Reservada</text>
+                 <text x="100" y="583" className={styles.legendText} fontSize="9">➕ Reservada</text>
+                 <rect x="150" y="575" width="15" height="12" fill="#ffffff" stroke="#f59e0b" strokeWidth="1" rx="1" />
+                 <text x="170" y="583" className={styles.legendText} fontSize="9">❌ Walk-in</text>
                </g>
             </svg>
           </div>
@@ -418,10 +495,16 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
             </div>
           )}
           
-          {/* Orden de reserva de mesas */}
+          {/* Información del sistema de cupos */}
           <div className={styles.orderSection}>
-            <h4 className={styles.orderTitle}>Orden de Reserva</h4>
+            <h4 className={styles.orderTitle}>Sistema de Gestión de Cupos</h4>
             <div className={styles.orderGrid}>
+              <div className={styles.orderCategory}>
+                <span className={styles.orderLabel}>Walk-ins:</span>
+                <span className={styles.orderSequence}>
+                  {getWalkInCupos()} cupos reservados (mesas: {Array.from(blockedTables).sort((a,b) => a-b).join(', ')})
+                </span>
+              </div>
               <div className={styles.orderCategory}>
                 <span className={styles.orderLabel}>2 pers:</span>
                 <span className={styles.orderSequence}>
@@ -440,6 +523,9 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
                   {RESERVATION_ORDER[6].join(' → ')}
                 </span>
               </div>
+            </div>
+            <div className="mt-2 text-xs text-gray-600">
+              💡 Click en las mesas para bloquear/desbloquear. El sistema redistribuye automáticamente.
             </div>
           </div>
           
