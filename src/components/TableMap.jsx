@@ -15,24 +15,24 @@ const TABLES_LAYOUT = [
   { id: 14, x: 200, y: 110, width: 50, height: 50, capacity: 2 }, // cuadrada (a la derecha de 24)
   
   // Zona central (después de la división principal)
-  // Columna izquierda: 10, 9, 8 alineadas verticalmente (horizontales)
-  { id: 10, x: 50, y: 230, width: 80, height: 50, capacity: 4 }, // rectangular horizontal
-  { id: 9, x: 50, y: 290, width: 80, height: 50, capacity: 4 }, // rectangular horizontal
-  { id: 8, x: 50, y: 350, width: 50, height: 50, capacity: 2 }, // cuadrada
+  // Columna izquierda: 10, 9, 8 alineadas verticalmente (rectangulares horizontales como 12 y 13)
+  { id: 10, x: 50, y: 230, width: 80, height: 50, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
+  { id: 9, x: 50, y: 290, width: 80, height: 50, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
+  { id: 8, x: 50, y: 350, width: 50, height: 50, capacity: 2 }, // cuadrada (igual que 2)
   
-  // Columna central: 6 vertical y 7 vertical
-  { id: 6, x: 150, y: 230, width: 50, height: 80, capacity: 4 }, // rectangular vertical
-  { id: 7, x: 150, y: 320, width: 60, height: 90, capacity: 6 }, // rectangular vertical más grande
+  // Columna central: 6 y 7 verticales
+  { id: 6, x: 150, y: 230, width: 50, height: 80, capacity: 4 }, // rectangular vertical (igual tamaño que 12 y 13 pero vertical)
+  { id: 7, x: 150, y: 320, width: 60, height: 90, capacity: 6 }, // rectangular vertical más grande (sin cambios)
   
   // Columna derecha: 5, 4, 3, 2 alineadas verticalmente
-  { id: 5, x: 230, y: 195, width: 50, height: 80, capacity: 4 }, // rectangular vertical - borde superior en el medio de mesa 11
-  { id: 4, x: 230, y: 285, width: 50, height: 80, capacity: 4 }, // rectangular vertical
-  { id: 3, x: 230, y: 375, width: 50, height: 80, capacity: 4 }, // rectangular vertical
-  { id: 2, x: 230, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada
+  { id: 5, x: 230, y: 195, width: 50, height: 80, capacity: 4 }, // rectangular vertical (igual tamaño que 12 y 13 pero vertical)
+  { id: 4, x: 230, y: 285, width: 50, height: 80, capacity: 4 }, // rectangular vertical (igual tamaño que 12 y 13 pero vertical)
+  { id: 3, x: 230, y: 375, width: 50, height: 80, capacity: 4 }, // rectangular vertical (igual tamaño que 12 y 13 pero vertical)
+  { id: 2, x: 230, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada (sin cambios)
   
-  // Mesas inferiores alineadas horizontalmente (alineadas con mesa 2)
-  { id: 1, x: 100, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada - alineada con mesa 2
-  { id: 31, x: 160, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada - alineada con mesa 2
+  // Mesas inferiores a la misma altura que mesa 2 (más compacto)
+  { id: 1, x: 120, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada (igual que 2) - reposicionada
+  { id: 31, x: 180, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada (igual que 2) - reposicionada
 ];
 
 // Reglas de orden de reserva de mesas
@@ -333,11 +333,8 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
               <rect x="0" y="0" width="350" height="600" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
               
               {/* Divisiones principales - Paredes */}
-              {/* Línea horizontal entre mesa 14 y mesa 5 */}
-              <line x1="140" y1="178" x2="280" y2="178" stroke="#374151" strokeWidth="2" />
-              
-              {/* Línea vertical que cubre el lado de mesa 1 (más separada y extendida) */}
-              <line x1="140" y1="465" x2="140" y2="515" stroke="#6b7280" strokeWidth="2" />
+              {/* Línea horizontal entre mesa 14 y mesa 5 - paralela y centrada entre ellas */}
+              <line x1="200" y1="177" x2="280" y2="177" stroke="#374151" strokeWidth="2" />
               
                              {/* Mesas */}
                {TABLES_LAYOUT.map(table => {

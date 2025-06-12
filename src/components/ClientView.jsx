@@ -123,7 +123,8 @@ export const ClientView = ({
     formatDate,
     handleSearchReservation, handleDeleteReservation,
     showReservationModal, setShowReservationModal,
-    showWaitingListModal, setShowWaitingListModal
+    showWaitingListModal, setShowWaitingListModal,
+    waitingList = []
 }) => {
 
   const [showSearchForm, setShowSearchForm] = useState(false);
@@ -231,6 +232,26 @@ export const ClientView = ({
     const day = date.getDate();
     const month = date.getMonth() + 1;
     return `${day}/${month}`;
+  };
+
+  // Función para verificar si un día tiene reservas en espera
+  const hasWaitingList = (date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return waitingList.some(waiting => 
+      waiting.fecha === dateString && 
+      waiting.status !== 'rejected' && 
+      waiting.status !== 'confirmed'
+    );
+  };
+
+  // Función para contar reservas en espera de un día
+  const getWaitingCount = (date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return waitingList.filter(waiting => 
+      waiting.fecha === dateString && 
+      waiting.status !== 'rejected' && 
+      waiting.status !== 'confirmed'
+    ).length;
   };
 
   if (currentScreen === 'landing') {
@@ -366,6 +387,8 @@ export const ClientView = ({
                 {weekDays.map((day) => {
                   const isSelected = reservaData.fecha && 
                     new Date(reservaData.fecha).toDateString() === day.date.toDateString();
+                  const hasWaiting = hasWaitingList(day.date);
+                  const waitingCount = getWaitingCount(day.date);
                   
                   return (
                     <button
@@ -374,10 +397,15 @@ export const ClientView = ({
                       className={`${isSelected ? styles.dateButtonSelected : styles.dateButtonUnselected} 
                         flex flex-col items-center py-3 relative`}
                       type="button"
-                                          >
-                        <span className="text-sm font-medium">{day.label}</span>
-                        <span className="text-xs opacity-75">{formatDayDisplay(day.date)}</span>
-                      </button>
+                    >
+                      <span className="text-sm font-medium">{day.label}</span>
+                      <span className="text-xs opacity-75">{formatDayDisplay(day.date)}</span>
+                      {hasWaiting && (
+                        <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
+                          {waitingCount}
+                        </div>
+                      )}
+                    </button>
                   );
                 })}
                 <button
@@ -389,6 +417,12 @@ export const ClientView = ({
                   <span className="text-sm font-medium">+ Fechas</span>
                   <Calendar size={16} className="text-gray-400 mt-1" />
                 </button>
+              </div>
+              <div className="mt-3 text-center">
+                <p className="text-xs text-white opacity-60 flex items-center justify-center gap-2">
+                  <span className="inline-block w-3 h-3 bg-orange-500 rounded-full"></span>
+                  Días con reservas en espera
+                </p>
               </div>
             </div>
           </div>
@@ -488,6 +522,16 @@ export const ClientView = ({
                     // Filtrar lunes
                     return date.getDay() !== 1;
                   }}
+                  renderDayContents={(day, date) => (
+                    <div className="relative flex items-center justify-center w-full h-full">
+                      <span>{day}</span>
+                      {date && hasWaitingList(date) && (
+                        <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold" style={{fontSize: '8px'}}>
+                          {getWaitingCount(date)}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   inline
                   locale="es"
                   dateFormat="dd/MM/yyyy"
@@ -496,14 +540,24 @@ export const ClientView = ({
                 />
               </div>
               
-              <div className="mt-4 text-center">
+              <div className="mt-4 text-center space-y-2">
                 <p className="text-sm text-white opacity-70">
                   Los lunes permanecemos cerrados
+                </p>
+                <p className="text-xs text-white opacity-60 flex items-center justify-center gap-2">
+                  <span className="inline-block w-3 h-3 bg-orange-500 rounded-full"></span>
+                  Días con reservas en espera
                 </p>
               </div>
             </div>
           </div>
         )}
+        <div className="mt-3 text-center">
+          <p className="text-xs text-white opacity-60 flex items-center justify-center gap-2">
+            <span className="inline-block w-3 h-3 bg-orange-500 rounded-full"></span>
+            Días con reservas en espera
+          </p>
+        </div>
       </ClientLayout>
     );
   }

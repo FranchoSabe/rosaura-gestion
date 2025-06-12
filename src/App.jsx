@@ -17,6 +17,8 @@ import {
   confirmWaitingReservation,
   deleteWaitingReservation,
   markWaitingAsNotified,
+  contactWaitingClient,
+  rejectWaitingReservation,
   auth 
 } from './firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -497,6 +499,26 @@ function App() {
     }
   };
 
+  const handleContactWaitingClient = async (waitingReservationId) => {
+    try {
+      await contactWaitingClient(waitingReservationId);
+      return true;
+    } catch (error) {
+      console.error("Error al contactar cliente:", error);
+      throw error;
+    }
+  };
+
+  const handleRejectWaitingReservation = async (waitingReservationId, reason = '') => {
+    try {
+      await rejectWaitingReservation(waitingReservationId, reason);
+      return true;
+    } catch (error) {
+      console.error("Error al rechazar reserva:", error);
+      throw error;
+    }
+  };
+
   if (authState) {
     return <AdminView 
       data={data} 
@@ -509,6 +531,8 @@ function App() {
       onConfirmWaitingReservation={handleConfirmWaitingReservation}
       onDeleteWaitingReservation={handleDeleteWaitingReservation}
       onMarkAsNotified={handleMarkAsNotified}
+      onContactWaitingClient={handleContactWaitingClient}
+      onRejectWaitingReservation={handleRejectWaitingReservation}
       getAvailableSlotsForEdit={getAvailableSlotsForEdit}
       getAvailableSlots={getAvailableSlots}
       isValidDate={isValidDate}
@@ -548,6 +572,7 @@ function App() {
       setShowReservationModal={setShowReservationModal}
       showWaitingListModal={showWaitingListModal}
       setShowWaitingListModal={setShowWaitingListModal}
+      waitingList={data.waitingList || []}
     />
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ChevronDown, ThumbsDown, MessageCircle, Check, Edit2, Trash2, CheckCircle, X, XCircle, AlertTriangle, Sun, Moon, Clock, Printer, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronDown, ThumbsDown, MessageCircle, Check, Edit2, Trash2, CheckCircle, X, XCircle, AlertTriangle, Sun, Moon, Clock, Printer, ChevronLeft, ChevronRight, Calendar, Users, Phone } from 'lucide-react';
 import styles from './AdminView.module.css';
 import TableMap from './TableMap';
 import DatePicker, { registerLocale } from 'react-datepicker';
@@ -416,6 +416,9 @@ const ReservationsTable = ({
               <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
                 Personas
               </th>
+              <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
+                Comentarios
+              </th>
               {tableAssignments && Object.keys(tableAssignments).length > 0 && (
                 <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
                   Mesa
@@ -467,6 +470,21 @@ const ReservationsTable = ({
                       {reserva.personas}
                     </span>
                   </td>
+
+                                     <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
+                     <div className="text-sm max-w-xs">
+                       {reserva.cliente.comentarios ? (
+                         <div className="text-xs text-gray-600 leading-relaxed italic">
+                           {reserva.cliente.comentarios.length > 60 
+                             ? `${reserva.cliente.comentarios.substring(0, 60)}...` 
+                             : reserva.cliente.comentarios
+                           }
+                         </div>
+                       ) : (
+                         <span className="text-gray-300 text-xs">—</span>
+                       )}
+                     </div>
+                   </td>
 
                   {tableAssignments && Object.keys(tableAssignments).length > 0 && (
                     <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
@@ -554,6 +572,441 @@ const ReservationsTable = ({
 };
 
 // Componente para vista de clientes con lista negra
+const WaitingListView = ({ waitingList, reservations, clients, onConfirmWaitingReservation, onDeleteWaitingReservation, onContactWaitingClient, onRejectWaitingReservation, getAvailableSlots, formatDate, HORARIOS, showNotification, showConfirmation }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedTurno, setSelectedTurno] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedWaiting, setSelectedWaiting] = useState(null);
+  const [selectedHorario, setSelectedHorario] = useState('');
+  const [selectedMesa, setSelectedMesa] = useState('');
+
+  // Filtrar lista de espera por fecha y otros criterios
+  const filteredWaitingList = waitingList.filter(waiting => {
+    if (waiting.status === 'rejected') return false;
+    
+    // Filtro por fecha
+    if (selectedDate && waiting.fecha !== selectedDate) return false;
+    
+    // Filtro por turno
+    if (selectedTurno && waiting.turno !== selectedTurno) return false;
+    
+    // Filtro por búsqueda
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        waiting.cliente?.nombre?.toLowerCase().includes(searchLower) ||
+        waiting.cliente?.telefono?.includes(searchTerm) ||
+        waiting.waitingId?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return true;
+  });
+
+  // Obtener historial de reservas para cada cliente filtrando por nombre Y teléfono
+  const getClientHistory = (waiting) => {
+    if (!waiting?.cliente || !reservations) return [];
+    
+    // Normalizar nombre y teléfono para buscar coincidencias
+    const normalizedWaitingName = waiting.cliente.nombre.toLowerCase().trim();
+    const normalizedWaitingPhone = waiting.cliente.telefono.replace(/\D/g, ''); // Solo números
+    
+    // Buscar todas las reservas con el mismo nombre Y teléfono
+    return reservations.filter(reservation => {
+      if (!reservation?.cliente?.nombre || !reservation?.cliente?.telefono) return false;
+      
+      const resNormalizedName = reservation.cliente.nombre.toLowerCase().trim();
+      const resNormalizedPhone = reservation.cliente.telefono.replace(/\D/g, '');
+      
+      // Filtrar por nombre Y teléfono (ambos deben coincidir)
+      return normalizedWaitingName === resNormalizedName && 
+             normalizedWaitingPhone && resNormalizedPhone && 
+             normalizedWaitingPhone === resNormalizedPhone;
+    }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); // Ordenar por fecha más reciente
+  };
+
+  const formatPhoneForWhatsApp = (phone) => {
+    if (!phone) return '';
+    let cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = '54' + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith('54')) {
+      cleanPhone = '54' + cleanPhone;
+    }
+    return cleanPhone;
+  };
+
+  const handleContactClient = async (waiting) => {
+    try {
+      await onContactWaitingClient(waiting.id);
+      
+      const whatsappPhone = formatPhoneForWhatsApp(waiting.cliente.telefono);
+      const fechaFormateada = formatDate(waiting.fecha);
+      const turnoTexto = waiting.turno === 'mediodia' ? 'mediodía' : 'noche';
+      
+      const mensaje = `¡Hola ${waiting.cliente.nombre}! 🌹 
+      
+Tenemos buenas noticias. Hay disponibilidad para tu solicitud de reserva:
+📅 ${fechaFormateada} - ${turnoTexto}
+👥 ${waiting.personas} personas
+
+Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensaje. 
+
+⏰ Si no recibimos confirmación en 30 minutos, el cupo será ofrecido a la siguiente persona en lista de espera.
+
+¡Esperamos verte pronto en Rosaura!`;
+
+      const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(mensaje)}`;
+      window.open(whatsappUrl, '_blank');
+      
+      showNotification('success', 'Cliente contactado. Esperando confirmación...');
+    } catch (error) {
+      showNotification('error', 'Error al contactar cliente');
+    }
+  };
+
+  const handleConfirmReservation = (waiting) => {
+    setSelectedWaiting(waiting);
+    setSelectedHorario('');
+    setSelectedMesa('');
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!selectedHorario || !selectedMesa) {
+      showNotification('error', 'Selecciona horario y mesa');
+      return;
+    }
+
+    try {
+      await onConfirmWaitingReservation(selectedWaiting.id, selectedWaiting, selectedHorario);
+      showNotification('success', 'Reserva confirmada exitosamente');
+      setShowConfirmModal(false);
+      setSelectedWaiting(null);
+    } catch (error) {
+      showNotification('error', 'Error al confirmar reserva');
+    }
+  };
+
+  const handleRejectReservation = async (waiting) => {
+    const confirmed = await showConfirmation({
+      title: 'Rechazar solicitud',
+      message: `¿Estás seguro de rechazar la solicitud de ${waiting.cliente.nombre}?`,
+      confirmText: 'Rechazar',
+      cancelText: 'Cancelar'
+    });
+
+    if (confirmed) {
+      try {
+        await onRejectWaitingReservation(waiting.id, 'Rechazada por administración');
+        showNotification('success', 'Solicitud rechazada');
+      } catch (error) {
+        showNotification('error', 'Error al rechazar solicitud');
+      }
+    }
+  };
+
+  const getStatusBadge = (waiting) => {
+    if (waiting.contacted && waiting.awaitingConfirmation) {
+      const now = new Date();
+      const deadline = new Date(waiting.confirmationDeadline);
+      const isExpired = now > deadline;
+      
+      if (isExpired) {
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-red-50 text-red-700 border border-red-200">
+            <Clock size={12} className="mr-1" />
+            Expirado
+          </span>
+        );
+      } else {
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+            <Clock size={12} className="mr-1" />
+            Esperando
+          </span>
+        );
+      }
+    }
+    
+    if (waiting.contacted) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+          <MessageCircle size={12} className="mr-1" />
+          Contactado
+        </span>
+      );
+    }
+    
+    return (
+      <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-gray-50 text-gray-700 border border-gray-200">
+        <Clock size={12} className="mr-1" />
+        En espera
+      </span>
+    );
+  };
+
+  const availableHorarios = selectedWaiting ? getAvailableSlots(selectedWaiting.fecha, selectedWaiting.turno) : [];
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Lista de Espera</h2>
+        <div className="text-sm text-gray-600">
+          Total: {filteredWaitingList.length} solicitudes
+        </div>
+      </div>
+
+      {/* Filtros */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+          <input
+            type="text"
+            placeholder="Nombre, teléfono o código..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Turno</label>
+          <select
+            value={selectedTurno}
+            onChange={(e) => setSelectedTurno(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Todos los turnos</option>
+            <option value="mediodia">Mediodía</option>
+            <option value="noche">Noche</option>
+          </select>
+        </div>
+
+        <div className="flex items-end">
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedDate(new Date().toISOString().split('T')[0]);
+              setSelectedTurno('');
+            }}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Nombre</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Teléfono</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Turno</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Pers.</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Historial</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Notas</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Estado</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredWaitingList.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                  No hay solicitudes en lista de espera para los filtros seleccionados
+                </td>
+              </tr>
+            ) : (
+              filteredWaitingList.map((waiting) => {
+                const clientHistory = getClientHistory(waiting);
+                return (
+                  <tr key={waiting.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2">
+                      <div>
+                        <div className="font-medium text-gray-900 whitespace-nowrap">{waiting.cliente.nombre}</div>
+                        <div className="text-xs text-gray-500">{waiting.waitingId}</div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">
+                      <a 
+                        href={`https://wa.me/${formatPhoneForWhatsApp(waiting.cliente.telefono)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:text-green-800 hover:underline text-sm whitespace-nowrap"
+                      >
+                        {waiting.cliente.telefono}
+                      </a>
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full whitespace-nowrap ${
+                        waiting.turno === 'mediodia' 
+                          ? 'bg-yellow-100 text-yellow-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {waiting.turno === 'mediodia' ? 'Mediodía' : 'Noche'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-900">
+                      {waiting.personas}
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="text-sm">
+                        <div className="text-gray-900 flex items-center gap-1 whitespace-nowrap">
+                          <span>{clientHistory.length} total</span>
+                          {clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length > 0 && (
+                            <span className="text-blue-600 font-medium">
+                              • {clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length} activa(s)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="text-sm max-w-xs">
+                        {waiting.comentarios || waiting.cliente?.notasInternas || waiting.cliente?.comentarios ? (
+                          <div className="space-y-1">
+                            {waiting.comentarios && (
+                              <div className="text-xs text-gray-700 p-1 bg-blue-50 rounded">
+                                {waiting.comentarios.length > 50 
+                                  ? `${waiting.comentarios.substring(0, 50)}...` 
+                                  : waiting.comentarios
+                                }
+                              </div>
+                            )}
+                            {(waiting.cliente?.notasInternas || waiting.cliente?.comentarios) && (
+                              <div className="text-xs text-gray-600 italic">
+                                {(waiting.cliente?.notasInternas || waiting.cliente?.comentarios).length > 50 
+                                  ? `${(waiting.cliente?.notasInternas || waiting.cliente?.comentarios).substring(0, 50)}...` 
+                                  : (waiting.cliente?.notasInternas || waiting.cliente?.comentarios)
+                                }
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">
+                      {getStatusBadge(waiting)}
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex justify-end space-x-1">
+                        <button
+                          onClick={() => handleConfirmReservation(waiting)}
+                          className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                          title="Confirmar reserva"
+                        >
+                          <Check size={10} className="mr-1" />
+                          Confirmar
+                        </button>
+                        
+                        <button
+                          onClick={() => handleRejectReservation(waiting)}
+                          className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                          title="Rechazar solicitud"
+                        >
+                          <X size={10} className="mr-1" />
+                          Rechazar
+                        </button>
+                        
+                        <button
+                          onClick={() => handleContactWaitingClient(waiting)}
+                          className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${
+                            waiting.contacted 
+                              ? 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100' 
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          }`}
+                          title={waiting.contacted ? 'Ya contactado - Contactar nuevamente' : 'Contactar cliente'}
+                        >
+                          <MessageCircle size={10} className="mr-1" />
+                          {waiting.contacted ? 'Recontactar' : 'Contactar'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal de confirmación */}
+      {showConfirmModal && selectedWaiting && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Confirmar Reserva</h3>
+            <p className="text-gray-600 mb-4">
+              Cliente: <strong>{selectedWaiting.cliente.nombre}</strong><br />
+              Fecha: <strong>{formatDate(selectedWaiting.fecha)}</strong><br />
+              Turno: <strong>{selectedWaiting.turno === 'mediodia' ? 'Mediodía' : 'Noche'}</strong><br />
+              Personas: <strong>{selectedWaiting.personas}</strong>
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Horario</label>
+              <select
+                value={selectedHorario}
+                onChange={(e) => setSelectedHorario(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Seleccionar horario</option>
+                {availableHorarios.map(horario => (
+                  <option key={horario} value={horario}>{horario}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mesa</label>
+              <select
+                value={selectedMesa}
+                onChange={(e) => setSelectedMesa(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Seleccionar mesa</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(mesa => (
+                  <option key={mesa} value={mesa}>Mesa {mesa}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleConfirmSubmit}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+              >
+                Confirmar Reserva
+              </button>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNotes, showNotification, showConfirmation }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBlacklist, setFilterBlacklist] = useState('withReservations'); // 'all', 'blacklisted', 'normal', 'withReservations'
@@ -949,7 +1402,9 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
 };
 
 // Componente de vista panorama para mostrar resumen de reservas futuras
-const PanoramaView = ({ reservations, formatDate }) => {
+const PanoramaView = ({ reservations, formatDate, onGoToDailyView }) => {
+  const [selectedTurnoPreview, setSelectedTurnoPreview] = useState(null);
+
   // Obtener próximos 7 días excluyendo lunes
   const getNext7Days = useCallback(() => {
     const days = [];
@@ -1001,7 +1456,9 @@ const PanoramaView = ({ reservations, formatDate }) => {
         personas: totalPersonasNoche,
         ocupacion: Math.round((totalPersonasNoche / maxCapacityPerShift) * 100)
       },
-      isDomingo
+      isDomingo,
+      mediodiaReservations,
+      nocheReservations
     };
   }, [reservations]);
 
@@ -1015,6 +1472,23 @@ const PanoramaView = ({ reservations, formatDate }) => {
 
   const getOccupancyTextColor = (ocupacion) => {
     return ocupacion >= 30 ? 'text-white' : 'text-gray-700';
+  };
+
+  // Función para abrir preview de turno
+  const handleTurnoClick = (date, turno, reservas) => {
+    setSelectedTurnoPreview({
+      date,
+      turno,
+      reservas,
+      dateLabel: formatDate(date)
+    });
+  };
+
+  // Función para ir a gestión diaria
+  const handleGoToDailyView = (date, turno) => {
+    if (onGoToDailyView) {
+      onGoToDailyView(date, turno);
+    }
   };
 
   return (
@@ -1039,7 +1513,10 @@ const PanoramaView = ({ reservations, formatDate }) => {
                 
                 <div className="space-y-3">
                   {/* Mediodía */}
-                  <div className="bg-white rounded-lg p-3 border">
+                  <div 
+                    className="bg-white rounded-lg p-3 border cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => handleTurnoClick(stats.date, 'mediodia', stats.mediodiaReservations)}
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1">
                         <span className="text-amber-600">☀️</span>
@@ -1067,7 +1544,10 @@ const PanoramaView = ({ reservations, formatDate }) => {
 
                   {/* Noche */}
                   {!stats.isDomingo ? (
-                    <div className="bg-white rounded-lg p-3 border">
+                    <div 
+                      className="bg-white rounded-lg p-3 border cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => handleTurnoClick(stats.date, 'noche', stats.nocheReservations)}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1">
                           <span className="text-blue-600">🌙</span>
@@ -1144,38 +1624,47 @@ const PanoramaView = ({ reservations, formatDate }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Preview del Turno */}
+      {selectedTurnoPreview && (
+        <TurnoPreviewModal
+          preview={selectedTurnoPreview}
+          onClose={() => setSelectedTurnoPreview(null)}
+          onGoToDailyView={handleGoToDailyView}
+        />
+      )}
     </div>
   );
 };
 
 // Componente optimizado para vista "Hoy"
-const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDeleteReservation, getAvailableSlotsForEdit, isValidDate, HORARIOS, showNotification, showConfirmation, formatDate, waitingList = [], onConfirmWaitingReservation, onDeleteWaitingReservation, onMarkAsNotified, getAvailableSlots }) => {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedTurno, setSelectedTurno] = useState('mediodia');
+const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDeleteReservation, getAvailableSlotsForEdit, isValidDate, HORARIOS, showNotification, showConfirmation, formatDate, waitingList = [], onConfirmWaitingReservation, onDeleteWaitingReservation, onMarkAsNotified, onContactWaitingClient, onRejectWaitingReservation, getAvailableSlots, initialDate, initialTurno, onDateTurnoSet }) => {
+  const [selectedDate, setSelectedDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
+  const [selectedTurno, setSelectedTurno] = useState(initialTurno || 'mediodia');
   const [assignmentMode, setAssignmentMode] = useState(false);
   const [tableAssignments, setTableAssignments] = useState({});
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Layout de mesas - idéntico al original
+  // Layout de mesas - con tamaños estandarizados
   const TABLES_LAYOUT = [
-    { id: 12, x: 50, y: 30, width: 70, height: 40, capacity: 4 },
-    { id: 13, x: 140, y: 30, width: 70, height: 40, capacity: 4 },
-    { id: 21, x: 50, y: 85, width: 40, height: 40, capacity: 2 },
-    { id: 11, x: 50, y: 135, width: 40, height: 40, capacity: 4 },
-    { id: 24, x: 140, y: 85, width: 40, height: 40, capacity: 2 },
-    { id: 14, x: 190, y: 85, width: 40, height: 40, capacity: 4 },
-    { id: 10, x: 50, y: 190, width: 70, height: 35, capacity: 4 },
-    { id: 9, x: 50, y: 235, width: 70, height: 35, capacity: 4 },
-    { id: 8, x: 50, y: 280, width: 40, height: 40, capacity: 2 },
-    { id: 6, x: 140, y: 180, width: 40, height: 60, capacity: 4 },
-    { id: 7, x: 140, y: 250, width: 50, height: 70, capacity: 6 },
-    { id: 5, x: 220, y: 155, width: 40, height: 60, capacity: 4 },
-    { id: 4, x: 220, y: 225, width: 40, height: 60, capacity: 4 },
-    { id: 3, x: 220, y: 295, width: 40, height: 60, capacity: 4 },
-    { id: 2, x: 220, y: 365, width: 40, height: 40, capacity: 2 },
-    { id: 1, x: 100, y: 465, width: 50, height: 50, capacity: 2 },
-    { id: 31, x: 160, y: 465, width: 50, height: 50, capacity: 2 },
+    { id: 12, x: 50, y: 30, width: 70, height: 40, capacity: 4 }, // rectangular horizontal (tamaño estándar)
+    { id: 13, x: 140, y: 30, width: 70, height: 40, capacity: 4 }, // rectangular horizontal (tamaño estándar)
+    { id: 21, x: 50, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
+    { id: 11, x: 50, y: 135, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
+    { id: 24, x: 140, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
+    { id: 14, x: 190, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
+    { id: 10, x: 50, y: 190, width: 70, height: 35, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
+    { id: 9, x: 50, y: 235, width: 70, height: 35, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
+    { id: 8, x: 50, y: 280, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2)
+    { id: 6, x: 140, y: 180, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
+    { id: 7, x: 140, y: 250, width: 50, height: 70, capacity: 6 }, // rectangular vertical más grande (sin cambios)
+    { id: 5, x: 220, y: 155, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
+    { id: 4, x: 220, y: 225, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
+    { id: 3, x: 220, y: 295, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
+    { id: 2, x: 220, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (sin cambios)
+    { id: 1, x: 135, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2) - reposicionada
+    { id: 31, x: 180, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2) - reposicionada
   ];
 
   // Orden de reserva de mesas
@@ -1300,6 +1789,17 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
     }
   }, [selectedDate, selectedTurno]);
 
+  // Manejar fecha y turno inicial desde panorama
+  useEffect(() => {
+    if (initialDate && initialTurno) {
+      setSelectedDate(initialDate);
+      setSelectedTurno(initialTurno);
+      if (onDateTurnoSet) {
+        onDateTurnoSet();
+      }
+    }
+  }, [initialDate, initialTurno, onDateTurnoSet]);
+
   // Funciones de manejo
   const isMesaOcupada = (mesaId) => {
     return Object.values(tableAssignments).includes(mesaId);
@@ -1332,6 +1832,134 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
+
+  // Funciones para manejo de lista de espera
+  const formatPhoneForWhatsApp = (phone) => {
+    if (!phone) return '';
+    let cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = '54' + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith('54')) {
+      cleanPhone = '54' + cleanPhone;
+    }
+    return cleanPhone;
+  };
+
+  const handleContactWaitingClient = async (waiting) => {
+    try {
+      await onContactWaitingClient(waiting.id);
+      
+      const whatsappPhone = formatPhoneForWhatsApp(waiting.cliente.telefono);
+      const fechaFormateada = formatDate(waiting.fecha);
+      const turnoTexto = waiting.turno === 'mediodia' ? 'mediodía' : 'noche';
+      
+      const mensaje = `¡Hola ${waiting.cliente.nombre}! 🌹 
+      
+Tenemos buenas noticias. Hay disponibilidad para tu solicitud de reserva:
+📅 ${fechaFormateada} - ${turnoTexto}
+👥 ${waiting.personas} personas
+
+Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensaje. 
+
+⏰ Si no recibimos confirmación en 30 minutos, el cupo será ofrecido a la siguiente persona en lista de espera.
+
+¡Esperamos verte pronto en Rosaura!`;
+
+      const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(mensaje)}`;
+      window.open(whatsappUrl, '_blank');
+      
+      showNotification('success', 'Cliente contactado. Esperando confirmación...');
+    } catch (error) {
+      showNotification('error', 'Error al contactar cliente');
+    }
+  };
+
+  const handleQuickConfirmWaiting = async (waiting) => {
+    try {
+      const availableSlots = getAvailableSlots(waiting.fecha, waiting.turno);
+      if (availableSlots.length === 0) {
+        showNotification('error', 'No hay horarios disponibles para confirmar');
+        return;
+      }
+      
+      // Usar el primer horario disponible
+      const selectedHorario = availableSlots[0];
+      
+      await onConfirmWaitingReservation(waiting.id, waiting, selectedHorario);
+      showNotification('success', 'Reserva confirmada exitosamente');
+    } catch (error) {
+      showNotification('error', 'Error al confirmar reserva');
+    }
+  };
+
+  const handleRejectWaiting = async (waiting) => {
+    const confirmed = await showConfirmation({
+      title: 'Rechazar solicitud',
+      message: `¿Estás seguro de rechazar la solicitud de ${waiting.cliente.nombre}?`,
+      confirmText: 'Rechazar',
+      cancelText: 'Cancelar'
+    });
+
+    if (confirmed) {
+      try {
+        await onRejectWaitingReservation(waiting.id, 'Rechazada por administración');
+        showNotification('success', 'Solicitud rechazada');
+      } catch (error) {
+        showNotification('error', 'Error al rechazar solicitud');
+      }
+    }
+  };
+
+  const getWaitingStatusBadge = (waiting) => {
+    if (waiting.contacted && waiting.awaitingConfirmation) {
+      const now = new Date();
+      const deadline = new Date(waiting.confirmationDeadline);
+      const isExpired = now > deadline;
+      
+      if (isExpired) {
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-red-50 text-red-700 border border-red-200">
+            <Clock size={12} className="mr-1" />
+            Expirado
+          </span>
+        );
+      } else {
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+            <Clock size={12} className="mr-1" />
+            Esperando
+          </span>
+        );
+      }
+    }
+    
+    if (waiting.contacted) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+          <MessageCircle size={12} className="mr-1" />
+          Contactado
+        </span>
+      );
+    }
+    
+    return (
+      <span className="inline-flex items-center px-2 py-1 text-xs rounded-md bg-gray-50 text-gray-700 border border-gray-200">
+        <Clock size={12} className="mr-1" />
+        En espera
+      </span>
+    );
+  };
+
+  // Filtrar lista de espera para el día seleccionado
+  const waitingForSelectedDate = useMemo(() => 
+    waitingList.filter(w => w.fecha === selectedDate && w.status !== 'rejected'), 
+    [waitingList, selectedDate]
+  );
+
+  const waitingForSelectedTurno = useMemo(() => 
+    waitingForSelectedDate.filter(w => w.turno === selectedTurno), 
+    [waitingForSelectedDate, selectedTurno]
+  );
 
   // Organizar reservas por turno
   const organizarReservasPorTurno = useCallback((reservations) => {
@@ -1447,7 +2075,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                ☀️ Mediodía
+                Mediodía
               </button>
               <button
                 onClick={() => setSelectedTurno('noche')}
@@ -1461,7 +2089,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
                 }`}
                 title={new Date(selectedDate).getDay() === 0 ? 'Los domingos no hay turno noche' : ''}
               >
-                🌙 Noche
+                Noche
               </button>
             </div>
 
@@ -1488,6 +2116,164 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
         )}
       </div>
 
+      {/* Sección Lista de Espera para el día seleccionado */}
+      {waitingForSelectedTurno.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-amber-800 flex items-center gap-2">
+              ⏳ Lista de Espera - {formatDate(selectedDate)} - {selectedTurno === 'mediodia' ? 'Mediodía' : 'Noche'}
+            </h3>
+            <span className="text-sm text-amber-600 font-medium">
+              {waitingForSelectedTurno.length} {waitingForSelectedTurno.length === 1 ? 'solicitud' : 'solicitudes'}
+            </span>
+          </div>
+          
+          <div className="bg-white border border-amber-200 rounded-lg overflow-hidden shadow-sm">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-amber-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Cliente</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Teléfono</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Personas</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Comentarios</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Estado</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {waitingForSelectedTurno.map((waiting) => {
+                  // Obtener historial del cliente filtrando por nombre Y teléfono
+                  const getClientHistory = (waiting) => {
+                    if (!reservations || !waiting?.cliente?.nombre || !waiting?.cliente?.telefono) return [];
+                    
+                    // Normalizar nombre y teléfono para comparación
+                    const normalizePhone = (phone) => {
+                      return phone?.toString().replace(/\D/g, ''); // Solo números
+                    };
+                    
+                    const waitingName = waiting.cliente.nombre.toLowerCase().trim();
+                    const waitingPhone = normalizePhone(waiting.cliente.telefono);
+                    
+                    return reservations.filter(reserva => {
+                      if (!reserva?.cliente?.nombre || !reserva?.cliente?.telefono) return false;
+                      
+                      const reservaName = reserva.cliente.nombre.toLowerCase().trim();
+                      const reservaPhone = normalizePhone(reserva.cliente.telefono);
+                      
+                      // Filtrar por nombre Y teléfono (ambos deben coincidir)
+                      return waitingName === reservaName && 
+                             waitingPhone && reservaPhone && 
+                             waitingPhone === reservaPhone;
+                    }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                  };
+                  
+                  const clientHistory = getClientHistory(waiting);
+                  
+                  return (
+                    <tr key={waiting.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div>
+                          <div className="font-medium text-gray-900">{waiting.cliente.nombre}</div>
+                          <div className="text-xs text-gray-500">
+                            ID: {waiting.waitingId}
+                            {clientHistory.length > 0 && (
+                              <span className="ml-2 text-blue-600">
+                                • {clientHistory.length} reserva{clientHistory.length !== 1 ? 's' : ''} 
+                                {clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length > 0 && (
+                                  <span className="font-medium">
+                                    ({clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length} activa{clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length !== 1 ? 's' : ''})
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <a 
+                          href={`https://wa.me/${formatPhoneForWhatsApp(waiting.cliente.telefono)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-800 hover:underline text-sm"
+                        >
+                          {waiting.cliente.telefono}
+                        </a>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {waiting.personas}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm max-w-xs">
+                          {waiting.comentarios || waiting.cliente?.notasInternas || waiting.cliente?.comentarios ? (
+                            <div className="space-y-1">
+                              {waiting.comentarios && (
+                                <div className="text-xs text-gray-700 p-1 bg-blue-50 rounded">
+                                  {waiting.comentarios.length > 40 
+                                    ? `${waiting.comentarios.substring(0, 40)}...` 
+                                    : waiting.comentarios
+                                  }
+                                </div>
+                              )}
+                              {(waiting.cliente?.notasInternas || waiting.cliente?.comentarios) && (
+                                <div className="text-xs text-gray-600 italic">
+                                  {(waiting.cliente?.notasInternas || waiting.cliente?.comentarios).length > 40 
+                                    ? `${(waiting.cliente?.notasInternas || waiting.cliente?.comentarios).substring(0, 40)}...` 
+                                    : (waiting.cliente?.notasInternas || waiting.cliente?.comentarios)
+                                  }
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-gray-300 text-xs">—</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {getWaitingStatusBadge(waiting)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => handleQuickConfirmWaiting(waiting)}
+                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                            title="Confirmar reserva"
+                          >
+                            <Check size={10} className="mr-1" />
+                            Confirmar
+                          </button>
+                          
+                          <button
+                            onClick={() => handleRejectWaiting(waiting)}
+                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                            title="Rechazar solicitud"
+                          >
+                            <X size={10} className="mr-1" />
+                            Rechazar
+                          </button>
+                          
+                          <button
+                            onClick={() => handleContactWaitingClient(waiting)}
+                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${
+                              waiting.contacted 
+                                ? 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100' 
+                                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                            }`}
+                            title={waiting.contacted ? 'Ya contactado - Contactar nuevamente' : 'Contactar cliente'}
+                          >
+                            <MessageCircle size={10} className="mr-1" />
+                            {waiting.contacted ? 'Recontactar' : 'Contactar'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Contenido principal */}
       <div className="flex">
         {/* Mapa de Mesas - Lado Izquierdo */}
@@ -1503,8 +2289,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
               <rect x="0" y="0" width="350" height="600" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
               
               {/* Líneas divisorias */}
-              <line x1="140" y1="178" x2="280" y2="178" stroke="#374151" strokeWidth="2" />
-              <line x1="140" y1="465" x2="140" y2="515" stroke="#6b7280" strokeWidth="2" />
+              <line x1="190" y1="140" x2="260" y2="140" stroke="#374151" strokeWidth="2" />
               
               {/* Mesas */}
               {TABLES_LAYOUT.map(table => {
@@ -1619,10 +2404,12 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   );
 };
 
-export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClientNotes, onUpdateReservation, onDeleteReservation, onConfirmWaitingReservation, onDeleteWaitingReservation, onMarkAsNotified, getAvailableSlotsForEdit, getAvailableSlots, isValidDate, formatDate, HORARIOS }) => {
+export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClientNotes, onUpdateReservation, onDeleteReservation, onConfirmWaitingReservation, onDeleteWaitingReservation, onMarkAsNotified, onContactWaitingClient, onRejectWaitingReservation, getAvailableSlotsForEdit, getAvailableSlots, isValidDate, formatDate, HORARIOS }) => {
   const [adminView, setAdminView] = useState('daily');
   const [notifications, setNotifications] = useState([]);
   const [confirmation, setConfirmation] = useState(null);
+  const [selectedDateFromPanorama, setSelectedDateFromPanorama] = useState(null);
+  const [selectedTurnoFromPanorama, setSelectedTurnoFromPanorama] = useState(null);
 
   // Función para mostrar notificaciones
   const showNotification = useCallback((type, message) => {
@@ -1739,7 +2526,15 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
             onConfirmWaitingReservation={onConfirmWaitingReservation}
             onDeleteWaitingReservation={onDeleteWaitingReservation}
             onMarkAsNotified={onMarkAsNotified}
+            onContactWaitingClient={onContactWaitingClient}
+            onRejectWaitingReservation={onRejectWaitingReservation}
             getAvailableSlots={getAvailableSlots}
+            initialDate={selectedDateFromPanorama}
+            initialTurno={selectedTurnoFromPanorama}
+            onDateTurnoSet={() => {
+              setSelectedDateFromPanorama(null);
+              setSelectedTurnoFromPanorama(null);
+            }}
           />
         )}
 
@@ -1747,6 +2542,11 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
           <PanoramaView 
             reservations={data.reservas}
             formatDate={formatDate}
+            onGoToDailyView={(date, turno) => {
+              setSelectedDateFromPanorama(date);
+              setSelectedTurnoFromPanorama(turno);
+              setAdminView('daily');
+            }}
           />
         )}
 
@@ -1762,11 +2562,292 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
         )}
 
         {adminView === 'waitinglist' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Lista de Espera</h2>
-            <p className="text-gray-600">Funcionalidad pendiente de implementar</p>
-          </div>
+          <WaitingListView 
+            waitingList={data.waitingList || []}
+            reservations={data.reservas || []}
+            clients={data.clientes || []}
+            onConfirmWaitingReservation={onConfirmWaitingReservation}
+            onDeleteWaitingReservation={onDeleteWaitingReservation}
+            onContactWaitingClient={onContactWaitingClient}
+            onRejectWaitingReservation={onRejectWaitingReservation}
+            getAvailableSlots={getAvailableSlots}
+            formatDate={formatDate}
+            HORARIOS={HORARIOS}
+            showNotification={showNotification}
+            showConfirmation={showConfirmationDialog}
+          />
         )}
+      </div>
+    </div>
+  );
+}; 
+
+// Componente Modal de Preview del Turno
+const TurnoPreviewModal = ({ preview, onClose, onGoToDailyView }) => {
+  // Layout de mesas - con tamaños estandarizados (idéntico a TodayView)
+  const TABLES_LAYOUT = [
+    { id: 12, x: 50, y: 30, width: 70, height: 40, capacity: 4 }, // rectangular horizontal (tamaño estándar)
+    { id: 13, x: 140, y: 30, width: 70, height: 40, capacity: 4 }, // rectangular horizontal (tamaño estándar)
+    { id: 21, x: 50, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
+    { id: 11, x: 50, y: 135, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
+    { id: 24, x: 140, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
+    { id: 14, x: 190, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
+    { id: 10, x: 50, y: 190, width: 70, height: 35, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
+    { id: 9, x: 50, y: 235, width: 70, height: 35, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
+    { id: 8, x: 50, y: 280, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2)
+    { id: 6, x: 140, y: 180, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
+    { id: 7, x: 140, y: 250, width: 50, height: 70, capacity: 6 }, // rectangular vertical más grande (sin cambios)
+    { id: 5, x: 220, y: 155, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
+    { id: 4, x: 220, y: 225, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
+    { id: 3, x: 220, y: 295, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
+    { id: 2, x: 220, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (sin cambios)
+    { id: 1, x: 135, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2) - reposicionada
+    { id: 31, x: 180, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2) - reposicionada
+  ];
+
+  // Orden de reserva de mesas
+  const RESERVATION_ORDER = {
+    2: [1, 31, 2, 8],
+    4: [3, 4, 5, 6],
+    6: [7]
+  };
+
+  // Auto-asignación de mesas
+  const autoAssignTables = useCallback((reservations) => {
+    const assignments = {};
+    const occupiedTables = new Set();
+    
+    const sortedReservations = [...reservations].sort((a, b) => a.horario.localeCompare(b.horario));
+    
+    for (const reserva of sortedReservations) {
+      const capacity = reserva.personas;
+      let targetCapacity = capacity;
+      
+      if (capacity === 5) targetCapacity = 6;
+      
+      let availableOrder = RESERVATION_ORDER[targetCapacity];
+      if (!availableOrder) {
+        for (const cap of [4, 6]) {
+          if (cap >= capacity && RESERVATION_ORDER[cap]) {
+            availableOrder = RESERVATION_ORDER[cap];
+            break;
+          }
+        }
+      }
+      
+      if (availableOrder) {
+        for (const tableId of availableOrder) {
+          if (!occupiedTables.has(tableId)) {
+            assignments[reserva.id] = tableId;
+            occupiedTables.add(tableId);
+            break;
+          }
+        }
+      }
+    }
+    
+    return assignments;
+  }, []);
+
+  const tableAssignments = useMemo(() => autoAssignTables(preview.reservas), [preview.reservas, autoAssignTables]);
+
+  const isMesaOcupada = (mesaId) => {
+    return Object.values(tableAssignments).includes(mesaId);
+  };
+
+  const handleGoToDaily = () => {
+    onGoToDailyView(preview.date, preview.turno);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-auto">
+        {/* Header */}
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">
+              Preview - {preview.dateLabel}
+            </h3>
+            <p className="text-sm text-gray-600">
+              {preview.turno === 'mediodia' ? '☀️ Mediodía' : '🌙 Noche'} • {preview.reservas.length} reservas
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleGoToDaily}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <Calendar size={16} />
+              Ir a Gestión Diaria
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Contenido */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Mapa de Mesas */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">Disposición de Mesas</h4>
+              <div className="bg-white rounded-lg p-4 border">
+                <svg 
+                  viewBox="0 0 350 550" 
+                  className="w-full h-auto"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Fondo del restaurante */}
+                  <rect x="0" y="0" width="350" height="550" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
+                  
+                  {/* Líneas divisorias */}
+                  <line x1="190" y1="142" x2="260" y2="142" stroke="#374151" strokeWidth="2" />
+                  
+                  {/* Mesas */}
+                  {TABLES_LAYOUT.map((mesa) => {
+                    const isOcupada = isMesaOcupada(mesa.id);
+                    return (
+                      <g key={mesa.id}>
+                        <rect
+                          x={mesa.x}
+                          y={mesa.y}
+                          width={mesa.width}
+                          height={mesa.height}
+                          fill="#ffffff"
+                          stroke={isOcupada ? "#dc2626" : "#0c4900"}
+                          strokeWidth="2"
+                          rx="4"
+                        />
+                        <text
+                          x={mesa.x + mesa.width / 2}
+                          y={mesa.y + mesa.height / 2 + (isOcupada ? -5 : 6)}
+                          textAnchor="middle"
+                          fill="#0c4900"
+                          fontSize="14"
+                          fontWeight="bold"
+                        >
+                          {mesa.id}
+                        </text>
+                        {/* X para mesas ocupadas */}
+                        {isOcupada && (
+                          <text
+                            x={mesa.x + mesa.width / 2}
+                            y={mesa.y + mesa.height / 2 + 15}
+                            textAnchor="middle"
+                            fontSize="20"
+                            fontWeight="bold"
+                            fill="#dc2626"
+                          >
+                            ✗
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })}
+                  
+                  {/* Leyenda */}
+                  <g>
+                    <rect x="20" y="520" width="15" height="12" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
+                    <text x="40" y="528" fontSize="9" fill="#6b7280">Libre</text>
+                    <rect x="80" y="520" width="15" height="12" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
+                    <text x="100" y="528" fontSize="9" fill="#6b7280">Ocupada</text>
+                    <text x="140" y="528" fontSize="9" fill="#6b7280">✗ = Reservada</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            {/* Lista de Reservas */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                Reservas del Turno ({preview.reservas.length})
+              </h4>
+              
+              {preview.reservas.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Clock size={48} className="mx-auto mb-2 opacity-50" />
+                  <p>No hay reservas para este turno</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-80 overflow-y-auto">
+                  {preview.reservas
+                    .sort((a, b) => a.horario.localeCompare(b.horario))
+                    .map((reserva, index) => (
+                    <div key={reserva.id} className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">
+                              {reserva.horario}
+                            </span>
+                            {tableAssignments[reserva.id] && (
+                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                                Mesa {tableAssignments[reserva.id]}
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-medium text-gray-900">
+                            {reserva.cliente?.nombre || 'Sin nombre'}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            <span className="inline-flex items-center gap-1">
+                              <Users size={14} />
+                              {reserva.personas} personas
+                            </span>
+                            {reserva.cliente?.telefono && (
+                              <span className="ml-3 inline-flex items-center gap-1">
+                                <Phone size={14} />
+                                {reserva.cliente.telefono}
+                              </span>
+                            )}
+                          </div>
+                          {reserva.comentarios && (
+                            <div className="text-xs text-gray-500 mt-1 italic">
+                              "{reserva.comentarios}"
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer con resumen */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div className="bg-blue-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-blue-600">{preview.reservas.length}</div>
+                <div className="text-sm text-gray-600">Reservas</div>
+              </div>
+              <div className="bg-green-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-green-600">
+                  {preview.reservas.reduce((sum, r) => sum + r.personas, 0)}
+                </div>
+                <div className="text-sm text-gray-600">Personas</div>
+              </div>
+              <div className="bg-yellow-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {Object.keys(tableAssignments).length}
+                </div>
+                <div className="text-sm text-gray-600">Mesas Ocupadas</div>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-3">
+                <div className="text-2xl font-bold text-purple-600">
+                  {Math.round((preview.reservas.reduce((sum, r) => sum + r.personas, 0) / 36) * 100)}%
+                </div>
+                <div className="text-sm text-gray-600">Ocupación</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

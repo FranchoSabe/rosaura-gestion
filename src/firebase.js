@@ -383,3 +383,36 @@ export const markWaitingAsNotified = async (waitingReservationId) => {
     throw error;
   }
 };
+
+// Función para contactar cliente en lista de espera
+export const contactWaitingClient = async (waitingReservationId) => {
+  try {
+    const waitingDocRef = doc(db, "lista_espera", waitingReservationId);
+    await updateDoc(waitingDocRef, {
+      contacted: true,
+      contactedAt: new Date(),
+      awaitingConfirmation: true,
+      confirmationDeadline: new Date(Date.now() + 30 * 60 * 1000) // 30 minutos
+    });
+    return true;
+  } catch (error) {
+    console.error("Error al marcar como contactado:", error);
+    throw error;
+  }
+};
+
+// Función para rechazar una reserva en lista de espera
+export const rejectWaitingReservation = async (waitingReservationId, reason = '') => {
+  try {
+    const waitingDocRef = doc(db, "lista_espera", waitingReservationId);
+    await updateDoc(waitingDocRef, {
+      status: 'rejected',
+      rejectedAt: new Date(),
+      rejectionReason: reason
+    });
+    return true;
+  } catch (error) {
+    console.error("Error al rechazar reserva en espera:", error);
+    throw error;
+  }
+};
