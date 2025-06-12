@@ -6,6 +6,7 @@ import {
   addReservation, 
   addClient, 
   updateClientBlacklist, 
+  updateClientNotes,
   updateReservation,
   deleteReservation,
   searchReservation,
@@ -153,7 +154,7 @@ function App() {
     return horariosDisponibles;
   };
 
-  const isValidDate = (fecha) => {
+  const isValidDate = (fecha, turno = null) => {
     if (!fecha) return false;
     
     const today = new Date();
@@ -172,7 +173,9 @@ function App() {
     
     // Si es hoy, verificar que haya al menos 2 horas de anticipación
     if (selectedDate.toDateString() === today.toDateString()) {
-      const primerTurno = HORARIOS[reservaData.turno]?.[0];
+      // Usar el turno pasado como parámetro o el del estado global
+      const turnoToUse = turno || reservaData.turno;
+      const primerTurno = HORARIOS[turnoToUse]?.[0];
       if (primerTurno) {
         const [horas, minutos] = primerTurno.split(':').map(Number);
         const horaTurno = new Date();
@@ -228,6 +231,16 @@ function App() {
     } catch (error) {
       console.error("Error al actualizar lista negra:", error);
       alert("Error al actualizar el estado del cliente");
+    }
+  };
+
+  const handleUpdateClientNotes = async (clienteId, notes) => {
+    try {
+      await updateClientNotes(clienteId, notes);
+      return true;
+    } catch (error) {
+      console.error("Error al actualizar notas del cliente:", error);
+      throw error;
     }
   };
 
@@ -387,7 +400,7 @@ function App() {
     try {
       const fechaString = updatedData.fecha instanceof Date ? updatedData.fecha.toISOString().split('T')[0] : updatedData.fecha;
 
-      if (!isValidDate(fechaString)) {
+      if (!isValidDate(fechaString, updatedData.turno)) {
         throw new Error('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');
       }
 
@@ -490,6 +503,7 @@ function App() {
       auth={authState} 
       onLogout={handleLogout}
       onSetBlacklist={handleSetBlacklist}
+      onUpdateClientNotes={handleUpdateClientNotes}
       onUpdateReservation={handleUpdateReservation}
       onDeleteReservation={handleDeleteReservation}
       onConfirmWaitingReservation={handleConfirmWaitingReservation}

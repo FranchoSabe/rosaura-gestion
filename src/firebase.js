@@ -92,6 +92,19 @@ export const updateClientBlacklist = async (clientId, isBlacklisted) => {
   }
 };
 
+export const updateClientNotes = async (clientId, notes) => {
+  try {
+    const clientRef = doc(db, "clientes", clientId);
+    await updateDoc(clientRef, {
+      notasInternas: notes,
+      updatedAt: new Date()
+    });
+  } catch (error) {
+    console.error("Error al actualizar notas del cliente:", error);
+    throw error;
+  }
+};
+
 export const getReservations = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, "reservas"));

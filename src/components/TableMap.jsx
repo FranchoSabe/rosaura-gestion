@@ -25,14 +25,14 @@ const TABLES_LAYOUT = [
   { id: 7, x: 150, y: 320, width: 60, height: 90, capacity: 6 }, // rectangular vertical más grande
   
   // Columna derecha: 5, 4, 3, 2 alineadas verticalmente
-  { id: 5, x: 260, y: 230, width: 50, height: 80, capacity: 4 }, // rectangular vertical
-  { id: 4, x: 260, y: 320, width: 50, height: 80, capacity: 4 }, // rectangular vertical
-  { id: 3, x: 260, y: 410, width: 50, height: 80, capacity: 4 }, // rectangular vertical
-  { id: 2, x: 260, y: 500, width: 50, height: 50, capacity: 2 }, // cuadrada
+  { id: 5, x: 230, y: 195, width: 50, height: 80, capacity: 4 }, // rectangular vertical - borde superior en el medio de mesa 11
+  { id: 4, x: 230, y: 285, width: 50, height: 80, capacity: 4 }, // rectangular vertical
+  { id: 3, x: 230, y: 375, width: 50, height: 80, capacity: 4 }, // rectangular vertical
+  { id: 2, x: 230, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada
   
-  // Mesas inferiores alineadas horizontalmente (lado derecho de 6, 7, 31 alineados)
-  { id: 1, x: 100, y: 500, width: 50, height: 50, capacity: 2 }, // cuadrada (más a la izquierda)
-  { id: 31, x: 160, y: 500, width: 50, height: 50, capacity: 2 }, // cuadrada (lado derecho alineado con 6 y 7)
+  // Mesas inferiores alineadas horizontalmente (alineadas con mesa 2)
+  { id: 1, x: 100, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada - alineada con mesa 2
+  { id: 31, x: 160, y: 465, width: 50, height: 50, capacity: 2 }, // cuadrada - alineada con mesa 2
 ];
 
 // Reglas de orden de reserva de mesas
@@ -42,11 +42,12 @@ const RESERVATION_ORDER = {
   6: [7]            // Mesa para 6 personas
 };
 
-const TableMap = ({ reservations = [], formatDate }) => {
+const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSelector = true }) => {
   const [selectedTurno, setSelectedTurno] = useState('mediodia');
   const [tableAssignments, setTableAssignments] = useState({}); // {reservationId: tableId}
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [assignmentMode, setAssignmentMode] = useState(false);
+  
   // Obtener fecha actual en formato local
   const getTodayString = () => {
     const today = new Date();
@@ -72,7 +73,7 @@ const TableMap = ({ reservations = [], formatDate }) => {
     return dates;
   };
 
-  const [selectedDate, setSelectedDate] = useState(getTodayString());
+  const [selectedDate, setSelectedDate] = useState(fixedDate || getTodayString());
 
   const availableDates = React.useMemo(() => getAvailableDates(), []);
   const selectedDateReservations = React.useMemo(
@@ -80,7 +81,12 @@ const TableMap = ({ reservations = [], formatDate }) => {
     [reservations, selectedDate]
   );
 
-
+  // Si se proporciona fixedDate, usar esa fecha
+  React.useEffect(() => {
+    if (fixedDate) {
+      setSelectedDate(fixedDate);
+    }
+  }, [fixedDate]);
 
   // Función para formatear fecha de manera amigable
   const formatDateLabel = (dateString) => {
@@ -112,8 +118,6 @@ const TableMap = ({ reservations = [], formatDate }) => {
     () => selectedDateReservations.filter(r => r.turno === selectedTurno),
     [selectedDateReservations, selectedTurno]
   );
-
-
 
   // Auto-asignación de mesas basada en el orden de prioridad
   const autoAssignTables = (reservations) => {
@@ -233,13 +237,10 @@ const TableMap = ({ reservations = [], formatDate }) => {
     cancelAssignment();
   };
 
-
-
   // Función para imprimir/exportar
   const handlePrint = () => {
     window.print();
   };
-
   
   // Organizar reservas por turno
   const organizarReservasPorTurno = (reservations) => {
@@ -267,20 +268,22 @@ const TableMap = ({ reservations = [], formatDate }) => {
           </p>
         </div>
         <div className={styles.controls}>
-          <div className={styles.dateSelector}>
-            <label className={styles.selectorLabel}>📅 Fecha:</label>
-            <select 
-              value={selectedDate} 
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className={styles.dateSelect}
-            >
-              {availableDates.map(date => (
-                <option key={date} value={date}>
-                  {formatDateLabel(date)} ({formatDate(date)})
-                </option>
-              ))}
-            </select>
-          </div>
+          {showDateSelector && (
+            <div className={styles.dateSelector}>
+              <label className={styles.selectorLabel}>📅 Fecha:</label>
+              <select 
+                value={selectedDate} 
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className={styles.dateSelect}
+              >
+                {availableDates.map(date => (
+                  <option key={date} value={date}>
+                    {formatDateLabel(date)} ({formatDate(date)})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className={styles.turnoSelector}>
             <button 
               onClick={() => setSelectedTurno('mediodia')}
@@ -330,11 +333,11 @@ const TableMap = ({ reservations = [], formatDate }) => {
               <rect x="0" y="0" width="350" height="600" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
               
               {/* Divisiones principales - Paredes */}
-              {/* Línea horizontal que cubre los largos de mesa 5 y mesa 6 (más separada) */}
-              <line x1="150" y1="220" x2="310" y2="220" stroke="#374151" strokeWidth="2" />
+              {/* Línea horizontal entre mesa 14 y mesa 5 */}
+              <line x1="140" y1="178" x2="280" y2="178" stroke="#374151" strokeWidth="2" />
               
               {/* Línea vertical que cubre el lado de mesa 1 (más separada y extendida) */}
-              <line x1="140" y1="500" x2="140" y2="550" stroke="#6b7280" strokeWidth="2" />
+              <line x1="140" y1="465" x2="140" y2="515" stroke="#6b7280" strokeWidth="2" />
               
                              {/* Mesas */}
                {TABLES_LAYOUT.map(table => {

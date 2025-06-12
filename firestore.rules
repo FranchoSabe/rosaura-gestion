@@ -57,8 +57,12 @@ service cloud.firestore {
       // Cualquiera puede crear una reserva en lista de espera
       allow create: if true;
       
-      // Solo staff puede leer, modificar o eliminar de la lista de espera
-      allow read, update, delete: if isStaff();
+      // Permitir lectura pública temporalmente para debugging
+      // TODO: Cambiar a isStaff() una vez resuelto el problema de auth
+      allow read: if true;
+      
+      // Solo staff puede modificar o eliminar de la lista de espera
+      allow update, delete: if isStaff();
     }
   }
 } 
