@@ -113,18 +113,19 @@ const ReservationConfirmationModal = ({ reservation, onClose, formatDate }) => {
 };
 
 export const ClientView = ({ 
-    LOGO_URL, BACKGROUND_IMAGE_URL,
-    onAdminClick,
-    currentScreen, setCurrentScreen,
-    reservaData, setReservaData,
-    availableSlots,
-    showConfirmation, setShowConfirmation,
-    handleDateAndTurnoSubmit, handleHorarioSelect, handleContactoSubmit,
-    formatDate,
-    handleSearchReservation, handleDeleteReservation,
-    showReservationModal, setShowReservationModal,
-    showWaitingListModal, setShowWaitingListModal,
-    waitingList = []
+  LOGO_URL, BACKGROUND_IMAGE_URL,
+  onAdminClick,
+  currentScreen, setCurrentScreen,
+  reservaData, setReservaData,
+  availableSlots,
+  showConfirmation, setShowConfirmation,
+  handleDateAndTurnoSubmit, handleHorarioSelect, handleContactoSubmit,
+  formatDate,
+  handleSearchReservation, handleDeleteReservation,
+  showReservationModal, setShowReservationModal,
+  showWaitingListModal, setShowWaitingListModal,
+  waitingList = [],
+  allReservations = []
 }) => {
 
   const [showSearchForm, setShowSearchForm] = useState(false);
@@ -234,24 +235,117 @@ export const ClientView = ({
     return `${day}/${month}`;
   };
 
-  // Función para verificar si un día tiene reservas en espera
-  const hasWaitingList = (date) => {
+  // Función para verificar la disponibilidad de un día específico para un turno
+  const getDayAvailability = (date, turno = null, personas = null) => {
     const dateString = date.toISOString().split('T')[0];
-    return waitingList.some(waiting => 
-      waiting.fecha === dateString && 
-      waiting.status !== 'rejected' && 
-      waiting.status !== 'confirmed'
+    const fechaObj = new Date(dateString + "T00:00:00");
+    const dayOfWeek = fechaObj.getDay();
+    
+    // Verificar si el día está cerrado
+    if (dayOfWeek === 1) return 'closed'; // Lunes cerrado
+    
+    // Si no hay turno o personas seleccionadas, no mostrar indicador
+    if (!turno || !personas) return 'no-turno';
+    
+    // Si es domingo y turno noche, está cerrado
+    if (dayOfWeek === 0 && turno === 'noche') return 'closed';
+    
+    // Capacidad total por turno
+    const capacidadTotal = {
+      'pequena': { max: 4, size: 2 },  // 4 mesas para 1-2 personas
+      'mediana': { max: 4, size: 4 },  // 4 mesas para 3-4 personas  
+      'grande': { max: 1, size: 6 }    // 1 mesa para 5-6 personas
+    };
+    
+    // Calcular disponibilidad solo para el turno seleccionado
+    const reservasDelTurno = allReservations.filter(
+      r => r.fecha === dateString && r.turno === turno
     );
+    
+    const mesasOcupadas = {
+      pequena: reservasDelTurno.filter(r => r.personas <= 2).length,
+      mediana: reservasDelTurno.filter(r => r.personas > 2 && r.personas <= 4).length,
+      grande: reservasDelTurno.filter(r => r.personas > 4).length
+    };
+    
+    // Verificar disponibilidad específica para la cantidad de personas
+    let hayDisponibilidad = false;
+    
+    if (personas <= 2) {
+      hayDisponibilidad = mesasOcupadas.pequena < capacidadTotal.pequena.max;
+    } else if (personas <= 4) {
+      hayDisponibilidad = mesasOcupadas.mediana < capacidadTotal.mediana.max;
+    } else {
+      hayDisponibilidad = mesasOcupadas.grande < capacidadTotal.grande.max;
+    }
+    
+    if (!hayDisponibilidad) {
+      return 'full'; // Sin disponibilidad para esta cantidad de personas
+    }
+    
+    // Calcular disponibilidad general
+    const disponibilidad = (capacidadTotal.pequena.max - mesasOcupadas.pequena) +
+                          (capacidadTotal.mediana.max - mesasOcupadas.mediana) +
+                          (capacidadTotal.grande.max - mesasOcupadas.grande);
+    
+    const capacidadMaxima = 9; // 9 mesas por turno (4+4+1)
+    
+    // Determinar el tipo de disponibilidad
+    if (disponibilidad <= capacidadMaxima * 0.3) {
+      return 'low'; // Poca disponibilidad (30% o menos)
+    } else {
+      return 'available'; // Buena disponibilidad
+    }
   };
 
-  // Función para contar reservas en espera de un día
-  const getWaitingCount = (date) => {
-    const dateString = date.toISOString().split('T')[0];
-    return waitingList.filter(waiting => 
-      waiting.fecha === dateString && 
-      waiting.status !== 'rejected' && 
-      waiting.status !== 'confirmed'
-    ).length;
+  // Función para obtener el indicador visual según la disponibilidad
+  const getAvailabilityIndicator = (date) => {
+    const availability = getDayAvailability(date, reservaData.turno, reservaData.personas);
+    
+    switch (availability) {
+      case 'closed':
+      case 'no-turno':
+        return null; // No mostrar indicador para días cerrados o sin turno
+      case 'full':
+        return (
+          <div className="absolute top-2 right-2 bg-red-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-md"></div>
+        );
+      case 'low':
+        return (
+          <div className="absolute top-2 right-2 bg-orange-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-md"></div>
+        );
+      case 'available':
+        return (
+          <div className="absolute top-2 right-2 bg-green-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-md"></div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Función para obtener el indicador para el calendario extendido
+  const getCalendarAvailabilityIndicator = (date) => {
+    const availability = getDayAvailability(date, reservaData.turno, reservaData.personas);
+    
+    switch (availability) {
+      case 'closed':
+      case 'no-turno':
+        return null;
+      case 'full':
+        return (
+          <div className="absolute top-1.5 right-1.5 bg-red-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-sm"></div>
+        );
+      case 'low':
+        return (
+          <div className="absolute top-1.5 right-1.5 bg-orange-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-sm"></div>
+        );
+      case 'available':
+        return (
+          <div className="absolute top-1.5 right-1.5 bg-green-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-sm"></div>
+        );
+      default:
+        return null;
+    }
   };
 
   if (currentScreen === 'landing') {
@@ -356,10 +450,11 @@ export const ClientView = ({
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className="space-y-6">
+          {/* Selección de turno */}
           <div className={styles.formSection}>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-gray-200 flex items-center">
-                <Calendar size={20} className="inline-block align-text-bottom mr-2" />Fecha
+                <Clock size={20} className="inline-block align-text-bottom mr-2" />Turno
               </label>
               <button 
                 onClick={() => {
@@ -382,54 +477,6 @@ export const ClientView = ({
                 Volver
               </button>
             </div>
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-3">
-                {weekDays.map((day) => {
-                  const isSelected = reservaData.fecha && 
-                    new Date(reservaData.fecha).toDateString() === day.date.toDateString();
-                  const hasWaiting = hasWaitingList(day.date);
-                  const waitingCount = getWaitingCount(day.date);
-                  
-                  return (
-                    <button
-                      key={day.dateString}
-                      onClick={() => setReservaData({ ...reservaData, fecha: day.date })}
-                      className={`${isSelected ? styles.dateButtonSelected : styles.dateButtonUnselected} 
-                        flex flex-col items-center py-3 relative`}
-                      type="button"
-                    >
-                      <span className="text-sm font-medium">{day.label}</span>
-                      <span className="text-xs opacity-75">{formatDayDisplay(day.date)}</span>
-                      {hasWaiting && (
-                        <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
-                          {waitingCount}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-                <button
-                  onClick={() => {
-                    setShowDatePicker(true);
-                  }}
-                  className={`${styles.dateButtonUnselected} flex flex-col items-center py-3 relative`}
-                >
-                  <span className="text-sm font-medium">+ Fechas</span>
-                  <Calendar size={16} className="text-gray-400 mt-1" />
-                </button>
-              </div>
-              <div className="mt-3 text-center">
-                <p className="text-xs text-white opacity-60 flex items-center justify-center gap-2">
-                  <span className="inline-block w-3 h-3 bg-orange-500 rounded-full"></span>
-                  Días con reservas en espera
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className={styles.formSection}>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              <Clock size={20} className="inline-block align-text-bottom mr-2" />Turno
-            </label>
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => setReservaData({...reservaData, turno: 'mediodia'})} 
@@ -445,6 +492,8 @@ export const ClientView = ({
               </button>
             </div>
           </div>
+
+          {/* Selección de cantidad de personas */}
           <div className={styles.formSection}>
             <label className="block text-sm font-medium text-gray-200 mb-2">
               <Users size={20} className="inline-block align-text-bottom mr-2" />Cantidad de personas
@@ -472,6 +521,69 @@ export const ClientView = ({
               <span>7+</span>
             </button>
           </div>
+
+          {/* Selección de fecha */}
+          <div className={styles.formSection}>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-200 flex items-center">
+                <Calendar size={20} className="inline-block align-text-bottom mr-2" />Fecha
+              </label>
+            </div>
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-3">
+                {weekDays.map((day) => {
+                  const isSelected = reservaData.fecha && 
+                    new Date(reservaData.fecha).toDateString() === day.date.toDateString();
+                  // Solo mostrar indicador si hay turno Y personas seleccionadas
+                  const availabilityIndicator = (reservaData.turno && reservaData.personas) ? getAvailabilityIndicator(day.date) : null;
+                  
+                  return (
+                    <button
+                      key={day.dateString}
+                      onClick={() => setReservaData({ ...reservaData, fecha: day.date })}
+                      className={`${isSelected ? styles.dateButtonSelected : styles.dateButtonUnselected} 
+                        flex flex-col items-center py-3 relative`}
+                      type="button"
+                    >
+                      <span className="text-sm font-medium">{day.label}</span>
+                      <span className="text-xs opacity-75">{formatDayDisplay(day.date)}</span>
+                      {availabilityIndicator}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => {
+                    setShowDatePicker(true);
+                  }}
+                  className={`${styles.dateButtonUnselected} flex flex-col items-center py-3 relative`}
+                >
+                  <span className="text-sm font-medium">+ Fechas</span>
+                  <Calendar size={16} className="text-gray-400 mt-1" />
+                </button>
+              </div>
+              {/* Solo mostrar leyenda si hay turno Y personas seleccionadas */}
+              {(reservaData.turno && reservaData.personas) && (
+                  <div className="mt-3 text-center">
+                    <div className="flex items-center justify-center gap-4 text-xs text-white opacity-70">
+                      <div className="flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 bg-green-400 bg-opacity-80 rounded-full shadow-sm"></span>
+                        <span>Disponible</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 bg-orange-400 bg-opacity-80 rounded-full shadow-sm"></span>
+                        <span>Poca disponibilidad</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 bg-red-400 bg-opacity-80 rounded-full shadow-sm"></span>
+                        <span>Sin lugar</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+            </div>
+          </div>
+
+          {/* Botón para consultar disponibilidad */}
           <button 
             onClick={handleDateAndTurnoSubmit} 
             disabled={!reservaData.personas || !reservaData.fecha || !reservaData.turno}
@@ -525,11 +637,8 @@ export const ClientView = ({
                   renderDayContents={(day, date) => (
                     <div className="relative flex items-center justify-center w-full h-full">
                       <span>{day}</span>
-                      {date && hasWaitingList(date) && (
-                        <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold" style={{fontSize: '8px'}}>
-                          {getWaitingCount(date)}
-                        </div>
-                      )}
+                      {/* Solo mostrar indicador en calendario si hay turno Y personas seleccionadas */}
+                      {date && reservaData.turno && reservaData.personas && getCalendarAvailabilityIndicator(date)}
                     </div>
                   )}
                   inline
@@ -544,20 +653,27 @@ export const ClientView = ({
                 <p className="text-sm text-white opacity-70">
                   Los lunes permanecemos cerrados
                 </p>
-                <p className="text-xs text-white opacity-60 flex items-center justify-center gap-2">
-                  <span className="inline-block w-3 h-3 bg-orange-500 rounded-full"></span>
-                  Días con reservas en espera
-                </p>
+                {/* Solo mostrar leyenda en calendario si hay turno Y personas seleccionadas */}
+                {(reservaData.turno && reservaData.personas) && (
+                    <div className="flex items-center justify-center gap-4 text-xs text-white opacity-70">
+                      <div className="flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 bg-green-400 bg-opacity-80 rounded-full shadow-sm"></span>
+                        <span>Disponible</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 bg-orange-400 bg-opacity-80 rounded-full shadow-sm"></span>
+                        <span>Poca disponibilidad</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="inline-block w-3 h-3 bg-red-400 bg-opacity-80 rounded-full shadow-sm"></span>
+                        <span>Sin lugar</span>
+                      </div>
+                    </div>
+                 )}
               </div>
             </div>
           </div>
         )}
-        <div className="mt-3 text-center">
-          <p className="text-xs text-white opacity-60 flex items-center justify-center gap-2">
-            <span className="inline-block w-3 h-3 bg-orange-500 rounded-full"></span>
-            Días con reservas en espera
-          </p>
-        </div>
       </ClientLayout>
     );
   }

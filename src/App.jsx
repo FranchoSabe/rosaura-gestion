@@ -573,6 +573,7 @@ function App() {
       showWaitingListModal={showWaitingListModal}
       setShowWaitingListModal={setShowWaitingListModal}
       waitingList={data.waitingList || []}
+      allReservations={data.reservas || []}
     />
   );
 }
