@@ -21,6 +21,7 @@ import {
   rejectWaitingReservation,
   auth 
 } from './firebase';
+import { assignTableToNewReservation, DEFAULT_BLOCKED_TABLES } from './utils/mesaLogic';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db } from './firebase';
 
@@ -349,8 +350,8 @@ function App() {
       // Agregar cliente a la base de datos
       const clientId = await addClient(newClient);
 
-      // Crear nueva reserva
-      const newReservation = {
+      // Crear nueva reserva temporal para asignación de mesa
+      const tempReservation = {
         fecha: fechaString,
         turno: reservaData.turno,
         horario: reservaData.horario,
@@ -359,7 +360,26 @@ function App() {
         cliente: newClient
       };
 
+      // Intentar asignar mesa automáticamente
+      const defaultBlocked = new Set();
+      Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
+        defaultBlocked.add(tableId);
+      });
+
+      const mesaAsignada = assignTableToNewReservation(tempReservation, data.reservas, defaultBlocked);
+
+      // Crear nueva reserva con mesa asignada (o null si no hay disponible)
+      const newReservation = {
+        ...tempReservation,
+        mesaAsignada: mesaAsignada
+      };
+
       console.log('Creando nueva reserva:', newReservation);
+      if (mesaAsignada) {
+        console.log('Mesa asignada automáticamente:', mesaAsignada);
+      } else {
+        console.log('No se pudo asignar mesa automáticamente');
+      }
 
       // Agregar reserva a la base de datos
       const { id, reservationId } = await addReservation(newReservation);
@@ -401,28 +421,36 @@ function App() {
 
   const handleUpdateReservation = async (reservationId, updatedData, adminOverride = false) => {
     try {
-      const fechaString = updatedData.fecha instanceof Date ? updatedData.fecha.toISOString().split('T')[0] : updatedData.fecha;
+      // Si es actualización de solo mesaAsignada (admin), buscar la reserva original y combinar datos
+      let fullData = updatedData;
+      if (adminOverride && Object.keys(updatedData).length === 1 && updatedData.mesaAsignada) {
+        const original = data.reservas.find(r => r.id === reservationId);
+        if (!original) throw new Error('Reserva original no encontrada');
+        fullData = { ...original, mesaAsignada: updatedData.mesaAsignada };
+      }
 
-      if (!isValidDate(fechaString, updatedData.turno, adminOverride)) {
+      const fechaString = fullData.fecha instanceof Date ? fullData.fecha.toISOString().split('T')[0] : fullData.fecha;
+
+      if (!isValidDate(fechaString, fullData.turno, adminOverride)) {
         throw new Error('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');
       }
 
       const slots = getAvailableSlotsForEdit(
         fechaString,
-        updatedData.turno,
-        updatedData.personas,
+        fullData.turno,
+        fullData.personas,
         reservationId
       );
 
-      if (!adminOverride && !slots.includes(updatedData.horario)) {
+      if (!adminOverride && !slots.includes(fullData.horario)) {
         throw new Error('El horario seleccionado no está disponible. Por favor, elige otro horario.');
       }
 
       const reservationUpdate = {
-        ...updatedData,
+        ...fullData,
         fecha: fechaString,
         cliente: {
-          ...updatedData.cliente,
+          ...fullData.cliente,
           ultimaReserva: fechaString
         },
       };
@@ -467,11 +495,28 @@ function App() {
         throw new Error('Ya no hay cupos disponibles para este turno.');
       }
 
-      // Confirmar la reserva desde lista de espera
+      // Crear datos temporales para asignación de mesa
+      const tempReservationData = {
+        ...waitingData,
+        horario: selectedHorario
+      };
+
+      // Intentar asignar mesa automáticamente
+      const defaultBlocked = new Set();
+      Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
+        defaultBlocked.add(tableId);
+      });
+
+      const mesaAsignada = assignTableToNewReservation(tempReservationData, data.reservas, defaultBlocked);
+
+      // Confirmar la reserva desde lista de espera con mesa asignada
       const { id, reservationId } = await confirmWaitingReservation(waitingReservationId, {
         ...waitingData,
-        horario: selectedHorario // Usar el horario seleccionado por el admin
+        horario: selectedHorario, // Usar el horario seleccionado por el admin
+        mesaAsignada: mesaAsignada // Agregar mesa asignada
       });
+
+      console.log('Reserva confirmada desde lista de espera con mesa:', mesaAsignada);
 
       return { id, reservationId };
     } catch (error) {

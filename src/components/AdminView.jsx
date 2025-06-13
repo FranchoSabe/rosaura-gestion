@@ -7,7 +7,7 @@ import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
 import { TABLES_LAYOUT, DEFAULT_BLOCKED_TABLES, calculateAutoAssignments, setsAreEqual } from '../utils/mesaLogic';
-import { saveTableAssignments, saveBlockedTables, loadBlockedTables } from '../utils/mesaLogic';
+import { saveTableAssignments, saveBlockedTables, loadBlockedTables, reassignTableManually, validateTableAssignment } from '../utils/mesaLogic';
 
 // Registrar locale español para el DatePicker
 registerLocale('es', es);
@@ -68,6 +68,43 @@ const ConfirmationModal = ({ confirmation, onConfirm, onCancel }) => {
           </button>
           <button onClick={onConfirm} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
             {confirmation.confirmText || 'Confirmar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ConflictModal = ({ conflict, onForce, onCancel }) => {
+  if (!conflict) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+        <div className="flex items-center mb-4">
+          <AlertTriangle className="text-yellow-500 mr-3" size={24} />
+          <h3 className="text-lg font-semibold text-gray-900">Conflicto de Mesa Detectado</h3>
+        </div>
+        <div className="mb-6">
+          <p className="text-gray-600 mb-3">{conflict.message}</p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p className="text-sm text-yellow-800">
+              <strong>¿Deseas forzar la asignación?</strong> Esto reasignará la mesa y desasignará la reserva en conflicto.
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3">
+          <button 
+            onClick={onCancel} 
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button 
+            onClick={onForce} 
+            className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+          >
+            Forzar Asignación
           </button>
         </div>
       </div>
@@ -489,9 +526,9 @@ const ReservationsTable = ({
 
                   {tableAssignments && Object.keys(tableAssignments).length > 0 && (
                     <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
-                      {tableAssignments[reserva.id] && (
+                      {(reserva.mesaAsignada || tableAssignments[reserva.id]) && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Mesa {tableAssignments[reserva.id]}
+                          Mesa {reserva.mesaAsignada || tableAssignments[reserva.id]}
                         </span>
                       )}
                     </td>
@@ -1650,6 +1687,9 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   const [pendingBlockedTables, setPendingBlockedTables] = useState(new Set());
   // Toggle para modificar cupos
   const [editCuposMode, setEditCuposMode] = useState(false);
+  // Estados para conflictos de mesa
+  const [conflict, setConflict] = useState(null);
+  const [pendingTableAssignment, setPendingTableAssignment] = useState(null);
 
   // Layout de mesas - con tamaños estandarizados
   const TABLES_LAYOUT = [
@@ -1731,48 +1771,25 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
     [reservationsForSelectedDate, selectedTurno]
   );
 
-  // Auto-asignación de mesas
-  const autoAssignTables = useCallback((reservations) => {
+  // Obtener asignaciones de mesas desde las reservas guardadas en BD
+  const getTableAssignments = useCallback((reservations) => {
     const assignments = {};
-    const occupiedTables = new Set();
     
-    const sortedReservations = [...reservations].sort((a, b) => a.horario.localeCompare(b.horario));
-    
-    for (const reserva of sortedReservations) {
-      const capacity = reserva.personas;
-      let targetCapacity = capacity;
-      
-      if (capacity === 5) targetCapacity = 6;
-      
-      let availableOrder = RESERVATION_ORDER[targetCapacity];
-      if (!availableOrder) {
-        for (const cap of [4, 6]) {
-          if (cap >= capacity && RESERVATION_ORDER[cap]) {
-            availableOrder = RESERVATION_ORDER[cap];
-            break;
-          }
-        }
+    reservations.forEach(reserva => {
+      if (reserva.mesaAsignada) {
+        assignments[reserva.id] = reserva.mesaAsignada;
       }
-      
-      if (availableOrder) {
-        for (const tableId of availableOrder) {
-          if (!occupiedTables.has(tableId)) {
-            assignments[reserva.id] = tableId;
-            occupiedTables.add(tableId);
-            break;
-          }
-        }
-      }
-    }
+    });
     
     return assignments;
   }, []);
 
-  // Calcular asignaciones automáticas cuando cambian las reservas o el turno
+  // Cargar asignaciones desde la base de datos cuando cambian las reservas o el turno
   useEffect(() => {
-    const autoAssignments = autoAssignTables(reservasTurnoSeleccionado);
-    setTableAssignments(autoAssignments);
-  }, [reservasTurnoSeleccionado]);
+    const savedAssignments = getTableAssignments(reservasTurnoSeleccionado);
+    setTableAssignments(savedAssignments);
+    setPendingAssignments(savedAssignments);
+  }, [reservasTurnoSeleccionado, getTableAssignments]);
 
   // Cerrar datepicker al hacer clic fuera
   useEffect(() => {
@@ -1810,28 +1827,71 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
     return Object.values(tableAssignments).includes(mesaId);
   };
 
-  const handleTableClick = (tableId) => {
+  const handleTableClick = async (tableId) => {
     if (assignmentMode && selectedReservation) {
-      // Modo asignación: asignar reserva a mesa
-      const newAssignments = { ...pendingAssignments };
-      
-      // Remover asignación anterior de esta reserva
-      Object.keys(newAssignments).forEach(key => {
-        if (newAssignments[key] === tableId) {
-          delete newAssignments[key];
+      // Modo asignación manual: asignar reserva a mesa con validación de conflictos
+      try {
+        const result = await reassignTableManually(
+          selectedReservation.id,
+          tableId,
+          reservationsForSelectedDate,
+          onUpdateReservation,
+          showNotification,
+          false // No forzar inicialmente
+        );
+
+        if (result.hasConflict) {
+          // Mostrar modal de conflicto
+          setConflict({
+            ...result,
+            tableId,
+            reservationId: selectedReservation.id
+          });
+          setPendingTableAssignment({
+            reservationId: selectedReservation.id,
+            tableId: tableId
+          });
+        } else {
+          // Asignación exitosa
+          setSelectedReservation(null);
+          setAssignmentMode(false);
         }
-      });
-      
-      // Asignar la nueva mesa
-      newAssignments[selectedReservation.id] = tableId;
-      setPendingAssignments(newAssignments);
-      
-      // No desactivar modo asignación automáticamente
-      setSelectedReservation(null);
+      } catch (error) {
+        showNotification('error', 'Error al asignar mesa');
+      }
     } else if (editCuposMode) {
       // Solo permitir modificar bloqueos si está activado el modo cupos
       toggleTableBlock(tableId);
     }
+  };
+
+  // Función para forzar asignación después de conflicto
+  const handleForceAssignment = async () => {
+    if (pendingTableAssignment) {
+      try {
+        await reassignTableManually(
+          pendingTableAssignment.reservationId,
+          pendingTableAssignment.tableId,
+          reservationsForSelectedDate,
+          onUpdateReservation,
+          showNotification,
+          true // Forzar asignación
+        );
+        
+        setConflict(null);
+        setPendingTableAssignment(null);
+        setSelectedReservation(null);
+        setAssignmentMode(false);
+      } catch (error) {
+        showNotification('error', 'Error al forzar asignación');
+      }
+    }
+  };
+
+  // Función para cancelar asignación conflictiva
+  const handleCancelConflict = () => {
+    setConflict(null);
+    setPendingTableAssignment(null);
   };
 
   const handleReservationClick = useCallback((reserva) => {
@@ -2455,28 +2515,22 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
                       {table.id}
                     </text>
                     {isOcupada && (
-                      <text
-                        x={table.x + table.width / 2}
-                        y={table.y + table.height / 2 + 15}
-                        textAnchor="middle"
-                        fontSize="20"
-                        fontWeight="bold"
+                      <circle
+                        cx={table.x + table.width / 2}
+                        cy={table.y + table.height / 2 + 10}
+                        r="6"
                         fill="#dc2626"
-                      >
-                        ➕
-                      </text>
+                      />
                     )}
                     {isBloqueada && (
-                      <text
-                        x={table.x + table.width / 2}
-                        y={table.y + table.height / 2 + 15}
-                        textAnchor="middle"
-                        fontSize="20"
-                        fontWeight="bold"
-                        fill="#f59e0b"
-                      >
-                        ❌
-                      </text>
+                      <circle
+                        cx={table.x + table.width / 2}
+                        cy={table.y + table.height / 2 + 10}
+                        r="4"
+                        fill="none"
+                        stroke="#f59e0b"
+                        strokeWidth="2"
+                      />
                     )}
                   </g>
                 );
@@ -2487,9 +2541,11 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
                 <rect x="30" y="575" width="15" height="12" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
                 <text x="50" y="583" fontSize="9" fill="#6b7280">Libre</text>
                 <rect x="80" y="575" width="15" height="12" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
-                <text x="100" y="583" fontSize="9" fill="#6b7280">➕ Reservada</text>
+                <circle cx="87.5" cy="581" r="3" fill="#dc2626" />
+                <text x="100" y="583" fontSize="9" fill="#6b7280">Reservada</text>
                 <rect x="160" y="575" width="15" height="12" fill="#ffffff" stroke="#f59e0b" strokeWidth="1" rx="1" />
-                <text x="180" y="583" fontSize="9" fill="#6b7280">❌ Walk-in</text>
+                <circle cx="167.5" cy="581" r="2" fill="none" stroke="#f59e0b" strokeWidth="1" />
+                <text x="180" y="583" fontSize="9" fill="#6b7280">Walk-in</text>
               </g>
             </svg>
           </div>
@@ -2569,6 +2625,13 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
       <div className="hidden print:block p-4 text-center text-xs text-gray-500">
         Generado el {new Date().toLocaleString('es-AR')} | Rosaura - Sistema de Reservas
       </div>
+
+      {/* Modal de Conflicto */}
+      <ConflictModal
+        conflict={conflict}
+        onForce={handleForceAssignment}
+        onCancel={handleCancelConflict}
+      />
     </div>
   );
 };
@@ -2919,31 +2982,25 @@ const TurnoPreviewModal = ({ preview, onClose, onGoToDailyView }) => {
                         >
                           {mesa.id}
                         </text>
-                        {/* + para mesas ocupadas */}
+                        {/* Círculo para mesas ocupadas */}
                         {isOcupada && (
-                          <text
-                            x={mesa.x + mesa.width / 2}
-                            y={mesa.y + mesa.height / 2 + 15}
-                            textAnchor="middle"
-                            fontSize="20"
-                            fontWeight="bold"
+                          <circle
+                            cx={mesa.x + mesa.width / 2}
+                            cy={mesa.y + mesa.height / 2 + 10}
+                            r="6"
                             fill="#dc2626"
-                          >
-                            ➕
-                          </text>
+                          />
                         )}
-                        {/* X para mesas bloqueadas */}
+                        {/* Círculo para mesas bloqueadas */}
                         {isBloqueada && (
-                          <text
-                            x={mesa.x + mesa.width / 2}
-                            y={mesa.y + mesa.height / 2 + 15}
-                            textAnchor="middle"
-                            fontSize="20"
-                            fontWeight="bold"
-                            fill="#f59e0b"
-                          >
-                            ❌
-                          </text>
+                          <circle
+                            cx={mesa.x + mesa.width / 2}
+                            cy={mesa.y + mesa.height / 2 + 10}
+                            r="4"
+                            fill="none"
+                            stroke="#f59e0b"
+                            strokeWidth="2"
+                          />
                         )}
                       </g>
                     );
@@ -2954,9 +3011,11 @@ const TurnoPreviewModal = ({ preview, onClose, onGoToDailyView }) => {
                     <rect x="20" y="520" width="15" height="12" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
                     <text x="40" y="528" fontSize="9" fill="#6b7280">Libre</text>
                     <rect x="80" y="520" width="15" height="12" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
-                    <text x="100" y="528" fontSize="9" fill="#6b7280">➕ Reservada</text>
+                    <circle cx="87.5" cy="526" r="3" fill="#dc2626" />
+                    <text x="100" y="528" fontSize="9" fill="#6b7280">Reservada</text>
                     <rect x="160" y="520" width="15" height="12" fill="#ffffff" stroke="#f59e0b" strokeWidth="1" rx="1" />
-                    <text x="180" y="528" fontSize="9" fill="#6b7280">❌ Walk-in</text>
+                    <circle cx="167.5" cy="526" r="2" fill="none" stroke="#f59e0b" strokeWidth="1" />
+                    <text x="180" y="528" fontSize="9" fill="#6b7280">Walk-in</text>
                   </g>
                 </svg>
               </div>
@@ -2985,9 +3044,9 @@ const TurnoPreviewModal = ({ preview, onClose, onGoToDailyView }) => {
                             <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">
                               {reserva.horario}
                             </span>
-                            {tableAssignments[reserva.id] && (
+                            {(reserva.mesaAsignada || tableAssignments[reserva.id]) && (
                               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                Mesa {tableAssignments[reserva.id]}
+                                Mesa {reserva.mesaAsignada || tableAssignments[reserva.id]}
                               </span>
                             )}
                           </div>
