@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronDown, ThumbsDown, MessageCircle, Check, Edit2, Trash2, CheckCircle, X, XCircle, AlertTriangle, Sun, Moon, Clock, Printer, ChevronLeft, ChevronRight, Calendar, Users, Phone } from 'lucide-react';
 import styles from './AdminView.module.css';
-import TableMap from './TableMap';
+
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
-import { TABLES_LAYOUT, DEFAULT_BLOCKED_TABLES, calculateAutoAssignments, setsAreEqual } from '../utils/mesaLogic';
+import { TABLES_LAYOUT, DEFAULT_BLOCKED_TABLES, calculateAutoAssignments, setsAreEqual, detectWalkInQuotaChanges, calculateWalkInQuotas } from '../utils/mesaLogic';
 import { saveTableAssignments, saveBlockedTables, loadBlockedTables, reassignTableManually, validateTableAssignment } from '../utils/mesaLogic';
 
 // Registrar locale español para el DatePicker
@@ -462,11 +462,9 @@ const ReservationsTable = ({
                   Mesa
                 </th>
               )}
-              {!assignmentMode && (
-                <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
-                  Acciones
-                </th>
-              )}
+              <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -474,7 +472,7 @@ const ReservationsTable = ({
               .sort((a, b) => a.horario.localeCompare(b.horario))
               .map((reserva) => (
                 <tr 
-                  key={reserva.id} 
+                  key={`table-${reserva.id}`} 
                   className={`hover:bg-gray-50 transition-colors ${
                     assignmentMode ? 'cursor-pointer' : ''
                   } ${
@@ -527,67 +525,97 @@ const ReservationsTable = ({
                   {tableAssignments && Object.keys(tableAssignments).length > 0 && (
                     <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
                       {(reserva.mesaAsignada || tableAssignments[reserva.id]) && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Mesa {reserva.mesaAsignada || tableAssignments[reserva.id]}
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          (() => {
+                            const mesa = reserva.mesaAsignada || tableAssignments[reserva.id];
+                            const isUnida = typeof mesa === 'string' && mesa.includes('+');
+                            return isUnida ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
+                          })()
+                        }`}>
+                          Mesa {(() => {
+                            const mesa = reserva.mesaAsignada || tableAssignments[reserva.id];
+                            if (typeof mesa === 'string' && mesa.includes('+')) {
+                              return `${mesa} (unidas)`;
+                            }
+                            return mesa;
+                          })()}
                         </span>
                       )}
                     </td>
                   )}
                   
-                  {!assignmentMode && (
-                    <td className={`px-3 py-2 whitespace-nowrap text-right ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'} font-medium`}>
-                      <div className="flex items-center gap-1">
-                        {/* WhatsApp */}
-                        <a
-                          href={`https://wa.me/${formatPhoneForWhatsApp(reserva.cliente.telefono)}?text=${encodeURIComponent(getWhatsAppMessage(reserva))}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`text-green-600 hover:text-green-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
-                          title="Confirmar por WhatsApp"
+                  <td className={`px-3 py-2 whitespace-nowrap text-right ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'} font-medium`}>
+                    <div className="flex items-center gap-1">
+                      {assignmentMode ? (
+                        // Botón especial para modo asignación
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onReservationClick && onReservationClick(reserva);
+                          }}
+                          className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                            selectedReservation?.id === reserva.id
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                          }`}
+                          title="Seleccionar para asignar mesa"
                         >
-                          <MessageCircle size={compactMode ? 14 : 16} />
-                        </a>
+                          {selectedReservation?.id === reserva.id ? 'Seleccionado' : 'Seleccionar'}
+                        </button>
+                      ) : (
+                        <>
+                          {/* WhatsApp */}
+                          <a
+                            href={`https://wa.me/${formatPhoneForWhatsApp(reserva.cliente.telefono)}?text=${encodeURIComponent(getWhatsAppMessage(reserva))}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`text-green-600 hover:text-green-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
+                            title="Confirmar por WhatsApp"
+                          >
+                            <MessageCircle size={compactMode ? 14 : 16} />
+                          </a>
 
-                        {/* Editar */}
-                        {showEditButton && (
+                          {/* Editar */}
+                          {showEditButton && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingReservation(reserva);
+                              }}
+                              className={`text-blue-600 hover:text-blue-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
+                              title="Editar reserva"
+                            >
+                              <Edit2 size={compactMode ? 14 : 16} />
+                            </button>
+                          )}
+
+                          {/* Eliminar */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditingReservation(reserva);
+                              handleDelete(reserva);
                             }}
-                            className={`text-blue-600 hover:text-blue-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
-                            title="Editar reserva"
+                            className={`text-red-600 hover:text-red-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
+                            title="Eliminar reserva"
                           >
-                            <Edit2 size={compactMode ? 14 : 16} />
+                            <Trash2 size={compactMode ? 14 : 16} />
                           </button>
-                        )}
 
-                        {/* Eliminar */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(reserva);
-                          }}
-                          className={`text-red-600 hover:text-red-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
-                          title="Eliminar reserva"
-                        >
-                          <Trash2 size={compactMode ? 14 : 16} />
-                        </button>
-
-                        {/* Lista negra */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleBlacklist(reserva);
-                          }}
-                          className={`text-gray-600 hover:text-gray-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
-                          title="Agregar a lista negra"
-                        >
-                          <ThumbsDown size={compactMode ? 14 : 16} />
-                        </button>
-                      </div>
-                    </td>
-                  )}
+                          {/* Lista negra */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBlacklist(reserva);
+                            }}
+                            className={`text-gray-600 hover:text-gray-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
+                            title="Agregar a lista negra"
+                          >
+                            <ThumbsDown size={compactMode ? 14 : 16} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
           </tbody>
@@ -718,7 +746,7 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
     }
 
     try {
-      await onConfirmWaitingReservation(selectedWaiting.id, selectedWaiting, selectedHorario);
+      await onConfirmWaitingReservation(selectedWaiting.id, selectedWaiting, selectedHorario, blockedTables);
       showNotification('success', 'Reserva confirmada exitosamente');
       setShowConfirmModal(false);
       setSelectedWaiting(null);
@@ -1440,7 +1468,7 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
 };
 
 // Componente de vista panorama para mostrar resumen de reservas futuras
-const PanoramaView = ({ reservations, formatDate, onGoToDailyView }) => {
+const PanoramaView = ({ reservations, formatDate, onGoToDailyView, TurnoPreviewModal }) => {
   const [selectedTurnoPreview, setSelectedTurnoPreview] = useState(null);
 
   // Obtener próximos 7 días excluyendo lunes
@@ -1664,11 +1692,14 @@ const PanoramaView = ({ reservations, formatDate, onGoToDailyView }) => {
       </div>
 
       {/* Modal de Preview del Turno */}
-      {selectedTurnoPreview && (
+      {selectedTurnoPreview && TurnoPreviewModal && (
         <TurnoPreviewModal
           preview={selectedTurnoPreview}
           onClose={() => setSelectedTurnoPreview(null)}
           onGoToDailyView={handleGoToDailyView}
+          currentDate={new Date().toISOString().split('T')[0]}
+          currentTurno="mediodia"
+          tableAssignments={{}}
         />
       )}
     </div>
@@ -1824,12 +1855,161 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
 
   // Funciones de manejo
   const isMesaOcupada = (mesaId) => {
-    return Object.values(tableAssignments).includes(mesaId);
+    // Verificar en asignaciones pendientes
+    const pendingValues = Object.values(pendingAssignments);
+    for (const assignment of pendingValues) {
+      // Si es una mesa individual
+      if (assignment === mesaId) {
+        return true;
+      }
+      // Si es una combinación (formato "11+21")
+      if (typeof assignment === 'string' && assignment.includes('+')) {
+        const tableIds = assignment.split('+').map(id => parseInt(id));
+        if (tableIds.includes(mesaId)) {
+          return true;
+        }
+      }
+    }
+    
+    // Verificar en reservas ya guardadas para el turno seleccionado
+    const reservasDelTurno = reservasPorTurno[selectedTurno] || [];
+    return reservasDelTurno.some(reserva => {
+      if (!reserva.mesaAsignada) return false;
+      
+      // Si es una mesa individual
+      if (reserva.mesaAsignada === mesaId) {
+        return true;
+      }
+      
+      // Si es una combinación (formato "11+21")
+      if (typeof reserva.mesaAsignada === 'string' && reserva.mesaAsignada.includes('+')) {
+        const tableIds = reserva.mesaAsignada.split('+').map(id => parseInt(id));
+        return tableIds.includes(mesaId);
+      }
+      
+      return false;
+    });
   };
 
   const handleTableClick = async (tableId) => {
-    if (assignmentMode && selectedReservation) {
-      // Modo asignación manual: asignar reserva a mesa con validación de conflictos
+    // Modo edición de cupos - bloquear/desbloquear mesas para walk-ins
+    if (editCuposMode) {
+      if (isMesaOcupada(tableId)) {
+        showNotification('warning', 'No puedes bloquear una mesa ocupada');
+        return;
+      }
+      toggleTableBlock(tableId);
+      const newQuotas = calculateWalkInQuotas(pendingBlockedTables.has(tableId) 
+        ? new Set([...pendingBlockedTables].filter(id => id !== tableId))
+        : new Set([...pendingBlockedTables, tableId])
+      );
+      showNotification('info', `Mesa ${tableId} ${pendingBlockedTables.has(tableId) ? 'desbloqueada' : 'bloqueada'}. Cupos: ${newQuotas} personas`);
+      return;
+    }
+
+    // Modo asignación manual de reservas
+    if (assignmentMode) {
+      if (!selectedReservation) {
+        showNotification('warning', 'Primero selecciona una reserva de la lista');
+        return;
+      }
+
+      // Verificar si esta mesa está disponible para combinaciones
+      const isTable2or3 = (tableId === 2 || tableId === 3);
+      const personas = selectedReservation.personas;
+      
+      // Si es mesa 2 o 3 y la reserva es para 5-6 personas, ofrecer combinación PRIMERO
+      if (isTable2or3 && personas >= 5) {
+        const otherTableId = tableId === 2 ? 3 : 2;
+        const table2Occupied = isMesaOcupada(2);
+        const table3Occupied = isMesaOcupada(3);
+        
+        // Si ambas mesas están libres, ofrecer la combinación
+        if (!table2Occupied && !table3Occupied) {
+          const confirmed = await showConfirmation({
+            title: personas === 6 ? 'Combinación Recomendada' : 'Combinación de Mesas',
+            message: `Para ${personas} personas ${personas === 6 ? 'se recomienda' : 'puedes'} usar la combinación Mesa 2+3 (capacidad 6). ¿Deseas asignar las mesas 2 y 3 juntas?`,
+            confirmText: 'Sí, usar 2+3',
+            cancelText: personas === 6 ? 'Solo Mesa ' + tableId : 'Cancelar'
+          });
+          
+          if (confirmed) {
+            // Asignar combinación 2+3
+            setPendingAssignments(prev => ({
+              ...prev,
+              [selectedReservation.id]: '2+3'
+            }));
+            
+            // Si alguna mesa está bloqueada, liberarla
+            if (pendingBlockedTables.has(2) || pendingBlockedTables.has(3)) {
+              const newBlocked = new Set(pendingBlockedTables);
+              newBlocked.delete(2);
+              newBlocked.delete(3);
+              setPendingBlockedTables(newBlocked);
+            }
+            
+            showNotification('success', `Combinación Mesa 2+3 asignada a ${selectedReservation.cliente.nombre}. Recuerda guardar los cambios.`);
+            setSelectedReservation(null);
+            return;
+          } else {
+            // Para 5 personas, si cancela la combinación, cancelar toda la asignación
+            if (personas === 5) {
+              showNotification('info', 'Asignación cancelada');
+              return;
+            }
+            // Para 6 personas, si cancela la combinación, continuar con asignación individual
+          }
+        }
+      }
+
+      if (isMesaOcupada(tableId)) {
+        showNotification('warning', 'Esta mesa ya está ocupada');
+        return;
+      }
+
+      // Validar capacidad de la mesa antes de asignar (solo si no se ofreció combinación o se canceló)
+      const selectedTable = TABLES_LAYOUT.find(t => t.id === tableId);
+      if (selectedTable && selectedTable.capacity < personas) {
+        const confirmed = await showConfirmation({
+          title: 'Capacidad Insuficiente',
+          message: `La Mesa ${tableId} tiene capacidad para ${selectedTable.capacity} personas, pero la reserva es para ${personas} personas. ¿Deseas asignarla de todas formas?`,
+          confirmText: 'Sí, asignar',
+          cancelText: 'Cancelar'
+        });
+        
+        if (!confirmed) {
+          showNotification('info', 'Asignación cancelada');
+          return;
+        }
+      }
+
+      // En modo manual, permitir asignar cualquier mesa disponible (incluso bloqueadas)
+      if (pendingBlockedTables.has(tableId)) {
+        const confirmed = await showConfirmation({
+          title: 'Mesa Walk-in',
+          message: `La Mesa ${tableId} está reservada para walk-ins. ¿Deseas asignarla a la reserva de ${selectedReservation.cliente.nombre}? Esto liberará la mesa de los cupos walk-in.`,
+          confirmText: 'Asignar',
+          cancelText: 'Cancelar'
+        });
+        
+        if (confirmed) {
+          // Asignar mesa en pendiente
+          setPendingAssignments(prev => ({
+            ...prev,
+            [selectedReservation.id]: tableId
+          }));
+          
+          // Liberar mesa de bloqueos
+          const newBlocked = new Set(pendingBlockedTables);
+          newBlocked.delete(tableId);
+          setPendingBlockedTables(newBlocked);
+          
+          showNotification('success', `Mesa ${tableId} asignada (liberada de walk-ins). Recuerda guardar los cambios.`);
+        }
+        return;
+      }
+
+      // Verificar conflictos para mesas no bloqueadas usando el sistema existente
       try {
         const result = await reassignTableManually(
           selectedReservation.id,
@@ -1852,16 +2032,16 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
             tableId: tableId
           });
         } else {
-          // Asignación exitosa
-          setSelectedReservation(null);
-          setAssignmentMode(false);
+          // Asignación exitosa - actualizar el estado local también
+          setPendingAssignments(prev => ({
+            ...prev,
+            [selectedReservation.id]: tableId
+          }));
+          showNotification('success', `Mesa ${tableId} asignada. Recuerda guardar los cambios.`);
         }
       } catch (error) {
         showNotification('error', 'Error al asignar mesa');
       }
-    } else if (editCuposMode) {
-      // Solo permitir modificar bloqueos si está activado el modo cupos
-      toggleTableBlock(tableId);
     }
   };
 
@@ -1878,10 +2058,17 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
           true // Forzar asignación
         );
         
+        // Actualizar el estado local también
+        setPendingAssignments(prev => ({
+          ...prev,
+          [pendingTableAssignment.reservationId]: pendingTableAssignment.tableId
+        }));
+        
         setConflict(null);
         setPendingTableAssignment(null);
         setSelectedReservation(null);
-        setAssignmentMode(false);
+        // No desactivar el modo asignación automáticamente
+        showNotification('success', `Mesa ${pendingTableAssignment.tableId} asignada (forzado). Recuerda guardar los cambios.`);
       } catch (error) {
         showNotification('error', 'Error al forzar asignación');
       }
@@ -1955,7 +2142,7 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
       // Usar el primer horario disponible
       const selectedHorario = availableSlots[0];
       
-      await onConfirmWaitingReservation(waiting.id, waiting, selectedHorario);
+      await onConfirmWaitingReservation(waiting.id, waiting, selectedHorario, blockedTables);
       showNotification('success', 'Reserva confirmada exitosamente');
     } catch (error) {
       showNotification('error', 'Error al confirmar reserva');
@@ -2060,8 +2247,8 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
 
   // --- BLOQUEOS Y ASIGNACIÓN CENTRALIZADA ---
   const [blockedTables, setBlockedTables] = useState(() => {
-    // Bloqueos predeterminados: 1,4,5,14,24
-    return new Set([1, 4, 5, 14, 24]);
+    // Bloqueos predeterminados: 4,5 (4 personas) y 14,24 (2 personas)
+    return new Set([4, 5, 14, 24]);
   });
 
   // Cargar bloqueos guardados al cambiar fecha/turno
@@ -2074,7 +2261,7 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
           setPendingBlockedTables(savedBlocked);
         } else {
           // Si no hay guardados, usar predeterminados
-          const predet = new Set([1, 4, 5, 14, 24]);
+          const predet = new Set([4, 5, 14, 24]);
           setBlockedTables(predet);
           setPendingBlockedTables(predet);
         }
@@ -2086,15 +2273,19 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
     loadSavedBlocked();
   }, [selectedDate, selectedTurno, onLoadBlockedTables]);
 
-  // Recalcular asignaciones/bloqueos cada vez que cambian reservasTurnoSeleccionado
+  // Cargar asignaciones existentes sin auto-asignación automática
   useEffect(() => {
-    const { assignments, blockedTables: calcBlocked } = calculateAutoAssignments(reservasTurnoSeleccionado, blockedTables);
-    setTableAssignments(assignments);
-    setPendingAssignments(assignments);
-    if (!setsAreEqual(blockedTables, calcBlocked)) {
-      setBlockedTables(calcBlocked);
-      setPendingBlockedTables(calcBlocked);
-    }
+    // Solo cargar asignaciones existentes, sin modificar nada
+    const existingAssignments = {};
+    reservasTurnoSeleccionado.forEach(reserva => {
+      if (reserva.mesaAsignada && reserva.mesaAsignada !== 'Sin asignar') {
+        existingAssignments[reserva.id] = reserva.mesaAsignada;
+      }
+    });
+    
+    setTableAssignments(existingAssignments);
+    setPendingAssignments(existingAssignments);
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservasTurnoSeleccionado]);
 
@@ -2149,6 +2340,151 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
     setPendingBlockedTables(blockedTables);
     setAssignmentMode(false);
     setSelectedReservation(null);
+  };
+
+
+
+  // Función para corregir asignaciones de mesas incorrectas
+  const handleFixTableAssignments = async () => {
+    const confirmed = await showConfirmation({
+      title: 'Corregir Asignaciones',
+      message: '¿Deseas revisar y corregir asignaciones incorrectas? Esto verificará reservas de 5-6 personas que estén asignadas a mesa individual y las convertirá a combinación 2+3 si es apropiado.',
+      confirmText: 'Corregir',
+      cancelText: 'Cancelar'
+    });
+    
+    if (confirmed) {
+      let correcciones = 0;
+      
+      for (const reserva of reservasTurnoSeleccionado) {
+        // Verificar reservas de 5-6 personas asignadas solo a mesa 2 o 3
+        if (reserva.personas >= 5 && (reserva.mesaAsignada === 2 || reserva.mesaAsignada === '2')) {
+          // Verificar si mesa 3 está libre
+          const mesa3Ocupada = reservasTurnoSeleccionado.some(r => 
+            r.id !== reserva.id && (r.mesaAsignada === 3 || r.mesaAsignada === '3')
+          );
+          
+          if (!mesa3Ocupada && !pendingBlockedTables.has(3)) {
+            // Corregir a combinación 2+3
+            await onUpdateReservation(reserva.id, { mesaAsignada: '2+3' }, true);
+            correcciones++;
+          }
+        }
+        else if (reserva.personas >= 5 && (reserva.mesaAsignada === 3 || reserva.mesaAsignada === '3')) {
+          // Verificar si mesa 2 está libre
+          const mesa2Ocupada = reservasTurnoSeleccionado.some(r => 
+            r.id !== reserva.id && (r.mesaAsignada === 2 || r.mesaAsignada === '2')
+          );
+          
+          if (!mesa2Ocupada && !pendingBlockedTables.has(2)) {
+            // Corregir a combinación 2+3
+            await onUpdateReservation(reserva.id, { mesaAsignada: '2+3' }, true);
+            correcciones++;
+          }
+        }
+      }
+      
+      if (correcciones > 0) {
+        showNotification('success', `✅ Se corrigieron ${correcciones} asignación${correcciones !== 1 ? 'es' : ''}. Las mesas se combinaron correctamente.`);
+      } else {
+        showNotification('info', 'No se encontraron asignaciones que necesiten corrección.');
+      }
+    }
+  };
+
+  // Función para activar Modo Manual
+  const handleManualAssignMode = () => {
+    if (!assignmentMode) {
+      setAssignmentMode(true);
+      setSelectedReservation(null);
+      showNotification('info', '🎯 Modo Manual activado. Selecciona una reserva y luego una mesa.');
+    } else {
+      setAssignmentMode(false);
+      setSelectedReservation(null);
+      showNotification('info', 'Modo Manual desactivado.');
+    }
+  };
+
+  // Función para limpiar todas las asignaciones
+  const handleClearAssignments = async () => {
+    const confirmed = await showConfirmation({
+      title: 'Limpiar Asignaciones',
+      message: '¿Estás seguro de que deseas eliminar todas las asignaciones pendientes? Esto dará total libertad para asignar manualmente.',
+      confirmText: 'Limpiar',
+      cancelText: 'Cancelar'
+    });
+    
+    if (confirmed) {
+      // Limpiar todas las asignaciones pendientes
+      setPendingAssignments({});
+      
+      // Limpiar asignaciones guardadas de las reservas del turno
+      const clearPromises = reservasTurnoSeleccionado.map(reserva => {
+        if (reserva.mesaAsignada && reserva.mesaAsignada !== 'Sin asignar') {
+          return onUpdateReservation(reserva.id, { mesaAsignada: 'Sin asignar' }, true);
+        }
+        return Promise.resolve();
+      });
+      
+      Promise.all(clearPromises).then(() => {
+        showNotification('success', '🗑️ Todas las asignaciones han sido eliminadas. Listo para asignación manual.');
+        setAssignmentMode(true);
+        setSelectedReservation(null);
+      }).catch(error => {
+        console.error('Error al limpiar asignaciones:', error);
+        showNotification('error', 'Error al limpiar algunas asignaciones');
+      });
+    }
+  };
+
+  // Función para restablecer cupos walk-in por defecto
+  const handleResetToDefaultQuotas = async () => {
+    const confirmed = await showConfirmation({
+      title: 'Restablecer Cupos Walk-in',
+      message: '¿Deseas restablecer los cupos walk-in a la configuración por defecto? (Mesas 4, 5, 14, 24)',
+      confirmText: 'Restablecer',
+      cancelText: 'Cancelar'
+    });
+    
+    if (confirmed) {
+      const defaultBlocked = new Set([4, 5, 14, 24]);
+      setPendingBlockedTables(defaultBlocked);
+      showNotification('success', `Cupos walk-in restablecidos: ${calculateWalkInQuotas(defaultBlocked)} personas`);
+    }
+  };
+
+  // Función para detectar qué mesas están unidas (combinadas)
+  const getMesasUnidas = () => {
+    const unidas = new Map(); // mesaId -> combinationInfo
+    
+    // Revisar asignaciones pendientes
+    Object.values(pendingAssignments).forEach(assignment => {
+      if (typeof assignment === 'string' && assignment.includes('+')) {
+        const tableIds = assignment.split('+').map(id => parseInt(id));
+        tableIds.forEach(tableId => {
+          unidas.set(tableId, { combination: assignment, tables: tableIds });
+        });
+      }
+    });
+    
+    // Revisar reservas guardadas del turno seleccionado
+    const reservasDelTurno = reservasPorTurno[selectedTurno] || [];
+    reservasDelTurno.forEach(reserva => {
+      if (reserva.mesaAsignada && typeof reserva.mesaAsignada === 'string' && reserva.mesaAsignada.includes('+')) {
+        const tableIds = reserva.mesaAsignada.split('+').map(id => parseInt(id));
+        tableIds.forEach(tableId => {
+          unidas.set(tableId, { combination: reserva.mesaAsignada, tables: tableIds });
+        });
+      }
+    });
+    
+    return unidas;
+  };
+
+  // Función para verificar si una mesa está unida con otra
+  const isTableJoined = (tableId) => {
+    const unidas = getMesasUnidas();
+    return unidas.has(tableId);
   };
 
   return (
@@ -2206,7 +2542,7 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
               </button>
             </div>
             
-            {/* Toggle Modo Asignar */}
+            {/* Controles de Asignación */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setEditCuposMode(!editCuposMode)}
@@ -2218,15 +2554,35 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
               >
                 {editCuposMode ? 'Modificando cupos' : 'Modificar cupos'}
               </button>
+              
+
+              
               <button
-                onClick={() => setAssignmentMode(!assignmentMode)}
+                onClick={handleFixTableAssignments}
+                className="px-3 py-1 rounded text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                disabled={reservasTurnoSeleccionado.length === 0}
+                title="Corregir asignaciones incorrectas de reservas grandes"
+              >
+                🔧 Corregir
+              </button>
+              
+              <button
+                onClick={handleManualAssignMode}
                 className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
                   assignmentMode
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {assignmentMode ? 'Modo Asignación Activo' : 'Activar Asignación'}
+                {assignmentMode ? '✋ Modo Manual Activo' : '✋ Asignación Manual'}
+              </button>
+              
+              <button
+                onClick={handleClearAssignments}
+                className="px-3 py-1 rounded text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
+                disabled={Object.keys(pendingAssignments).length === 0}
+              >
+                🗑️ Limpiar Todo
               </button>
             </div>
           </div>
@@ -2270,14 +2626,37 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
 
         {/* Información del modo asignación */}
         {assignmentMode && (
-          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2 text-blue-800">
-              <span className="font-medium">🎯 Modo Asignación Activo</span>
+          <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="flex items-center gap-2 text-purple-800">
+              <span className="font-medium">✋ Modo Asignación Manual Activo</span>
               {selectedReservation ? (
-                <span>- Reserva seleccionada: <strong>{selectedReservation.cliente.nombre}</strong> ({selectedReservation.personas} personas)</span>
+                <span>- Reserva seleccionada: <strong>{selectedReservation.cliente.nombre}</strong> ({selectedReservation.personas} personas) - Haz click en una mesa</span>
               ) : (
-                <span>- Selecciona una reserva y luego haz click en una mesa</span>
+                <span>- Selecciona una reserva de la lista y luego haz click en una mesa del mapa</span>
               )}
+            </div>
+            <div className="mt-2 text-xs text-purple-600">
+              💡 En modo manual tienes total libertad para asignar cualquier mesa disponible, incluso si no coincide con la lógica automática.
+            </div>
+          </div>
+        )}
+        
+        {/* Información de asignaciones automáticas */}
+        {!assignmentMode && Object.keys(pendingAssignments).length > 0 && reservasTurnoSeleccionado.length > 0 && (
+          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 text-green-800">
+              <span className="font-medium">🤖 Asignación Automática Activa</span>
+              <span>- Usa "🗑️ Limpiar Todo" + "✋ Asignación Manual" para control total</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Información cuando no hay reservas */}
+        {!assignmentMode && Object.keys(pendingAssignments).length === 0 && reservasTurnoSeleccionado.length === 0 && (
+          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-center gap-2 text-gray-600">
+              <span className="font-medium">📋 Sin reservas</span>
+              <span>- Las nuevas reservas se asignarán automáticamente según la lógica inteligente</span>
             </div>
           </div>
         )}
@@ -2445,30 +2824,32 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
       <div className="flex">
         {/* Mapa de Mesas - Lado Izquierdo */}
         <div className="w-1/2 p-6 border-r border-gray-200">
-          {/* Controles de guardado */}
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-yellow-800">
-                <strong>Cambios pendientes:</strong> 
-                {Object.keys(pendingAssignments).length > 0 && ` ${Object.keys(pendingAssignments).length} asignaciones`}
-                {!setsAreEqual(blockedTables, pendingBlockedTables) && ` • Bloqueos modificados`}
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCancelChanges}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveChanges}
-                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
-                >
-                  Guardar Cambios
-                </button>
+          {/* Controles de guardado - Solo mostrar si hay cambios pendientes */}
+          {(Object.keys(pendingAssignments).length > 0 || !setsAreEqual(blockedTables, pendingBlockedTables)) && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-yellow-800">
+                  <strong>Cambios pendientes:</strong> 
+                  {Object.keys(pendingAssignments).length > 0 && ` ${Object.keys(pendingAssignments).length} asignaciones`}
+                  {!setsAreEqual(blockedTables, pendingBlockedTables) && ` • Bloqueos modificados`}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCancelChanges}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSaveChanges}
+                    className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                  >
+                    Guardar Cambios
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           
           <div className="bg-gray-50 rounded-lg p-4">
             <svg 
@@ -2484,8 +2865,9 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
               
               {/* Mesas */}
               {TABLES_LAYOUT.map((table) => {
-                const isOcupada = Object.values(pendingAssignments).includes(table.id);
+                const isOcupada = isMesaOcupada(table.id);
                 const isBloqueada = pendingBlockedTables.has(table.id);
+                const isUnida = isTableJoined(table.id);
                 const estado = isOcupada ? 'occupied' : isBloqueada ? 'blocked' : 'available';
                 
                 const strokeColor = isOcupada ? '#dc2626' : isBloqueada ? '#f59e0b' : '#0c4900';
@@ -2499,7 +2881,8 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
                       height={table.height}
                       fill="#ffffff"
                       stroke={strokeColor}
-                      strokeWidth="2"
+                      strokeWidth={isUnida ? "3" : "2"}
+                      strokeDasharray={isUnida ? "8,4" : "none"}
                       rx="3"
                       className="cursor-pointer"
                       onClick={() => handleTableClick(table.id)}
@@ -2515,21 +2898,60 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
                       {table.id}
                     </text>
                     {isOcupada && (
-                      <circle
-                        cx={table.x + table.width / 2}
-                        cy={table.y + table.height / 2 + 10}
-                        r="6"
-                        fill="#dc2626"
-                      />
+                      <g>
+                        {/* + para mesas ocupadas */}
+                        <line
+                          x1={table.x + table.width / 2 - 5}
+                          y1={table.y + table.height / 2 + 10}
+                          x2={table.x + table.width / 2 + 5}
+                          y2={table.y + table.height / 2 + 10}
+                          stroke="#2563eb"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <line
+                          x1={table.x + table.width / 2}
+                          y1={table.y + table.height / 2 + 5}
+                          x2={table.x + table.width / 2}
+                          y2={table.y + table.height / 2 + 15}
+                          stroke="#2563eb"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </g>
                     )}
                     {isBloqueada && (
+                      <g>
+                        {/* X para mesas bloqueadas */}
+                        <line
+                          x1={table.x + table.width / 2 - 4}
+                          y1={table.y + table.height / 2 + 6}
+                          x2={table.x + table.width / 2 + 4}
+                          y2={table.y + table.height / 2 + 14}
+                          stroke="#dc2626"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                        <line
+                          x1={table.x + table.width / 2 + 4}
+                          y1={table.y + table.height / 2 + 6}
+                          x2={table.x + table.width / 2 - 4}
+                          y2={table.y + table.height / 2 + 14}
+                          stroke="#dc2626"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </g>
+                    )}
+                    {/* Indicador visual para mesas unidas */}
+                    {isUnida && (
                       <circle
-                        cx={table.x + table.width / 2}
-                        cy={table.y + table.height / 2 + 10}
-                        r="4"
-                        fill="none"
-                        stroke="#f59e0b"
-                        strokeWidth="2"
+                        cx={table.x + table.width - 10}
+                        cy={table.y + 10}
+                        r="6"
+                        fill="#f59e0b"
+                        stroke="#ffffff"
+                        strokeWidth="1"
                       />
                     )}
                   </g>
@@ -2538,25 +2960,87 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
               
               {/* Leyenda */}
               <g>
-                <rect x="30" y="575" width="15" height="12" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
-                <text x="50" y="583" fontSize="9" fill="#6b7280">Libre</text>
-                <rect x="80" y="575" width="15" height="12" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
-                <circle cx="87.5" cy="581" r="3" fill="#dc2626" />
-                <text x="100" y="583" fontSize="9" fill="#6b7280">Reservada</text>
-                <rect x="160" y="575" width="15" height="12" fill="#ffffff" stroke="#f59e0b" strokeWidth="1" rx="1" />
-                <circle cx="167.5" cy="581" r="2" fill="none" stroke="#f59e0b" strokeWidth="1" />
-                <text x="180" y="583" fontSize="9" fill="#6b7280">Walk-in</text>
+                <rect x="20" y="575" width="13" height="10" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
+                <text x="37" y="582" fontSize="8" fill="#6b7280">Libre</text>
+                <rect x="65" y="575" width="13" height="10" fill="#ffffff" stroke="#2563eb" strokeWidth="1" rx="1" />
+                {/* + para reservadas */}
+                <line x1="69" y1="580" x2="74" y2="580" stroke="#2563eb" strokeWidth="1" strokeLinecap="round" />
+                <line x1="71.5" y1="577" x2="71.5" y2="583" stroke="#2563eb" strokeWidth="1" strokeLinecap="round" />
+                <text x="82" y="582" fontSize="8" fill="#6b7280">Reservada</text>
+                <rect x="130" y="575" width="13" height="10" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
+                {/* X para walk-in */}
+                <line x1="134" y1="577" x2="139" y2="583" stroke="#dc2626" strokeWidth="1" strokeLinecap="round" />
+                <line x1="139" y1="577" x2="134" y2="583" stroke="#dc2626" strokeWidth="1" strokeLinecap="round" />
+                <text x="147" y="582" fontSize="8" fill="#6b7280">Walk-in</text>
+                <rect x="190" y="575" width="13" height="10" fill="#ffffff" stroke="#0c4900" strokeWidth="2" strokeDasharray="6,2" rx="1" />
+                <circle cx="198" cy="577" r="3" fill="#f59e0b" stroke="#ffffff" strokeWidth="0.5" />
+                <text x="207" y="582" fontSize="8" fill="#6b7280">Unidas</text>
               </g>
             </svg>
           </div>
 
           {/* Orden de reserva */}
           <div className="mt-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">Orden de Reserva</h4>
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">Orden de Reserva (Optimizado)</h4>
             <div className="text-xs text-gray-600 space-y-1">
               <div><span className="font-medium">2 pers:</span> {RESERVATION_ORDER[2].join(' → ')}</div>
               <div><span className="font-medium">4 pers:</span> {RESERVATION_ORDER[4].join(' → ')}</div>
               <div><span className="font-medium">6 pers:</span> {RESERVATION_ORDER[6].join(' → ')}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                ℹ️ Mesas 2 y 3 al final para preservar combinación 2+3
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              <div className="font-medium text-blue-600">Para 4 personas:</div>
+              <div>1° Mesas individuales disponibles</div>
+              <div>2° Mesas bloqueadas (liberando automáticamente)</div>
+              <div>3° Mesas unidas (11+21, 1+31, 14+24)</div>
+              
+              <div className="font-medium text-blue-600 mt-2">Para 5-6 personas:</div>
+              <div>• 6 pers: Mesa 7 → Mesa 2+3</div>
+              <div>• 5 pers: Mesa 7 → Mesa 2+3</div>
+            </div>
+          </div>
+
+          {/* Sistema de flexibilidad */}
+          <div className="mt-4">
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">Sistema Flexible Walk-in</h4>
+            <div className="text-xs text-gray-600 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Cupos Walk-in:</span> 
+                <span className="font-bold text-blue-600">{calculateWalkInQuotas(pendingBlockedTables)} personas</span>
+                {editCuposMode && (
+                  <button
+                    onClick={handleResetToDefaultQuotas}
+                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                  >
+                    Restablecer ({calculateWalkInQuotas(new Set([4, 5, 14, 24]))})
+                  </button>
+                )}
+              </div>
+              {editCuposMode && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                  <div className="text-xs text-blue-800 font-medium">🛠️ Modo Edición de Cupos Activo</div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Haz click en las mesas para bloquear/desbloquear. Las mesas bloqueadas se reservan para walk-ins.
+                  </div>
+                </div>
+              )}
+              <div className="text-xs text-gray-500">
+                • Al liberar mesa de 4 → Bloquea mesa de 2 automáticamente
+              </div>
+              <div className="text-xs text-gray-500">
+                • Mantiene equilibrio entre reservas y walk-ins
+              </div>
+              
+              <div className="mt-2"><span className="font-medium">Mesas Combinables:</span></div>
+              <div className="ml-2">• Mesa 11 + 21 (2+2) → 4 personas</div>
+              <div className="ml-2">• Mesa 1 + 31 (2+2) → 4 personas</div>
+              <div className="ml-2">• Mesa 14 + 24 (2+2) → 4 personas</div>
+              <div className="ml-2">• Mesa 2 + 3 (2+4) → 6 personas</div>
+              <div className="text-xs text-gray-500 mt-1">
+                ℹ️ Se usan automáticamente según disponibilidad y prioridad
+              </div>
             </div>
           </div>
         </div>
@@ -2677,6 +3161,400 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
 
   const todayReservations = data.reservas.filter(r => r.fecha === new Date().toISOString().split('T')[0]);
 
+  // Componente de Mapa Reutilizable (idéntico al principal pero con modo preview)
+  const RestaurantTableMap = ({ 
+    reservas, 
+    fecha, 
+    turno, 
+    previewMode = false, 
+    TABLES_LAYOUT: customLayout,
+    className = "w-full h-auto",
+    useRealAssignments = false
+  }) => {
+    // Layout de mesas - usar el mismo que el principal
+    const LAYOUT = customLayout || [
+      { id: 12, x: 50, y: 30, width: 70, height: 40, capacity: 4 },
+      { id: 13, x: 140, y: 30, width: 70, height: 40, capacity: 4 },
+      { id: 21, x: 50, y: 85, width: 40, height: 40, capacity: 2 },
+      { id: 11, x: 50, y: 135, width: 40, height: 40, capacity: 2 },
+      { id: 24, x: 140, y: 85, width: 40, height: 40, capacity: 2 },
+      { id: 14, x: 190, y: 85, width: 40, height: 40, capacity: 2 },
+      { id: 10, x: 50, y: 190, width: 70, height: 35, capacity: 4 },
+      { id: 9, x: 50, y: 235, width: 70, height: 35, capacity: 4 },
+      { id: 8, x: 50, y: 280, width: 40, height: 40, capacity: 2 },
+      { id: 6, x: 140, y: 180, width: 35, height: 60, capacity: 4 },
+      { id: 7, x: 140, y: 250, width: 50, height: 70, capacity: 6 },
+      { id: 5, x: 220, y: 155, width: 35, height: 60, capacity: 4 },
+      { id: 4, x: 220, y: 225, width: 35, height: 60, capacity: 4 },
+      { id: 3, x: 220, y: 295, width: 35, height: 60, capacity: 4 },
+      { id: 2, x: 220, y: 365, width: 40, height: 40, capacity: 2 },
+      { id: 1, x: 125, y: 365, width: 40, height: 40, capacity: 2 },
+      { id: 31, x: 170, y: 365, width: 40, height: 40, capacity: 2 },
+    ];
+
+    // Calcular asignaciones - usar asignaciones reales si están disponibles
+    const { assignments, blockedTables: previewBlockedTables } = useMemo(() => {
+      // Si tenemos reservas con asignaciones reales (mesaAsignada), usarlas
+      const hasRealAssignments = reservas && reservas.some(r => r.mesaAsignada);
+      
+      if (hasRealAssignments && useRealAssignments) {
+        // Extraer asignaciones reales de las reservas
+        const realAssignments = {};
+        const occupiedTables = new Set();
+        
+        reservas.forEach(reserva => {
+          if (reserva.mesaAsignada) {
+            realAssignments[reserva.id] = reserva.mesaAsignada;
+            
+            // Marcar mesas ocupadas
+            if (typeof reserva.mesaAsignada === 'string' && reserva.mesaAsignada.includes('+')) {
+              const tableIds = reserva.mesaAsignada.split('+').map(id => parseInt(id));
+              tableIds.forEach(id => occupiedTables.add(id));
+            } else {
+              occupiedTables.add(parseInt(reserva.mesaAsignada));
+            }
+          }
+        });
+        
+        // Usar bloqueos por defecto menos las mesas ya ocupadas
+        const defaultBlocked = new Set([4, 5, 14, 24]);
+        occupiedTables.forEach(id => defaultBlocked.delete(id));
+        
+        return { 
+          assignments: realAssignments, 
+          blockedTables: defaultBlocked 
+        };
+      } else {
+        // Usar algoritmo automático para fechas futuras o sin asignaciones
+        return calculateAutoAssignments(reservas || [], new Set([4, 5, 14, 24]));
+      }
+    }, [reservas, useRealAssignments]);
+
+    // Función para determinar si una mesa está ocupada
+    const isMesaOcupada = (mesaId) => {
+      return Object.values(assignments).some(assignment => {
+        if (assignment === mesaId) return true;
+        if (typeof assignment === 'string' && assignment.includes('+')) {
+          const tableIds = assignment.split('+').map(id => parseInt(id));
+          return tableIds.includes(mesaId);
+        }
+        return false;
+      });
+    };
+
+    // Función para determinar si una mesa está bloqueada
+    const isMesaBloqueada = (mesaId) => {
+      return previewBlockedTables.has(mesaId);
+    };
+
+    // Verificar si una mesa está unida
+    const isTableJoined = (tableId) => {
+      return Object.values(assignments).some(assignment => {
+        return typeof assignment === 'string' && assignment.includes('+') && 
+               assignment.split('+').map(id => parseInt(id)).includes(tableId);
+      });
+    };
+
+    return (
+      <svg 
+        viewBox="0 0 350 600" 
+        className={className}
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Fondo del restaurante */}
+        <rect x="0" y="0" width="350" height="600" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
+        
+        {/* Líneas divisorias */}
+        <line x1="190" y1="140" x2="260" y2="140" stroke="#374151" strokeWidth="2" />
+        
+        {/* Mesas */}
+        {LAYOUT.map((table) => {
+          const isOcupada = isMesaOcupada(table.id);
+          const isBloqueada = isMesaBloqueada(table.id);
+          const isUnida = isTableJoined(table.id);
+          
+          const strokeColor = isOcupada ? '#dc2626' : isBloqueada ? '#f59e0b' : '#0c4900';
+
+          return (
+            <g key={table.id}>
+              <rect
+                x={table.x}
+                y={table.y}
+                width={table.width}
+                height={table.height}
+                fill="#ffffff"
+                stroke={strokeColor}
+                strokeWidth={isUnida ? "3" : "2"}
+                strokeDasharray={isUnida ? "8,4" : "none"}
+                rx="3"
+                className={previewMode ? "" : "cursor-pointer"}
+              />
+              <text
+                x={table.x + table.width / 2}
+                y={table.y + table.height / 2 + ((isOcupada || isBloqueada) ? -5 : 6)}
+                textAnchor="middle"
+                fontSize="16"
+                fontWeight="bold"
+                fill="#0c4900"
+              >
+                {table.id}
+              </text>
+              {isOcupada && (
+                <g>
+                  {/* + para mesas ocupadas */}
+                  <line
+                    x1={table.x + table.width / 2 - 5}
+                    y1={table.y + table.height / 2 + 10}
+                    x2={table.x + table.width / 2 + 5}
+                    y2={table.y + table.height / 2 + 10}
+                    stroke="#2563eb"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1={table.x + table.width / 2}
+                    y1={table.y + table.height / 2 + 5}
+                    x2={table.x + table.width / 2}
+                    y2={table.y + table.height / 2 + 15}
+                    stroke="#2563eb"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </g>
+              )}
+              {isBloqueada && (
+                <g>
+                  {/* X para mesas bloqueadas */}
+                  <line
+                    x1={table.x + table.width / 2 - 4}
+                    y1={table.y + table.height / 2 + 6}
+                    x2={table.x + table.width / 2 + 4}
+                    y2={table.y + table.height / 2 + 14}
+                    stroke="#dc2626"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <line
+                    x1={table.x + table.width / 2 + 4}
+                    y1={table.y + table.height / 2 + 6}
+                    x2={table.x + table.width / 2 - 4}
+                    y2={table.y + table.height / 2 + 14}
+                    stroke="#dc2626"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </g>
+              )}
+              {/* Indicador visual para mesas unidas */}
+              {isUnida && (
+                <circle
+                  cx={table.x + table.width - 10}
+                  cy={table.y + 10}
+                  r="6"
+                  fill="#f59e0b"
+                  stroke="#ffffff"
+                  strokeWidth="1"
+                />
+              )}
+            </g>
+          );
+        })}
+        
+        {/* Leyenda (solo en preview para ahorrar espacio) */}
+        {previewMode && (
+          <g>
+            <rect x="20" y="575" width="13" height="10" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
+            <text x="37" y="582" fontSize="8" fill="#6b7280">Libre</text>
+            <rect x="65" y="575" width="13" height="10" fill="#ffffff" stroke="#2563eb" strokeWidth="1" rx="1" />
+            {/* + para reservadas */}
+            <line x1="69" y1="580" x2="74" y2="580" stroke="#2563eb" strokeWidth="1" strokeLinecap="round" />
+            <line x1="71.5" y1="577" x2="71.5" y2="583" stroke="#2563eb" strokeWidth="1" strokeLinecap="round" />
+            <text x="82" y="582" fontSize="8" fill="#6b7280">Reservada</text>
+            <rect x="130" y="575" width="13" height="10" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
+            {/* X para walk-in */}
+            <line x1="134" y1="577" x2="139" y2="583" stroke="#dc2626" strokeWidth="1" strokeLinecap="round" />
+            <line x1="139" y1="577" x2="134" y2="583" stroke="#dc2626" strokeWidth="1" strokeLinecap="round" />
+            <text x="147" y="582" fontSize="8" fill="#6b7280">Walk-in</text>
+            <rect x="190" y="575" width="13" height="10" fill="#ffffff" stroke="#0c4900" strokeWidth="2" strokeDasharray="6,2" rx="1" />
+            <circle cx="198" cy="577" r="3" fill="#f59e0b" stroke="#ffffff" strokeWidth="0.5" />
+            <text x="207" y="582" fontSize="8" fill="#6b7280">Unidas</text>
+          </g>
+        )}
+      </svg>
+    );
+  };
+
+  // Componente Modal de Preview del Turno
+  const TurnoPreviewModal = ({ preview, onClose, onGoToDailyView, currentDate, currentTurno, tableAssignments }) => {
+    const handleGoToDaily = () => {
+      onGoToDailyView(preview.date, preview.turno);
+      onClose();
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-auto">
+          {/* Header */}
+          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">
+                Preview - {preview.dateLabel}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {preview.turno === 'mediodia' ? '☀️ Mediodía' : '🌙 Noche'} • {preview.reservas.length} reservas
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleGoToDaily}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                <Calendar size={16} />
+                Ir a Gestión Diaria
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+          </div>
+
+          {/* Contenido */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Mapa de Mesas - Preview Compacto */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Disposición de Mesas</h4>
+                <div className="bg-white rounded-lg p-4 border">
+                  <RestaurantTableMap 
+                    reservas={preview.reservas} 
+                    fecha={preview.date}
+                    turno={preview.turno}
+                    previewMode={true}
+                    className="w-full h-auto max-w-md mx-auto"
+                    useRealAssignments={true}
+                  />
+                </div>
+              </div>
+
+              {/* Lista de Reservas */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                  Reservas del Turno ({preview.reservas.length})
+                </h4>
+                
+                {preview.reservas.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Clock size={48} className="mx-auto mb-2 opacity-50" />
+                    <p>No hay reservas para este turno</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {preview.reservas
+                      .sort((a, b) => a.horario.localeCompare(b.horario))
+                      .map((reserva) => (
+                      <div key={`preview-${reserva.id}`} className="bg-white rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">
+                                {reserva.horario}
+                              </span>
+                              {(reserva.mesaAsignada || (tableAssignments && tableAssignments[reserva.id])) && (
+                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                                  Mesa {reserva.mesaAsignada || (tableAssignments && tableAssignments[reserva.id])}
+                                </span>
+                              )}
+                            </div>
+                            <div className="font-medium text-gray-900">
+                              {reserva.cliente?.nombre || 'Sin nombre'}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <span className="inline-flex items-center gap-1">
+                                <Users size={14} />
+                                {reserva.personas} personas
+                              </span>
+                              {reserva.cliente?.telefono && (
+                                <span className="ml-3 inline-flex items-center gap-1">
+                                  <Phone size={14} />
+                                  {reserva.cliente.telefono}
+                                </span>
+                              )}
+                            </div>
+                            {reserva.comentarios && (
+                              <div className="text-xs text-gray-500 mt-1 italic">
+                                "{reserva.comentarios}"
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer con resumen */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+                <div className="bg-blue-100 border border-blue-200 rounded-lg p-4 shadow-sm">
+                  <div className="text-3xl font-bold text-blue-700">{preview.reservas.length}</div>
+                  <div className="text-sm font-medium text-blue-600 mt-1">Reservas</div>
+                </div>
+                <div className="bg-green-100 border border-green-200 rounded-lg p-4 shadow-sm">
+                  <div className="text-3xl font-bold text-green-700">
+                    {preview.reservas.reduce((sum, r) => sum + r.personas, 0)}
+                  </div>
+                  <div className="text-sm font-medium text-green-600 mt-1">Personas</div>
+                </div>
+                <div className="bg-yellow-100 border border-yellow-200 rounded-lg p-4 shadow-sm">
+                  <div className="text-3xl font-bold text-yellow-700">
+                    {(() => {
+                      const isCurrentView = preview.date === currentDate && preview.turno === currentTurno;
+                      if (isCurrentView && tableAssignments) {
+                        return Object.keys(tableAssignments).length;
+                      } else {
+                        const { assignments } = calculateAutoAssignments(preview.reservas, new Set([4, 5, 14, 24]));
+                        return Object.keys(assignments).length;
+                      }
+                    })()}
+                  </div>
+                  <div className="text-sm font-medium text-yellow-600 mt-1">Mesas Ocupadas</div>
+                </div>
+                <div className="bg-orange-100 border border-orange-200 rounded-lg p-4 shadow-sm">
+                  <div className="text-3xl font-bold text-orange-700">
+                    {(() => {
+                      // Calcular cupos walk-in dinámicos
+                      const isCurrentView = preview.date === currentDate && preview.turno === currentTurno;
+                      const blockedTablesForCalc = isCurrentView ? new Set([4, 5, 14, 24]) : (() => {
+                        const { blockedTables } = calculateAutoAssignments(preview.reservas, new Set([4, 5, 14, 24]));
+                        return blockedTables;
+                      })();
+                      return [...blockedTablesForCalc].reduce((total, tableId) => {
+                        const table = TABLES_LAYOUT.find(t => t.id === tableId);
+                        return total + (table ? table.capacity : 0);
+                      }, 0);
+                    })()}
+                  </div>
+                  <div className="text-sm font-medium text-orange-600 mt-1">Cupos Walk-in</div>
+                </div>
+                <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 shadow-sm">
+                  <div className="text-3xl font-bold text-purple-700">
+                    {Math.round((preview.reservas.reduce((sum, r) => sum + r.personas, 0) / 36) * 100)}%
+                  </div>
+                  <div className="text-sm font-medium text-purple-600 mt-1">Ocupación</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -2784,6 +3662,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
               setSelectedTurnoFromPanorama(turno);
               setAdminView('daily');
             }}
+            TurnoPreviewModal={TurnoPreviewModal}
           />
         )}
 
@@ -2814,305 +3693,6 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
             showConfirmation={showConfirmationDialog}
           />
         )}
-      </div>
-    </div>
-  );
-}; 
-
-// Componente Modal de Preview del Turno
-const TurnoPreviewModal = ({ preview, onClose, onGoToDailyView }) => {
-  // Layout de mesas - con tamaños estandarizados (idéntico a TodayView)
-  const TABLES_LAYOUT = [
-    { id: 12, x: 50, y: 30, width: 70, height: 40, capacity: 4 }, // rectangular horizontal (tamaño estándar)
-    { id: 13, x: 140, y: 30, width: 70, height: 40, capacity: 4 }, // rectangular horizontal (tamaño estándar)
-    { id: 21, x: 50, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
-    { id: 11, x: 50, y: 135, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
-    { id: 24, x: 140, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
-    { id: 14, x: 190, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
-    { id: 10, x: 50, y: 190, width: 70, height: 35, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
-    { id: 9, x: 50, y: 235, width: 70, height: 35, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
-    { id: 8, x: 50, y: 280, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2)
-    { id: 6, x: 140, y: 180, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
-    { id: 7, x: 140, y: 250, width: 50, height: 70, capacity: 6 }, // rectangular vertical más grande (sin cambios)
-    { id: 5, x: 220, y: 155, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
-    { id: 4, x: 220, y: 225, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
-    { id: 3, x: 220, y: 295, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
-    { id: 2, x: 220, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (sin cambios)
-    { id: 1, x: 135, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2) - reposicionada
-    { id: 31, x: 180, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2) - reposicionada
-  ];
-  
-  // Configuración de bloqueos por defecto para walk-ins (12 cupos)
-  const DEFAULT_BLOCKED_TABLES = {
-    2: [1, 31],  // 2 mesas de 2 personas = 4 cupos
-    4: [4, 5],   // 2 mesas de 4 personas = 8 cupos
-    // Total: 12 cupos para walk-ins
-  };
-
-  // Orden de reserva de mesas - Actualizado
-  const RESERVATION_ORDER = {
-    2: [2, 8, 11, 21, 1, 31], // Mesas para 2 personas - Orden completo actualizado
-    4: [9, 10, 6, 12, 13, 3],  // Mesas para 4 personas - Orden actualizado  
-    6: [7]            // Mesa para 6 personas
-  };
-
-  // Estado para mesas bloqueadas (Set)
-  const [blockedTables, setBlockedTables] = useState(() => {
-    const s = new Set();
-    Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach((id) => s.add(id));
-    return s;
-  });
-
-  // Calcular asignaciones + bloqueos derivados usando la función pura
-  const { assignments, blockedTables: calcBlocked } = useMemo(
-    () => calculateAutoAssignments(preview.reservas, blockedTables),
-    [preview.reservas, blockedTables]
-  );
-
-  useEffect(() => {
-    if (!setsAreEqual(blockedTables, calcBlocked)) {
-      setBlockedTables(calcBlocked);
-    }
-  }, [calcBlocked]);
-
-  const tableAssignments = assignments;
-
-  // Función para determinar si una mesa está ocupada
-  const isMesaOcupada = (mesaId) => {
-    return Object.values(tableAssignments).includes(mesaId);
-  };
-  
-  // Función para determinar si una mesa está bloqueada
-  const isMesaBloqueada = (mesaId) => {
-    return blockedTables.has(mesaId);
-  };
-  
-  // Función para obtener el estado de una mesa
-  const getMesaStatus = (mesaId) => {
-    if (isMesaOcupada(mesaId)) return 'occupied';
-    if (isMesaBloqueada(mesaId)) return 'blocked';
-    return 'available';
-  };
-
-  const handleGoToDaily = () => {
-    onGoToDailyView(preview.date, preview.turno);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-auto">
-        {/* Header */}
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">
-              Preview - {preview.dateLabel}
-            </h3>
-            <p className="text-sm text-gray-600">
-              {preview.turno === 'mediodia' ? '☀️ Mediodía' : '🌙 Noche'} • {preview.reservas.length} reservas
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleGoToDaily}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-            >
-              <Calendar size={16} />
-              Ir a Gestión Diaria
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X size={24} />
-            </button>
-          </div>
-        </div>
-
-        {/* Contenido */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Mapa de Mesas */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Disposición de Mesas</h4>
-              <div className="bg-white rounded-lg p-4 border">
-                <svg 
-                  viewBox="0 0 350 550" 
-                  className="w-full h-auto"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Fondo del restaurante */}
-                  <rect x="0" y="0" width="350" height="550" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
-                  
-                  {/* Líneas divisorias */}
-                  <line x1="190" y1="142" x2="260" y2="142" stroke="#374151" strokeWidth="2" />
-                  
-                  {/* Mesas */}
-                  {TABLES_LAYOUT.map((mesa) => {
-                    const status = getMesaStatus(mesa.id);
-                    const isOcupada = status === 'occupied';
-                    const isBloqueada = status === 'blocked';
-                    
-                    // Colores según estado
-                    const getStrokeColor = () => {
-                      if (isOcupada) return "#dc2626"; // Rojo para ocupadas
-                      if (isBloqueada) return "#f59e0b"; // Naranja para bloqueadas
-                      return "#0c4900"; // Verde para libres
-                    };
-                    
-                    return (
-                      <g key={mesa.id}>
-                        <rect
-                          x={mesa.x}
-                          y={mesa.y}
-                          width={mesa.width}
-                          height={mesa.height}
-                          fill="#ffffff"
-                          stroke={getStrokeColor()}
-                          strokeWidth="2"
-                          rx="4"
-                        />
-                        <text
-                          x={mesa.x + mesa.width / 2}
-                          y={mesa.y + mesa.height / 2 + ((isOcupada || isBloqueada) ? -5 : 6)}
-                          textAnchor="middle"
-                          fill="#0c4900"
-                          fontSize="14"
-                          fontWeight="bold"
-                        >
-                          {mesa.id}
-                        </text>
-                        {/* Círculo para mesas ocupadas */}
-                        {isOcupada && (
-                          <circle
-                            cx={mesa.x + mesa.width / 2}
-                            cy={mesa.y + mesa.height / 2 + 10}
-                            r="6"
-                            fill="#dc2626"
-                          />
-                        )}
-                        {/* Círculo para mesas bloqueadas */}
-                        {isBloqueada && (
-                          <circle
-                            cx={mesa.x + mesa.width / 2}
-                            cy={mesa.y + mesa.height / 2 + 10}
-                            r="4"
-                            fill="none"
-                            stroke="#f59e0b"
-                            strokeWidth="2"
-                          />
-                        )}
-                      </g>
-                    );
-                  })}
-                  
-                  {/* Leyenda */}
-                  <g>
-                    <rect x="20" y="520" width="15" height="12" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
-                    <text x="40" y="528" fontSize="9" fill="#6b7280">Libre</text>
-                    <rect x="80" y="520" width="15" height="12" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
-                    <circle cx="87.5" cy="526" r="3" fill="#dc2626" />
-                    <text x="100" y="528" fontSize="9" fill="#6b7280">Reservada</text>
-                    <rect x="160" y="520" width="15" height="12" fill="#ffffff" stroke="#f59e0b" strokeWidth="1" rx="1" />
-                    <circle cx="167.5" cy="526" r="2" fill="none" stroke="#f59e0b" strokeWidth="1" />
-                    <text x="180" y="528" fontSize="9" fill="#6b7280">Walk-in</text>
-                  </g>
-                </svg>
-              </div>
-            </div>
-
-            {/* Lista de Reservas */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                Reservas del Turno ({preview.reservas.length})
-              </h4>
-              
-              {preview.reservas.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Clock size={48} className="mx-auto mb-2 opacity-50" />
-                  <p>No hay reservas para este turno</p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {preview.reservas
-                    .sort((a, b) => a.horario.localeCompare(b.horario))
-                    .map((reserva, index) => (
-                    <div key={reserva.id} className="bg-white rounded-lg p-3 border border-gray-200">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">
-                              {reserva.horario}
-                            </span>
-                            {(reserva.mesaAsignada || tableAssignments[reserva.id]) && (
-                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                Mesa {reserva.mesaAsignada || tableAssignments[reserva.id]}
-                              </span>
-                            )}
-                          </div>
-                          <div className="font-medium text-gray-900">
-                            {reserva.cliente?.nombre || 'Sin nombre'}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            <span className="inline-flex items-center gap-1">
-                              <Users size={14} />
-                              {reserva.personas} personas
-                            </span>
-                            {reserva.cliente?.telefono && (
-                              <span className="ml-3 inline-flex items-center gap-1">
-                                <Phone size={14} />
-                                {reserva.cliente.telefono}
-                              </span>
-                            )}
-                          </div>
-                          {reserva.comentarios && (
-                            <div className="text-xs text-gray-500 mt-1 italic">
-                              "{reserva.comentarios}"
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Footer con resumen */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
-              <div className="bg-blue-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-blue-600">{preview.reservas.length}</div>
-                <div className="text-sm text-gray-600">Reservas</div>
-              </div>
-              <div className="bg-green-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-green-600">
-                  {preview.reservas.reduce((sum, r) => sum + r.personas, 0)}
-                </div>
-                <div className="text-sm text-gray-600">Personas</div>
-              </div>
-              <div className="bg-yellow-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {Object.keys(tableAssignments).length}
-                </div>
-                <div className="text-sm text-gray-600">Mesas Ocupadas</div>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-orange-600">
-                  {blockedTables.size}
-                </div>
-                <div className="text-sm text-gray-600">Mesas Walk-in</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-3">
-                <div className="text-2xl font-bold text-purple-600">
-                  {Math.round((preview.reservas.reduce((sum, r) => sum + r.personas, 0) / 36) * 100)}%
-                </div>
-                <div className="text-sm text-gray-600">Ocupación</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

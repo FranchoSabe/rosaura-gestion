@@ -21,7 +21,7 @@ import {
   rejectWaitingReservation,
   auth 
 } from './firebase';
-import { assignTableToNewReservation, DEFAULT_BLOCKED_TABLES } from './utils/mesaLogic';
+import { assignTableToNewReservation, DEFAULT_BLOCKED_TABLES, TABLES_LAYOUT } from './utils/mesaLogic';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db } from './firebase';
 
@@ -71,6 +71,103 @@ function App() {
     };
   }, []);
 
+  const getAvailableSlotsDynamic = async (fecha, turno) => {
+    const fechaObj = new Date(fecha + "T00:00:00");
+    const dayOfWeek = fechaObj.getDay();
+    if (dayOfWeek === 1) return []; // Lunes cerrado
+    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos solo mediodía
+    
+    try {
+      // Cargar bloqueos específicos para esta fecha/turno
+      const blockedTablesForDate = await handleLoadBlockedTables(fecha, turno);
+      const blockedSet = new Set(blockedTablesForDate || []);
+      
+      // Si no hay bloqueos guardados, usar los predeterminados
+      if (blockedSet.size === 0) {
+        Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(id => blockedSet.add(id));
+      }
+      
+      // Obtener reservas existentes para esta fecha/turno
+      const reservasDelDia = data.reservas.filter(
+        r => r.fecha === fecha && r.turno === turno
+      );
+      
+      // Calcular capacidad dinámica basada en mesas disponibles (no bloqueadas)
+      const capacidadDisponible = {
+        pequena: 0, // Para 1-2 personas
+        mediana: 0, // Para 3-4 personas  
+        grande: 0   // Para 5-6 personas
+      };
+      
+      // Contar mesas disponibles por capacidad
+      TABLES_LAYOUT.forEach(mesa => {
+        if (!blockedSet.has(mesa.id)) {
+          if (mesa.capacity <= 2) capacidadDisponible.pequena++;
+          else if (mesa.capacity <= 4) capacidadDisponible.mediana++;
+          else capacidadDisponible.grande++;
+        }
+      });
+      
+      // Verificar si la combinación Mesa 2+3 está disponible para aumentar capacidad grande
+      const mesa2Available = !blockedSet.has(2);
+      const mesa3Available = !blockedSet.has(3);
+      if (mesa2Available && mesa3Available) {
+        capacidadDisponible.grande++; // Añadir una capacidad más para la combinación 2+3
+      }
+      
+      // Contar mesas ya ocupadas por reservas, considerando combinaciones
+      const mesasOcupadas = {
+        pequena: 0,
+        mediana: 0,
+        grande: 0
+      };
+      
+      // Contar también mesas que están asignadas (incluye combinaciones)
+      const mesasAsignadas = new Set();
+      
+      reservasDelDia.forEach(reserva => {
+        if (reserva.personas <= 2) mesasOcupadas.pequena++;
+        else if (reserva.personas <= 4) mesasOcupadas.mediana++;
+        else mesasOcupadas.grande++;
+        
+        // Registrar mesas asignadas para verificar disponibilidad real
+        if (reserva.mesaAsignada) {
+          if (typeof reserva.mesaAsignada === 'string' && reserva.mesaAsignada.includes('+')) {
+            // Es una combinación, marcar ambas mesas como ocupadas
+            const tableIds = reserva.mesaAsignada.split('+').map(id => parseInt(id));
+            tableIds.forEach(id => mesasAsignadas.add(id));
+          } else {
+            mesasAsignadas.add(parseInt(reserva.mesaAsignada));
+          }
+        }
+      });
+      
+      // Verificar específicamente si la combinación 2+3 está disponible
+      const mesa2Ocupada = mesasAsignadas.has(2) || blockedSet.has(2);
+      const mesa3Ocupada = mesasAsignadas.has(3) || blockedSet.has(3);
+      const combinacion23Disponible = !mesa2Ocupada && !mesa3Ocupada;
+      
+      // Ajustar capacidad grande si la combinación 2+3 no está disponible
+      if (!combinacion23Disponible && capacidadDisponible.grande > 1) {
+        capacidadDisponible.grande--; // Reducir capacidad si la combinación no está disponible
+      }
+      
+      // Verificar si hay capacidad disponible para el tamaño de reserva actual
+      const hayCapacidad = 
+        (reservaData.personas <= 2 && mesasOcupadas.pequena < capacidadDisponible.pequena) ||
+        (reservaData.personas <= 4 && mesasOcupadas.mediana < capacidadDisponible.mediana) ||
+        (reservaData.personas > 4 && mesasOcupadas.grande < capacidadDisponible.grande);
+      
+      // Si hay capacidad, devolver todos los horarios disponibles
+      return hayCapacidad ? HORARIOS[turno] : [];
+      
+    } catch (error) {
+      console.error('Error al cargar bloqueos para cupos dinámicos:', error);
+      // Fallback al sistema anterior en caso de error
+      return getAvailableSlots(fecha, turno);
+    }
+  };
+
   const getAvailableSlots = (fecha, turno) => {
     const fechaObj = new Date(fecha + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
@@ -86,7 +183,7 @@ function App() {
     const capacidad = {
       'pequena': { max: 4, size: 2 },  // 4 mesas para 1-2 personas por turno
       'mediana': { max: 4, size: 4 },  // 4 mesas para 3-4 personas por turno
-      'grande': { max: 1, size: 6 }    // 1 mesa para 5-6 personas por turno
+      'grande': { max: 2, size: 6 }    // 2 mesas para 5-6 personas por turno (Mesa 7 + combinación 2+3)
     };
 
     // Contar mesas ocupadas por tipo para todo el turno
@@ -129,7 +226,7 @@ function App() {
     const capacidad = {
       'pequena': { max: 4, size: 2 },  // 4 mesas para 1-2 personas por turno
       'mediana': { max: 4, size: 4 },  // 4 mesas para 3-4 personas por turno
-      'grande': { max: 1, size: 6 }    // 1 mesa para 5-6 personas por turno
+      'grande': { max: 2, size: 6 }    // 2 mesas para 5-6 personas por turno (Mesa 7 + combinación 2+3)
     };
 
     // Contar mesas ocupadas por tipo para todo el turno
@@ -248,7 +345,7 @@ function App() {
     }
   };
 
-  const handleDateAndTurnoSubmit = () => {
+  const handleDateAndTurnoSubmit = async () => {
     // Convertir fecha a string si es necesario
     const fechaString = reservaData.fecha instanceof Date 
       ? reservaData.fecha.toISOString().split('T')[0] 
@@ -262,7 +359,8 @@ function App() {
       alert('Por favor, seleccioná un turno.');
       return;
     }
-    const slots = getAvailableSlots(fechaString, reservaData.turno);
+    // Usar el sistema dinámico de cupos que respeta los bloqueos
+    const slots = await getAvailableSlotsDynamic(fechaString, reservaData.turno);
     
     // Si no hay slots disponibles, ir directamente a recopilar datos para lista de espera
     if (slots.length === 0) {
@@ -293,7 +391,7 @@ function App() {
         : reservaData.fecha;
       
       // Verificar si hay cupo disponible ANTES de crear el cliente
-      const slotsDisponibles = getAvailableSlots(fechaString, reservaData.turno);
+      const slotsDisponibles = await getAvailableSlotsDynamic(fechaString, reservaData.turno);
       
       // Si viene marcado como willGoToWaitingList O no hay slots disponibles
       if (reservaData.willGoToWaitingList || slotsDisponibles.length === 0) {
@@ -360,13 +458,27 @@ function App() {
         cliente: newClient
       };
 
-      // Intentar asignar mesa automáticamente
-      const defaultBlocked = new Set();
-      Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
-        defaultBlocked.add(tableId);
-      });
+      // Intentar asignar mesa automáticamente usando los bloqueos específicos del turno
+      let blockedTables;
+      try {
+        const blockedTablesForDate = await handleLoadBlockedTables(fechaString, reservaData.turno);
+        blockedTables = new Set(blockedTablesForDate || []);
+        
+        // Si no hay bloqueos guardados, usar los predeterminados
+        if (blockedTables.size === 0) {
+          Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
+            blockedTables.add(tableId);
+          });
+        }
+      } catch (error) {
+        console.error('Error al cargar bloqueos, usando predeterminados:', error);
+        blockedTables = new Set();
+        Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
+          blockedTables.add(tableId);
+        });
+      }
 
-      const mesaAsignada = assignTableToNewReservation(tempReservation, data.reservas, defaultBlocked);
+      const mesaAsignada = assignTableToNewReservation(tempReservation, data.reservas, blockedTables);
 
       // Crear nueva reserva con mesa asignada (o null si no hay disponible)
       const newReservation = {
@@ -487,7 +599,7 @@ function App() {
 
   // === FUNCIONES PARA LISTA DE ESPERA ===
   
-  const handleConfirmWaitingReservation = async (waitingReservationId, waitingData, selectedHorario) => {
+  const handleConfirmWaitingReservation = async (waitingReservationId, waitingData, selectedHorario, currentBlocked = null) => {
     try {
       // Verificar que aún hay cupo disponible antes de confirmar
       const slotsDisponibles = getAvailableSlots(waitingData.fecha, waitingData.turno);
@@ -501,13 +613,21 @@ function App() {
         horario: selectedHorario
       };
 
-      // Intentar asignar mesa automáticamente
-      const defaultBlocked = new Set();
-      Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
-        defaultBlocked.add(tableId);
-      });
+      // Usar bloqueos específicos del turno si están disponibles, sino usar los predeterminados
+      let blockedTables = currentBlocked;
+      if (!blockedTables) {
+        blockedTables = new Set();
+        Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
+          blockedTables.add(tableId);
+        });
+      }
 
-      const mesaAsignada = assignTableToNewReservation(tempReservationData, data.reservas, defaultBlocked);
+      // Filtrar reservas del mismo turno y fecha para verificar conflictos
+      const reservasDelTurno = data.reservas.filter(
+        r => r.fecha === waitingData.fecha && r.turno === waitingData.turno
+      );
+
+      const mesaAsignada = assignTableToNewReservation(tempReservationData, reservasDelTurno, blockedTables);
 
       // Confirmar la reserva desde lista de espera con mesa asignada
       const { id, reservationId } = await confirmWaitingReservation(waitingReservationId, {
