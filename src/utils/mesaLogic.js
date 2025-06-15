@@ -534,6 +534,103 @@ export const optimizeLargeTableAssignment = (reservas, occupiedTables, blockedTa
 };
 
 // Función para evaluar si es conveniente preservar la combinación Mesa 2+3
+// Función para verificar si una mesa puede acomodar cierta cantidad de personas
+export const canTableAccommodate = (mesaAsignada, newPersonas) => {
+  if (!mesaAsignada || mesaAsignada === 'Sin asignar') {
+    return false;
+  }
+
+  // Si es una combinación (ej: "2+3")
+  if (typeof mesaAsignada === 'string' && mesaAsignada.includes('+')) {
+    const tableIds = mesaAsignada.split('+').map(id => parseInt(id));
+    const totalCapacity = tableIds.reduce((total, id) => {
+      const mesa = TABLES_LAYOUT.find(t => t.id === id);
+      return total + (mesa ? mesa.capacity : 0);
+    }, 0);
+    return totalCapacity >= newPersonas;
+  }
+
+  // Mesa individual
+  const mesa = TABLES_LAYOUT.find(t => t.id === parseInt(mesaAsignada));
+  return mesa ? mesa.capacity >= newPersonas : false;
+};
+
+// Función para verificar si necesita reasignación de mesa al cambiar cantidad de personas
+export const checkTableReassignmentNeeded = (originalReservation, newPersonas, existingReservations, currentBlocked = new Set()) => {
+  const currentMesa = originalReservation.mesaAsignada;
+  
+  // Si no tiene mesa asignada, intentar asignar una nueva
+  if (!currentMesa || currentMesa === 'Sin asignar') {
+    const tempReservation = { ...originalReservation, personas: newPersonas };
+    const suggestedTable = assignTableToNewReservation(tempReservation, existingReservations, currentBlocked);
+    
+    return {
+      needsReassignment: true,
+      reason: 'no_table_assigned',
+      currentTable: null,
+      suggestedTable: suggestedTable,
+      message: suggestedTable 
+        ? `Se asignará automáticamente la mesa ${suggestedTable} para ${newPersonas} personas.`
+        : `No hay mesa disponible para ${newPersonas} personas. Se guardará sin asignación de mesa.`
+    };
+  }
+
+  // Verificar si la mesa actual puede acomodar la nueva cantidad
+  const canAccommodate = canTableAccommodate(currentMesa, newPersonas);
+  
+  if (canAccommodate) {
+    return {
+      needsReassignment: false,
+      reason: 'current_table_sufficient',
+      currentTable: currentMesa,
+      suggestedTable: currentMesa,
+      message: `La mesa actual (${currentMesa}) puede acomodar ${newPersonas} personas.`
+    };
+  }
+
+  // La mesa actual no es suficiente, buscar una mejor opción
+  const tempReservation = { 
+    ...originalReservation, 
+    personas: newPersonas 
+  };
+  
+  // Obtener reservas excluyendo la actual para evitar conflictos
+  const otherReservations = existingReservations.filter(r => r.id !== originalReservation.id);
+  const suggestedTable = assignTableToNewReservation(tempReservation, otherReservations, currentBlocked);
+
+  return {
+    needsReassignment: true,
+    reason: 'insufficient_capacity',
+    currentTable: currentMesa,
+    suggestedTable: suggestedTable,
+    currentCapacity: getCurrentTableCapacity(currentMesa),
+    newCapacity: newPersonas,
+    message: suggestedTable 
+      ? `La mesa actual (${currentMesa}) es para ${getCurrentTableCapacity(currentMesa)} personas. Se reasignará automáticamente a la mesa ${suggestedTable} para ${newPersonas} personas.`
+      : `La mesa actual (${currentMesa}) es para ${getCurrentTableCapacity(currentMesa)} personas, pero no hay mesa disponible para ${newPersonas} personas. Se mantendrá la mesa actual.`
+  };
+};
+
+// Función auxiliar para obtener la capacidad de una mesa
+export const getCurrentTableCapacity = (mesaAsignada) => {
+  if (!mesaAsignada || mesaAsignada === 'Sin asignar') {
+    return 0;
+  }
+
+  // Si es una combinación
+  if (typeof mesaAsignada === 'string' && mesaAsignada.includes('+')) {
+    const tableIds = mesaAsignada.split('+').map(id => parseInt(id));
+    return tableIds.reduce((total, id) => {
+      const mesa = TABLES_LAYOUT.find(t => t.id === id);
+      return total + (mesa ? mesa.capacity : 0);
+    }, 0);
+  }
+
+  // Mesa individual
+  const mesa = TABLES_LAYOUT.find(t => t.id === parseInt(mesaAsignada));
+  return mesa ? mesa.capacity : 0;
+};
+
 export const shouldPreserveCombination23 = (reservas, occupiedTables, blockedTables) => {
   // Verificar si hay reservas de 5 o 6 personas pendientes que AÚN NO ESTÁN ASIGNADAS
   const largeGroupReservations = reservas.filter(r => 

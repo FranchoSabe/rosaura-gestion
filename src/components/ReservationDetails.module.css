@@ -1,0 +1,107 @@
+/* Container principal */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: white;
+}
+
+.closeButton {
+  color: white;
+  opacity: 0.7;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+
+.closeButton:hover {
+  opacity: 1;
+}
+
+/* Details section */
+.detailsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailLabel {
+  font-size: 0.875rem;
+  color: white;
+  opacity: 0.7;
+}
+
+.detailValue {
+  font-weight: 500;
+  color: white;
+}
+
+/* Actions section */
+.actionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1rem;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.875rem 1.25rem;
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.actionButton:hover {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.7) 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 40px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Icon colors for specific actions */
+.editIcon {
+  color: rgb(251, 191, 36);
+}
+
+.deleteIcon {
+  color: rgb(239, 68, 68);
+}
+
+.contactIcon {
+  color: rgb(34, 197, 94);
+} 

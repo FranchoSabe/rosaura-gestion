@@ -385,7 +385,7 @@ export const markWaitingAsNotified = async (waitingReservationId) => {
 };
 
 // Función para contactar cliente en lista de espera
-export const contactWaitingClient = async (waitingReservationId) => {
+export const contactWaitingClient = async (waitingReservationId, waitingData = null) => {
   try {
     const waitingDocRef = doc(db, "lista_espera", waitingReservationId);
     await updateDoc(waitingDocRef, {
@@ -394,6 +394,8 @@ export const contactWaitingClient = async (waitingReservationId) => {
       awaitingConfirmation: true,
       confirmationDeadline: new Date(Date.now() + 30 * 60 * 1000) // 30 minutos
     });
+
+    // El mensaje se enviará a través de n8n automáticamente
     return true;
   } catch (error) {
     console.error("Error al marcar como contactado:", error);

@@ -4,6 +4,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+import styles from './EditReservation.module.css';
 
 const HORARIOS = {
   mediodia: ['12:00', '12:30', '13:00', '13:30', '14:00'],
@@ -12,7 +13,7 @@ const HORARIOS = {
 
 const MAX_PERSONAS_POR_TURNO = 24;
 
-const EditReservation = ({ reservation, onClose, formatDate, onSave }) => {
+const EditReservation = ({ reservation, onClose, formatDate, onSave, isAdmin = false }) => {
   const [editedReservation, setEditedReservation] = useState({
     ...reservation,
     fecha: new Date(reservation.fecha)
@@ -63,13 +64,15 @@ const EditReservation = ({ reservation, onClose, formatDate, onSave }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validar que el horario tenga cupo disponible
-    const slots = await calculateAvailableSlots(editedReservation.fecha, selectedTurno);
-    const cupoDisponible = slots[editedReservation.horario] >= editedReservation.personas;
+    // Solo validar cupo disponible si no es administrador
+    if (!isAdmin) {
+      const slots = await calculateAvailableSlots(editedReservation.fecha, selectedTurno);
+      const cupoDisponible = slots[editedReservation.horario] >= editedReservation.personas;
 
-    if (!cupoDisponible) {
-      alert('Lo sentimos, no hay cupo disponible para el horario seleccionado.');
-      return;
+      if (!cupoDisponible) {
+        alert('Lo sentimos, no hay cupo disponible para el horario seleccionado.');
+        return;
+      }
     }
 
     await onSave(editedReservation);
@@ -77,37 +80,38 @@ const EditReservation = ({ reservation, onClose, formatDate, onSave }) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-medium text-white">Modificar Reserva</h2>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Modificar Reserva</h2>
         <button
           onClick={onClose}
-          className="text-white opacity-70 hover:opacity-100 transition-opacity"
+          className={styles.closeButton}
         >
           <X size={24} />
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <p className="text-sm text-white opacity-70 mb-1">Código de Reserva</p>
-          <p className="font-medium text-white">{editedReservation.reservationId}</p>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.fieldGroup}>
+          <p className={styles.infoText}>Código de Reserva</p>
+          <p className={styles.codeDisplay}>{editedReservation.reservationId}</p>
         </div>
 
-        <div>
-          <label className="text-sm text-white opacity-70 block mb-1">Fecha</label>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Fecha</label>
           <DatePicker
             selected={editedReservation.fecha}
             onChange={(date) => setEditedReservation({ ...editedReservation, fecha: date })}
             dateFormat="dd/MM/yyyy"
             minDate={new Date()}
             maxDate={new Date().setMonth(new Date().getMonth() + 1)}
-            className="w-full bg-black bg-opacity-40 text-white p-2 rounded-lg border border-white border-opacity-20"
+            filterDate={(date) => date.getDay() !== 1} // Excluir lunes (cerrado ambos turnos)
+            className={styles.input}
           />
         </div>
 
-        <div>
-          <label className="text-sm text-white opacity-70 block mb-1">Turno</label>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Turno</label>
           <select
             value={selectedTurno}
             onChange={(e) => {
@@ -119,44 +123,49 @@ const EditReservation = ({ reservation, onClose, formatDate, onSave }) => {
                 horario: HORARIOS[newTurno][0]
               });
             }}
-            className="w-full bg-black bg-opacity-40 text-white p-2 rounded-lg border border-white border-opacity-20"
+            className={styles.select}
           >
             <option value="mediodia">Mediodía</option>
-            <option value="noche">Noche</option>
+            <option 
+              value="noche" 
+              disabled={editedReservation.fecha && editedReservation.fecha.getDay() === 0}
+            >
+              Noche {editedReservation.fecha && editedReservation.fecha.getDay() === 0 ? '(Cerrado domingos)' : ''}
+            </option>
           </select>
         </div>
 
-        <div>
-          <label className="text-sm text-white opacity-70 block mb-1">Horario</label>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Horario</label>
           <select
             value={editedReservation.horario}
             onChange={(e) => setEditedReservation({ ...editedReservation, horario: e.target.value })}
-            className="w-full bg-black bg-opacity-40 text-white p-2 rounded-lg border border-white border-opacity-20"
+            className={styles.select}
           >
             {HORARIOS[selectedTurno].map(horario => (
               <option 
                 key={horario} 
                 value={horario}
-                disabled={availableSlots[horario] < editedReservation.personas}
+                disabled={!isAdmin && availableSlots[horario] < editedReservation.personas}
               >
-                {horario} {availableSlots[horario] < editedReservation.personas ? '(Sin cupo)' : ''}
+                {horario} {!isAdmin && availableSlots[horario] < editedReservation.personas ? '(Sin cupo)' : ''}
               </option>
             ))}
           </select>
         </div>
 
-        <div>
-          <label className="text-sm text-white opacity-70 block mb-1">Personas</label>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Personas</label>
           <select
             value={editedReservation.personas}
             onChange={(e) => setEditedReservation({ ...editedReservation, personas: parseInt(e.target.value) })}
-            className="w-full bg-black bg-opacity-40 text-white p-2 rounded-lg border border-white border-opacity-20"
+            className={styles.select}
           >
             {[...Array(6)].map((_, i) => (
               <option 
                 key={i + 1} 
                 value={i + 1}
-                disabled={availableSlots[editedReservation.horario] < (i + 1)}
+                disabled={!isAdmin && availableSlots[editedReservation.horario] < (i + 1)}
               >
                 {i + 1}
               </option>
@@ -164,8 +173,8 @@ const EditReservation = ({ reservation, onClose, formatDate, onSave }) => {
           </select>
         </div>
 
-        <div>
-          <label className="text-sm text-white opacity-70 block mb-1">Nombre</label>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Nombre</label>
           <input
             type="text"
             value={editedReservation.cliente.nombre}
@@ -173,25 +182,25 @@ const EditReservation = ({ reservation, onClose, formatDate, onSave }) => {
               ...editedReservation,
               cliente: { ...editedReservation.cliente, nombre: e.target.value }
             })}
-            className="w-full bg-black bg-opacity-40 text-white p-2 rounded-lg border border-white border-opacity-20"
+            className={styles.input}
           />
         </div>
 
-        <div>
-          <label className="text-sm text-white opacity-70 block mb-1">Comentarios</label>
+        <div className={styles.fieldGroup}>
+          <label className={styles.label}>Comentarios</label>
           <textarea
             value={editedReservation.cliente.comentarios || ''}
             onChange={(e) => setEditedReservation({
               ...editedReservation,
               cliente: { ...editedReservation.cliente, comentarios: e.target.value }
             })}
-            className="w-full bg-black bg-opacity-40 text-white p-2 rounded-lg border border-white border-opacity-20 h-24 resize-none"
+            className={styles.textarea}
           />
         </div>
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 bg-green-600 bg-opacity-20 text-white py-3 px-4 rounded-xl hover:bg-opacity-30 transition-all duration-200"
+          className={styles.submitButton}
         >
           <Save size={20} />
           Guardar Cambios

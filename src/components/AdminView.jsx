@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronDown, ThumbsDown, MessageCircle, Check, Edit2, Trash2, CheckCircle, X, XCircle, AlertTriangle, Sun, Moon, Clock, Printer, ChevronLeft, ChevronRight, Calendar, Users, Phone } from 'lucide-react';
 import styles from './AdminView.module.css';
+import { sanitizeData } from '../utils/validation';
 
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
+import { isValidPhoneNumber } from 'react-phone-number-input';
 import { TABLES_LAYOUT, DEFAULT_BLOCKED_TABLES, calculateAutoAssignments, setsAreEqual, detectWalkInQuotaChanges, calculateWalkInQuotas } from '../utils/mesaLogic';
-import { saveTableAssignments, saveBlockedTables, loadBlockedTables, reassignTableManually, validateTableAssignment } from '../utils/mesaLogic';
+import { saveTableAssignments, saveBlockedTables, loadBlockedTables, reassignTableManually, validateTableAssignment, checkTableReassignmentNeeded } from '../utils/mesaLogic';
 
 // Registrar locale español para el DatePicker
 registerLocale('es', es);
@@ -112,7 +114,347 @@ const ConflictModal = ({ conflict, onForce, onCancel }) => {
   );
 };
 
-const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsForEdit, isValidDate, HORARIOS, showNotification }) => {
+const TableReassignmentModal = ({ reassignmentInfo, reservationData, reservationDetails, onConfirm, onCancel }) => {
+  if (!reassignmentInfo) return null;
+
+  console.log('Renderizando TableReassignmentModal con:', { reassignmentInfo, reservationData, reservationDetails });
+
+  const getIconAndColor = (reason) => {
+    switch (reason) {
+      case 'no_table_assigned':
+        return { icon: '🏷️', color: 'blue', title: 'Asignación de Mesa' };
+      case 'insufficient_capacity':
+        return { icon: '⚠️', color: 'amber', title: 'Reasignación Necesaria' };
+      case 'current_table_sufficient':
+        return { icon: '✅', color: 'green', title: 'Mesa Actual Suficiente' };
+      default:
+        return { icon: 'ℹ️', color: 'gray', title: 'Información' };
+    }
+  };
+
+  const { icon, color, title } = getIconAndColor(reassignmentInfo.reason);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl">
+        <h3 className={`text-lg font-semibold mb-4 ${
+          color === 'amber' ? 'text-amber-600' : 
+          color === 'blue' ? 'text-blue-600' :
+          color === 'green' ? 'text-green-600' : 'text-gray-600'
+        }`}>
+          {icon} {title}
+        </h3>
+        
+        <div className="mb-6">
+          <p className="text-gray-700 mb-4">
+            {reassignmentInfo.message}
+          </p>
+
+          {reassignmentInfo.needsReassignment && (
+            <div className={`p-4 rounded-lg border ${
+              color === 'amber' ? 'bg-amber-50 border-amber-200' : 
+              color === 'blue' ? 'bg-blue-50 border-blue-200' :
+              color === 'green' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <div className="space-y-2">
+                {reassignmentInfo.currentTable && (
+                  <div className="flex justify-between">
+                    <span className="font-medium">Mesa actual:</span>
+                    <span>Mesa {reassignmentInfo.currentTable} ({reassignmentInfo.currentCapacity || 0} personas)</span>
+                  </div>
+                )}
+                {reassignmentInfo.suggestedTable && (
+                  <div className="flex justify-between">
+                    <span className="font-medium">Nueva mesa:</span>
+                    <span>Mesa {reassignmentInfo.suggestedTable}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="font-medium">Cantidad de personas:</span>
+                  <span>{reassignmentInfo.newCapacity || 0} personas</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onConfirm(reservationData, reservationDetails, reassignmentInfo)}
+            className={`px-4 py-2 text-white rounded-lg transition-colors ${
+              color === 'amber' ? 'bg-amber-600 hover:bg-amber-700' : 
+              color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' :
+              color === 'green' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'
+            }`}
+          >
+            {reassignmentInfo.needsReassignment ? 'Confirmar Cambios' : 'Continuar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDate, HORARIOS, showNotification }) => {
+  const [newReservation, setNewReservation] = useState({
+    fecha: '',
+    turno: 'mediodia',
+    horario: '',
+    personas: 1,
+    cliente: {
+      nombre: '',
+      telefono: '',
+      comentarios: ''
+    }
+  });
+
+  const [availableSlots, setAvailableSlots] = useState([]);
+
+  // Obtener horarios disponibles cuando cambia fecha o turno
+  useEffect(() => {
+    if (newReservation.fecha && newReservation.turno) {
+      const slots = getAvailableSlots(newReservation.fecha, newReservation.turno);
+      setAvailableSlots(slots);
+      
+      // Seleccionar el primer horario disponible automáticamente
+      if (slots.length > 0 && !newReservation.horario) {
+        setNewReservation(prev => ({ ...prev, horario: slots[0] }));
+      }
+    }
+  }, [newReservation.fecha, newReservation.turno, getAvailableSlots]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validar campos obligatorios
+    if (!newReservation.cliente.nombre?.trim()) {
+      showNotification('error', 'El nombre del cliente es obligatorio.');
+      return;
+    }
+    
+    if (!newReservation.cliente.telefono?.trim()) {
+      showNotification('error', 'El teléfono del cliente es obligatorio.');
+      return;
+    }
+
+    // Validar teléfono con react-phone-number-input
+    if (!isValidPhoneNumber(`+${newReservation.cliente.codigoPais || '54'}${newReservation.cliente.telefono}`)) {
+      showNotification('error', 'Por favor, ingresa un número de teléfono válido.');
+      return;
+    }
+    
+    if (!newReservation.fecha) {
+      showNotification('error', 'La fecha es obligatoria.');
+      return;
+    }
+    
+    if (!newReservation.turno) {
+      showNotification('error', 'El turno es obligatorio.');
+      return;
+    }
+    
+    if (!newReservation.horario) {
+      showNotification('error', 'El horario es obligatorio.');
+      return;
+    }
+    
+    if (!newReservation.personas || newReservation.personas < 1) {
+      showNotification('error', 'La cantidad de personas es obligatoria.');
+      return;
+    }
+
+    // Validar fecha
+    if (!isValidDate(newReservation.fecha, newReservation.turno)) {
+      showNotification('error', 'La fecha seleccionada no es válida.');
+      return;
+    }
+
+    // Validar disponibilidad
+    const slots = getAvailableSlots(newReservation.fecha, newReservation.turno);
+    if (!slots.includes(newReservation.horario)) {
+      showNotification('error', 'El horario seleccionado no está disponible.');
+      return;
+    }
+
+    try {
+      // Preparar y sanitizar los datos para guardar
+      const dataToSave = sanitizeData({
+        ...newReservation,
+        cliente: {
+          ...newReservation.cliente,
+          codigoPais: '54' // Asignar código de país por defecto
+        }
+      });
+      
+      await onSave(dataToSave);
+      showNotification('success', 'Reserva creada exitosamente.');
+      onClose();
+    } catch (error) {
+      console.error('Error al crear reserva:', error);
+      showNotification('error', 'Error al crear la reserva.');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Crear Nueva Reserva</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Cliente</label>
+            <input
+              type="text"
+              value={newReservation.cliente.nombre}
+              onChange={(e) => setNewReservation({
+                ...newReservation,
+                cliente: { ...newReservation.cliente, nombre: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Nombre completo"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+            <div className="flex gap-2">
+              <select
+                value={newReservation.cliente.codigoPais || '54'}
+                onChange={(e) => setNewReservation({
+                  ...newReservation,
+                  cliente: { ...newReservation.cliente, codigoPais: e.target.value }
+                })}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                style={{ minWidth: '120px' }}
+              >
+                <option value="54">+54</option>
+                <option value="598">+598</option>
+                <option value="55">+55</option>
+                <option value="1">+1</option>
+              </select>
+              <input
+                type="tel"
+                value={newReservation.cliente.telefono || ''}
+                onChange={(e) => setNewReservation({
+                  ...newReservation,
+                  cliente: { ...newReservation.cliente, telefono: e.target.value }
+                })}
+                className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  newReservation.cliente.telefono ? 
+                    (isValidPhoneNumber(`+${newReservation.cliente.codigoPais || '54'}${newReservation.cliente.telefono}`) ? 'border-green-500' : 'border-red-500') 
+                    : 'border-gray-300'
+                }`}
+                placeholder="Ingresa el número"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+            <input
+              type="date"
+              value={newReservation.fecha}
+              onChange={(e) => setNewReservation({ ...newReservation, fecha: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              min={new Date().toISOString().split('T')[0]}
+              max={(() => {
+                const maxDate = new Date();
+                maxDate.setMonth(maxDate.getMonth() + 1);
+                return maxDate.toISOString().split('T')[0];
+              })()}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Turno</label>
+            <select
+              value={newReservation.turno}
+              onChange={(e) => setNewReservation({ ...newReservation, turno: e.target.value, horario: '' })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="mediodia">Mediodía</option>
+              <option value="noche">Noche</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Horario</label>
+            <select
+              value={newReservation.horario}
+              onChange={(e) => setNewReservation({ ...newReservation, horario: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="">Selecciona un horario</option>
+              {availableSlots.map(slot => (
+                <option key={slot} value={slot}>{slot}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad de Personas</label>
+            <input
+              type="number"
+              min="1"
+              max="20"
+              value={newReservation.personas}
+              onChange={(e) => setNewReservation({ ...newReservation, personas: parseInt(e.target.value) })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Comentarios</label>
+            <textarea
+              value={newReservation.cliente.comentarios || ''}
+              onChange={(e) => setNewReservation({
+                ...newReservation,
+                cliente: { ...newReservation.cliente, comentarios: e.target.value }
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows="3"
+              placeholder="Comentarios adicionales (opcional)"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Crear Reserva
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsForEdit, isValidDate, HORARIOS, showNotification, isAdmin = true }) => {
   const [editedReservation, setEditedReservation] = useState({
     cliente: { 
       ...reservation.cliente,
@@ -152,6 +494,12 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
       showNotification('error', 'El teléfono del cliente es obligatorio.');
       return;
     }
+
+    // Validar teléfono con react-phone-number-input
+    if (!isValidPhoneNumber(`+${editedReservation.cliente.codigoPais || '54'}${editedReservation.cliente.telefono}`)) {
+      showNotification('error', 'Por favor, ingresa un número de teléfono válido.');
+      return;
+    }
     
     if (!editedReservation.fecha) {
       showNotification('error', 'La fecha es obligatoria.');
@@ -174,16 +522,14 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
     }
 
     try {
-      // Preparar los datos para guardar
-      const dataToSave = {
+      // Preparar y sanitizar los datos para guardar
+      const dataToSave = sanitizeData({
         ...editedReservation,
         cliente: {
           ...editedReservation.cliente,
-          nombre: editedReservation.cliente.nombre.trim(),
-          telefono: editedReservation.cliente.telefono.trim(),
-          comentarios: editedReservation.cliente.comentarios?.trim() || ''
+          codigoPais: editedReservation.cliente.codigoPais || '54'
         }
-      };
+      });
       
       if (process.env.NODE_ENV === 'development') {
         console.log('Saving reservation data:', dataToSave);
@@ -200,6 +546,18 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Editar Reserva</h3>
+        {isAdmin && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm text-blue-800">
+                <strong>Modo Administrador:</strong> Puedes modificar cualquier horario sin restricciones de cupo.
+              </p>
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -219,16 +577,36 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-              <input
-                type="tel"
-                value={editedReservation.cliente.telefono}
-                onChange={(e) => setEditedReservation({
-                  ...editedReservation,
-                  cliente: { ...editedReservation.cliente, telefono: e.target.value }
-                })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
+              <div className="flex gap-2">
+                <select
+                  value={editedReservation.cliente.codigoPais || '54'}
+                  onChange={(e) => setEditedReservation({
+                    ...editedReservation,
+                    cliente: { ...editedReservation.cliente, codigoPais: e.target.value }
+                  })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  style={{ minWidth: '120px' }}
+                >
+                  <option value="54">+54</option>
+                  <option value="598">+598</option>
+                  <option value="55">+55</option>
+                  <option value="1">+1</option>
+                </select>
+                <input
+                  type="tel"
+                  value={editedReservation.cliente.telefono || ''}
+                  onChange={(e) => setEditedReservation({
+                    ...editedReservation,
+                    cliente: { ...editedReservation.cliente, telefono: e.target.value }
+                  })}
+                  className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    editedReservation.cliente.telefono ? 
+                      (isValidPhoneNumber(`+${editedReservation.cliente.codigoPais || '54'}${editedReservation.cliente.telefono}`) ? 'border-green-500' : 'border-red-500') 
+                      : 'border-gray-300'
+                  }`}
+                  placeholder="Ingresa el número"
+                />
+              </div>
             </div>
           </div>
 
@@ -362,17 +740,97 @@ const ReservationsTable = ({
   tableAssignments = {}
 }) => {
   const [editingReservation, setEditingReservation] = useState(null);
+  const [tableReassignmentInfo, setTableReassignmentInfo] = useState(null);
+  const [pendingReservationData, setPendingReservationData] = useState(null);
+  const [savedReservationDetails, setSavedReservationDetails] = useState(null);
 
   const handleSave = async (updatedData) => {
     try {
       console.log('Updating reservation:', editingReservation.id, updatedData);
-      await onUpdateReservation(editingReservation.id, updatedData);
+      
+      // Verificar si cambió el número de personas y si necesita reasignación de mesa
+      const originalPersonas = editingReservation?.personas;
+      const newPersonas = updatedData?.personas;
+      
+      if (originalPersonas && newPersonas && originalPersonas !== newPersonas) {
+        try {
+          // Verificar si necesita reasignación de mesa
+          const reassignmentInfo = checkTableReassignmentNeeded(
+            editingReservation, 
+            newPersonas, 
+            reservations || [], 
+            new Set() // Usar set vacío para bloqueos por ahora
+          );
+          
+          if (reassignmentInfo && (reassignmentInfo.needsReassignment || reassignmentInfo.reason === 'current_table_sufficient')) {
+            // Mostrar modal de confirmación
+            console.log('Configurando modal de reasignación:', { reassignmentInfo, updatedData, editingReservation });
+            // Guardar una copia estática de los datos de la reserva
+            setSavedReservationDetails({ ...editingReservation });
+            setTableReassignmentInfo(reassignmentInfo);
+            setPendingReservationData(updatedData);
+            return; // Pausar el guardado hasta que el usuario confirme
+          }
+        } catch (error) {
+          console.error('Error al verificar reasignación de mesa:', error);
+          // Continuar con el guardado normal si hay error en la verificación
+        }
+      }
+      
+      // Si no necesita reasignación o ya fue confirmada, proceder con el guardado
+      await onUpdateReservation(editingReservation.id, updatedData, true);
       setEditingReservation(null);
       showNotification('success', 'Reserva actualizada exitosamente.');
     } catch (error) {
       console.error('Error en handleSave:', error);
       showNotification('error', `Error al actualizar la reserva: ${error.message || 'Error desconocido'}`);
     }
+  };
+  
+  const handleConfirmTableReassignment = async (reservationData, reservationDetails, reservationInfo) => {
+    try {
+      console.log('Ejecutando confirmación con datos:', { reservationData, reservationDetails, reservationInfo });
+
+      if (!reservationData || !reservationDetails) {
+        console.error('Datos faltantes en confirmación:', { reservationData, reservationDetails, reservationInfo });
+        showNotification('error', 'Error: Datos de reserva no encontrados.');
+        return;
+      }
+
+      let finalData = { ...reservationData };
+      
+      // Si hay una nueva mesa sugerida, añadirla a los datos
+      if (reservationInfo && reservationInfo.suggestedTable) {
+        finalData.mesaAsignada = reservationInfo.suggestedTable;
+      }
+      
+      await onUpdateReservation(reservationDetails.id, finalData, true);
+      
+      const mesaInfo = reservationInfo && reservationInfo.suggestedTable 
+        ? ` Mesa ${reservationInfo.suggestedTable} asignada automáticamente.`
+        : '';
+      
+      // Limpiar estados después del éxito
+      setEditingReservation(null);
+      setTableReassignmentInfo(null);
+      setPendingReservationData(null);
+      setSavedReservationDetails(null);
+      
+      showNotification('success', `Reserva actualizada exitosamente.${mesaInfo}`);
+    } catch (error) {
+      console.error('Error al confirmar reasignación:', error);
+      showNotification('error', 'Error al actualizar la reserva.');
+      // Limpiar estado en caso de error
+      setTableReassignmentInfo(null);
+      setPendingReservationData(null);
+      setSavedReservationDetails(null);
+    }
+  };
+  
+  const handleCancelTableReassignment = () => {
+    setTableReassignmentInfo(null);
+    setPendingReservationData(null);
+    setSavedReservationDetails(null);
   };
 
   const handleDelete = async (reservation) => {
@@ -631,6 +1089,16 @@ const ReservationsTable = ({
           isValidDate={isValidDate}
           HORARIOS={HORARIOS}
           showNotification={showNotification}
+        />
+      )}
+
+      {tableReassignmentInfo && (
+        <TableReassignmentModal
+          reassignmentInfo={tableReassignmentInfo}
+          reservationData={pendingReservationData}
+          reservationDetails={savedReservationDetails}
+          onConfirm={handleConfirmTableReassignment}
+          onCancel={handleCancelTableReassignment}
         />
       )}
     </div>
@@ -1471,7 +1939,7 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
 const PanoramaView = ({ reservations, formatDate, onGoToDailyView, TurnoPreviewModal }) => {
   const [selectedTurnoPreview, setSelectedTurnoPreview] = useState(null);
 
-  // Obtener próximos 7 días excluyendo lunes
+  // Obtener próximos 7 días excluyendo lunes (cerrado ambos turnos)
   const getNext7Days = useCallback(() => {
     const days = [];
     const today = new Date();
@@ -1479,7 +1947,7 @@ const PanoramaView = ({ reservations, formatDate, onGoToDailyView, TurnoPreviewM
     
     while (days.length < 7) {
       const dayOfWeek = currentDate.getDay();
-      if (dayOfWeek !== 1) { // Excluir lunes
+      if (dayOfWeek !== 1) { // Excluir lunes (cerrado ambos turnos)
         days.push(new Date(currentDate));
       }
       currentDate.setDate(currentDate.getDate() + 1);
@@ -1721,6 +2189,9 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   // Estados para conflictos de mesa
   const [conflict, setConflict] = useState(null);
   const [pendingTableAssignment, setPendingTableAssignment] = useState(null);
+  // Nuevo filtro para lista de espera
+  const [waitingListFilter, setWaitingListFilter] = useState('all'); // 'all', 'with-waiting', 'only-waiting'
+  const [searchWaitingTerm, setSearchWaitingTerm] = useState('');
 
   // Layout de mesas - con tamaños estandarizados
   const TABLES_LAYOUT = [
@@ -1758,7 +2229,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
     do {
       currentDate.setDate(currentDate.getDate() - 1);
       previousDate = currentDate.toISOString().split('T')[0];
-    } while (new Date(previousDate).getDay() === 1); // Saltar lunes (cerrado)
+    } while (new Date(previousDate).getDay() === 1); // Saltar lunes (cerrado ambos turnos)
     
     setSelectedDate(previousDate);
   }, [selectedDate]);
@@ -1770,7 +2241,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
     do {
       currentDate.setDate(currentDate.getDate() + 1);
       nextDate = currentDate.toISOString().split('T')[0];
-    } while (new Date(nextDate).getDay() === 1); // Saltar lunes (cerrado)
+    } while (new Date(nextDate).getDay() === 1); // Saltar lunes (cerrado ambos turnos)
     
     setSelectedDate(nextDate);
   }, [selectedDate]);
@@ -1786,7 +2257,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   // Verificar si un día está disponible (no es lunes, y si es domingo verificar turno)
   const isDayAvailable = useCallback((date, turno = null) => {
     const dayOfWeek = date.getDay();
-    if (dayOfWeek === 1) return false; // Lunes cerrado
+    if (dayOfWeek === 1) return false; // Lunes cerrado ambos turnos
     if (dayOfWeek === 0 && turno === 'noche') return false; // Domingos sin turno noche
     return true;
   }, []);
@@ -2104,29 +2575,12 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
 
   const handleContactWaitingClient = async (waiting) => {
     try {
-      await onContactWaitingClient(waiting.id);
+      // Pasar los datos del cliente para el mensaje automático
+      await onContactWaitingClient(waiting.id, waiting);
       
-      const whatsappPhone = formatPhoneForWhatsApp(waiting.cliente.telefono);
-      const fechaFormateada = formatDate(waiting.fecha);
-      const turnoTexto = waiting.turno === 'mediodia' ? 'mediodía' : 'noche';
-      
-      const mensaje = `¡Hola ${waiting.cliente.nombre}! 🌹 
-      
-Tenemos buenas noticias. Hay disponibilidad para tu solicitud de reserva:
-📅 ${fechaFormateada} - ${turnoTexto}
-👥 ${waiting.personas} personas
-
-Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensaje. 
-
-⏰ Si no recibimos confirmación en 30 minutos, el cupo será ofrecido a la siguiente persona en lista de espera.
-
-¡Esperamos verte pronto en Rosaura!`;
-
-      const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(mensaje)}`;
-      window.open(whatsappUrl, '_blank');
-      
-      showNotification('success', 'Cliente contactado. Esperando confirmación...');
+      showNotification('success', 'Cliente contactado automáticamente por WhatsApp.');
     } catch (error) {
+      console.error('Error al contactar cliente:', error);
       showNotification('error', 'Error al contactar cliente');
     }
   };
@@ -2217,6 +2671,40 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
     waitingForSelectedDate.filter(w => w.turno === selectedTurno), 
     [waitingForSelectedDate, selectedTurno]
   );
+
+  // Filtrar lista de espera basándose en los filtros aplicados
+  const filteredWaitingList = useMemo(() => {
+    let filtered = waitingList.filter(w => w.status !== 'rejected');
+
+    // Aplicar filtro de tipo
+    if (waitingListFilter === 'with-waiting') {
+      // Solo mostrar días que tienen lista de espera
+      const datesWithWaiting = new Set(filtered.map(w => w.fecha));
+      if (datesWithWaiting.has(selectedDate)) {
+        filtered = waitingForSelectedTurno;
+      } else {
+        filtered = [];
+      }
+    } else if (waitingListFilter === 'only-waiting') {
+      // Solo mostrar reservas en espera (del día actual)
+      filtered = waitingForSelectedTurno;
+    } else {
+      // Mostrar lista de espera del día seleccionado
+      filtered = waitingForSelectedTurno;
+    }
+
+    // Aplicar filtro de búsqueda
+    if (searchWaitingTerm) {
+      const searchLower = searchWaitingTerm.toLowerCase();
+      filtered = filtered.filter(waiting => 
+        waiting.cliente?.nombre?.toLowerCase().includes(searchLower) ||
+        waiting.cliente?.telefono?.includes(searchWaitingTerm) ||
+        waiting.waitingId?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return filtered;
+  }, [waitingList, waitingListFilter, searchWaitingTerm, waitingForSelectedTurno, selectedDate]);
 
   // Organizar reservas por turno
   const organizarReservasPorTurno = useCallback((reservations) => {
@@ -2506,11 +2994,11 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
               <div className="relative">
                 <button
                   onClick={() => setShowDatePicker(!showDatePicker)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-64"
                   title="Seleccionar fecha"
                 >
                   <Calendar size={16} />
-                  <span className="font-medium text-gray-900">{formatDate(selectedDate)}</span>
+                  <span className="font-medium text-gray-900 truncate">{formatDate(selectedDate)}</span>
                 </button>
                 
                 {showDatePicker && (
@@ -2588,6 +3076,16 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Indicador de lista de espera */}
+            {waitingList && waitingList.length > 0 && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-amber-100 border border-amber-300 rounded-lg text-amber-800">
+                <Clock size={16} />
+                <span className="text-sm font-medium">
+                  {waitingList.filter(w => w.status !== 'rejected').length} en espera
+                </span>
+              </div>
+            )}
+
             {/* Botones de turno */}
             <div className="flex bg-white rounded-lg border border-gray-300 overflow-hidden">
               <button
@@ -2660,165 +3158,12 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
             </div>
           </div>
         )}
+
+        {/* Filtros para lista de espera */}
+
       </div>
 
-      {/* Sección Lista de Espera para el día seleccionado */}
-      {waitingForSelectedTurno.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-amber-800 flex items-center gap-2">
-              ⏳ Lista de Espera - {formatDate(selectedDate)} - {selectedTurno === 'mediodia' ? 'Mediodía' : 'Noche'}
-            </h3>
-            <span className="text-sm text-amber-600 font-medium">
-              {waitingForSelectedTurno.length} {waitingForSelectedTurno.length === 1 ? 'solicitud' : 'solicitudes'}
-            </span>
-          </div>
-          
-          <div className="bg-white border border-amber-200 rounded-lg overflow-hidden shadow-sm">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-amber-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Cliente</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Teléfono</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Personas</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Comentarios</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Estado</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {waitingForSelectedTurno.map((waiting) => {
-                  // Obtener historial del cliente filtrando por nombre Y teléfono
-                  const getClientHistory = (waiting) => {
-                    if (!reservations || !waiting?.cliente?.nombre || !waiting?.cliente?.telefono) return [];
-                    
-                    // Normalizar nombre y teléfono para comparación
-                    const normalizePhone = (phone) => {
-                      return phone?.toString().replace(/\D/g, ''); // Solo números
-                    };
-                    
-                    const waitingName = waiting.cliente.nombre.toLowerCase().trim();
-                    const waitingPhone = normalizePhone(waiting.cliente.telefono);
-                    
-                    return reservations.filter(reserva => {
-                      if (!reserva?.cliente?.nombre || !reserva?.cliente?.telefono) return false;
-                      
-                      const reservaName = reserva.cliente.nombre.toLowerCase().trim();
-                      const reservaPhone = normalizePhone(reserva.cliente.telefono);
-                      
-                      // Filtrar por nombre Y teléfono (ambos deben coincidir)
-                      return waitingName === reservaName && 
-                             waitingPhone && reservaPhone && 
-                             waitingPhone === reservaPhone;
-                    }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-                  };
-                  
-                  const clientHistory = getClientHistory(waiting);
-                  
-                  return (
-                    <tr key={waiting.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div>
-                          <div className="font-medium text-gray-900">{waiting.cliente.nombre}</div>
-                          <div className="text-xs text-gray-500">
-                            ID: {waiting.waitingId}
-                            {clientHistory.length > 0 && (
-                              <span className="ml-2 text-blue-600">
-                                • {clientHistory.length} reserva{clientHistory.length !== 1 ? 's' : ''} 
-                                {clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length > 0 && (
-                                  <span className="font-medium">
-                                    ({clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length} activa{clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length !== 1 ? 's' : ''})
-                                  </span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <a 
-                          href={`https://wa.me/${formatPhoneForWhatsApp(waiting.cliente.telefono)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-800 hover:underline text-sm"
-                        >
-                          {waiting.cliente.telefono}
-                        </a>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {waiting.personas}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="text-sm max-w-xs">
-                          {waiting.comentarios || waiting.cliente?.notasInternas || waiting.cliente?.comentarios ? (
-                            <div className="space-y-1">
-                              {waiting.comentarios && (
-                                <div className="text-xs text-gray-700 p-1 bg-blue-50 rounded">
-                                  {waiting.comentarios.length > 40 
-                                    ? `${waiting.comentarios.substring(0, 40)}...` 
-                                    : waiting.comentarios
-                                  }
-                                </div>
-                              )}
-                              {(waiting.cliente?.notasInternas || waiting.cliente?.comentarios) && (
-                                <div className="text-xs text-gray-600 italic">
-                                  {(waiting.cliente?.notasInternas || waiting.cliente?.comentarios).length > 40 
-                                    ? `${(waiting.cliente?.notasInternas || waiting.cliente?.comentarios).substring(0, 40)}...` 
-                                    : (waiting.cliente?.notasInternas || waiting.cliente?.comentarios)
-                                  }
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-gray-300 text-xs">—</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {getWaitingStatusBadge(waiting)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={() => handleQuickConfirmWaiting(waiting)}
-                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                            title="Confirmar reserva"
-                          >
-                            <Check size={10} className="mr-1" />
-                            Confirmar
-                          </button>
-                          
-                          <button
-                            onClick={() => handleRejectWaiting(waiting)}
-                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
-                            title="Rechazar solicitud"
-                          >
-                            <X size={10} className="mr-1" />
-                            Rechazar
-                          </button>
-                          
-                          <button
-                            onClick={() => handleContactWaitingClient(waiting)}
-                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-colors ${
-                              waiting.contacted 
-                                ? 'bg-green-50 text-green-600 border border-green-200 hover:bg-green-100' 
-                                : 'bg-green-100 text-green-700 hover:bg-green-200'
-                            }`}
-                            title={waiting.contacted ? 'Ya contactado - Contactar nuevamente' : 'Contactar cliente'}
-                          >
-                            <MessageCircle size={10} className="mr-1" />
-                            {waiting.contacted ? 'Recontactar' : 'Contactar'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+
 
       {/* Contenido principal */}
       <div className="flex">
@@ -3110,6 +3455,187 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
         Generado el {new Date().toLocaleString('es-AR')} | Rosaura - Sistema de Reservas
       </div>
 
+      {/* Sección Lista de Espera - Movida al final */}
+      {filteredWaitingList.length > 0 && (
+        <div className="mt-8 bg-white border border-amber-200 rounded-lg shadow-sm">
+          <div className="bg-amber-50 px-6 py-4 border-b border-amber-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-amber-800 flex items-center gap-2">
+                ⏳ Lista de Espera 
+                {waitingListFilter === 'all' && `- ${formatDate(selectedDate)} - ${selectedTurno === 'mediodia' ? 'Mediodía' : 'Noche'}`}
+                {waitingListFilter === 'with-waiting' && '- Días con lista de espera'}
+                {waitingListFilter === 'only-waiting' && '- Solo reservas en espera'}
+              </h3>
+              <span className="text-sm text-amber-600 font-medium">
+                {filteredWaitingList.length} {filteredWaitingList.length === 1 ? 'solicitud' : 'solicitudes'}
+                {searchWaitingTerm && ' (filtradas)'}
+              </span>
+            </div>
+            
+            {/* Filtros para lista de espera */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-amber-700 mb-1">Filtrar por lista de espera</label>
+                <select
+                  value={waitingListFilter}
+                  onChange={(e) => setWaitingListFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-sm"
+                >
+                  <option value="all">Todos los días</option>
+                  <option value="with-waiting">Solo días con lista de espera</option>
+                  <option value="only-waiting">Solo reservas en espera</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-amber-700 mb-1">Buscar en lista de espera</label>
+                <input
+                  type="text"
+                  placeholder="Nombre, teléfono..."
+                  value={searchWaitingTerm}
+                  onChange={(e) => setSearchWaitingTerm(e.target.value)}
+                  className="w-full px-3 py-2 border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                />
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setWaitingListFilter('all');
+                    setSearchWaitingTerm('');
+                  }}
+                  className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            </div>
+
+            {waitingListFilter !== 'all' && (
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  {waitingListFilter === 'with-waiting' && 'Mostrando solo días con lista de espera'}
+                  {waitingListFilter === 'only-waiting' && 'Mostrando solo las reservas en lista de espera'}
+                  {searchWaitingTerm && ` que coincidan con "${searchWaitingTerm}"`}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <div className="overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-amber-50 border-t border-amber-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Cliente</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Teléfono</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Personas</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Comentarios</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Estado</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredWaitingList.map((waiting) => {
+                  // Obtener historial del cliente filtrando por nombre Y teléfono
+                  const getClientHistory = (waiting) => {
+                    if (!reservations || !waiting?.cliente?.nombre || !waiting?.cliente?.telefono) return [];
+                    
+                    // Normalizar nombre y teléfono para comparación
+                    const normalizePhone = (phone) => {
+                      return phone?.toString().replace(/\D/g, ''); // Solo números
+                    };
+                    
+                    const waitingName = waiting.cliente.nombre.toLowerCase().trim();
+                    const waitingPhone = normalizePhone(waiting.cliente.telefono);
+                    
+                    return reservations.filter(reserva => {
+                      if (!reserva?.cliente?.nombre || !reserva?.cliente?.telefono) return false;
+                      
+                      const reservaName = reserva.cliente.nombre.toLowerCase().trim();
+                      const reservaPhone = normalizePhone(reserva.cliente.telefono);
+                      
+                      // Filtrar por nombre Y teléfono (ambos deben coincidir)
+                      return waitingName === reservaName && 
+                             waitingPhone && reservaPhone && 
+                             waitingPhone === reservaPhone;
+                    }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                  };
+                  
+                  const clientHistory = getClientHistory(waiting);
+                  
+                  return (
+                    <tr key={waiting.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div>
+                          <div className="font-medium text-gray-900">{waiting.cliente.nombre}</div>
+                          <div className="text-xs text-gray-500">
+                            ID: {waiting.waitingId}
+                            {clientHistory.length > 0 && (
+                              <span className="ml-2 text-blue-600">
+                                • {clientHistory.length} reserva{clientHistory.length !== 1 ? 's' : ''} 
+                                {clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length > 0 && (
+                                  <span className="font-medium">
+                                    ({clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length} activa{clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length !== 1 ? 's' : ''})
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <a 
+                          href={`https://wa.me/${formatPhoneForWhatsApp(waiting.cliente.telefono)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-800 hover:underline text-sm"
+                        >
+                          {waiting.cliente.telefono}
+                        </a>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {waiting.personas}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-500 max-w-xs truncate">
+                        {waiting.cliente.comentarios || '-'}
+                      </td>
+                      <td className="px-4 py-3">
+                        {getWaitingStatusBadge(waiting)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleContactWaitingClient(waiting)}
+                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                            title="Contactar cliente"
+                          >
+                            <MessageCircle size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleQuickConfirmWaiting(waiting)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="Confirmar rápido"
+                          >
+                            <Check size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleRejectWaiting(waiting)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                            title="Rechazar"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Conflicto */}
       <ConflictModal
         conflict={conflict}
@@ -3126,6 +3652,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
   const [confirmation, setConfirmation] = useState(null);
   const [selectedDateFromPanorama, setSelectedDateFromPanorama] = useState(null);
   const [selectedTurnoFromPanorama, setSelectedTurnoFromPanorama] = useState(null);
+  const [showCreateReservationModal, setShowCreateReservationModal] = useState(false);
 
   // Función para mostrar notificaciones
   const showNotification = useCallback((type, message) => {
@@ -3158,6 +3685,44 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
     }
     setConfirmation(null);
   }, [confirmation]);
+
+  const handleCreateReservation = async (reservationData) => {
+    try {
+      // Crear el cliente primero
+      const { addClient, addReservation } = await import('../firebase');
+      
+      const newClient = {
+        nombre: reservationData.cliente.nombre,
+        telefono: reservationData.cliente.telefono,
+        comentarios: reservationData.cliente.comentarios || '',
+        ultimaReserva: reservationData.fecha,
+        listaNegra: false
+      };
+
+      // Agregar cliente a la base de datos
+      const clientId = await addClient(newClient);
+
+      // Crear nueva reserva
+      const newReservation = {
+        fecha: reservationData.fecha,
+        turno: reservationData.turno,
+        horario: reservationData.horario,
+        personas: reservationData.personas,
+        clienteId: clientId,
+        cliente: newClient
+      };
+
+      // Agregar reserva a la base de datos
+      const { id, reservationId } = await addReservation(newReservation);
+      
+      console.log('Nueva reserva creada:', { id, reservationId });
+      
+      return { id, reservationId };
+    } catch (error) {
+      console.error("Error al crear reserva:", error);
+      throw error;
+    }
+  };
 
   const todayReservations = data.reservas.filter(r => r.fecha === new Date().toISOString().split('T')[0]);
 
@@ -3559,18 +4124,26 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <div className={styles.logoSection}>
-          <img src="/logo.png" alt="Rosaura" className={styles.logo} />
-          <div className={styles.titleSection}>
-            <h1 className={styles.title}>Rosaura</h1>
-            <p className={styles.subtitle}>Sistema de Reservas</p>
+        <div className={styles.headerContent}>
+          <div className={styles.logoSection}>
+            <div className={styles.titleSection}>
+              <h1 className={styles.title}>Rosaura</h1>
+              <p className={styles.subtitle}>Sistema de Reservas</p>
+            </div>
           </div>
-        </div>
-        <div className={styles.userSection}>
-          <span className={styles.userName}>{auth.username}</span>
-          <button onClick={onLogout} className={styles.logoutButton}>
-            Cerrar Sesión
-          </button>
+          <div className={styles.userSection}>
+            <button 
+              onClick={() => setShowCreateReservationModal(true)} 
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 mr-4"
+            >
+              <Users size={16} />
+              Crear Reserva
+            </button>
+            <span className={styles.userName}>{auth.username}</span>
+            <button onClick={onLogout} className={styles.logoutButton}>
+              Cerrar Sesión
+            </button>
+          </div>
         </div>
       </div>
 
@@ -3608,14 +4181,6 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
                 className={adminView === 'clients' ? styles.tabActive : styles.tabInactive}
               >
                 Clientes
-              </button>
-            )}
-            {auth.role === 'admin' && (
-              <button 
-                onClick={() => setAdminView('waitinglist')} 
-                className={adminView === 'waitinglist' ? styles.tabActive : styles.tabInactive}
-              >
-                Lista de Espera ({data.waitingList ? data.waitingList.length : 0})
               </button>
             )}
           </div>
@@ -3677,20 +4242,15 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
           />
         )}
 
-        {adminView === 'waitinglist' && (
-          <WaitingListView 
-            waitingList={data.waitingList || []}
-            reservations={data.reservas || []}
-            clients={data.clientes || []}
-            onConfirmWaitingReservation={onConfirmWaitingReservation}
-            onDeleteWaitingReservation={onDeleteWaitingReservation}
-            onContactWaitingClient={onContactWaitingClient}
-            onRejectWaitingReservation={onRejectWaitingReservation}
+        {/* Modal para crear nueva reserva */}
+        {showCreateReservationModal && (
+          <CreateReservationModal
+            onClose={() => setShowCreateReservationModal(false)}
+            onSave={handleCreateReservation}
             getAvailableSlots={getAvailableSlots}
-            formatDate={formatDate}
+            isValidDate={isValidDate}
             HORARIOS={HORARIOS}
             showNotification={showNotification}
-            showConfirmation={showConfirmationDialog}
           />
         )}
       </div>

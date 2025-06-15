@@ -1,10 +1,67 @@
+.container {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
 .header {
   background-color: white;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .headerContent {
   padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logoSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #0c4900;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1;
+}
+
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.userName {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
 @media (min-width: 640px) {
@@ -1352,3 +1409,5 @@
 .modernTable tr {
   animation: fadeInUp 0.3s ease-out;
 }
+
+/* AdminView ya no necesita estilos específicos para PhoneInput */

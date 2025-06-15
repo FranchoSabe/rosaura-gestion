@@ -1,0 +1,81 @@
+/* Títulos */
+.title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: white;
+}
+
+.subtitle {
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+}
+
+/* Texto de labels */
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  opacity: 0.7;
+  margin-bottom: 0.25rem;
+}
+
+.labelWithIcon {
+  composes: label;
+  display: flex;
+  align-items: center;
+}
+
+.labelWithIcon svg {
+  margin-right: 0.5rem;
+}
+
+/* Texto de información */
+.infoText {
+  font-size: 0.875rem;
+  color: white;
+  opacity: 0.7;
+}
+
+.valueText {
+  font-weight: 500;
+  color: white;
+}
+
+.boldValue {
+  font-weight: bold;
+  color: white;
+}
+
+.largeValue {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: white;
+}
+
+/* Texto de ayuda */
+.helpText {
+  font-size: 0.875rem;
+  color: white;
+  opacity: 0.7;
+  margin-top: 0.25rem;
+}
+
+/* Estados de texto */
+.errorText {
+  color: rgb(239, 68, 68);
+}
+
+.successText {
+  color: rgb(34, 197, 94);
+}
+
+.warningText {
+  color: rgb(251, 191, 36);
+}
+
+/* Texto centrado */
+.centeredText {
+  text-align: center;
+} 

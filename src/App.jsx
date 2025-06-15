@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AdminView } from './components/AdminView';
 import { ClientView } from './components/ClientView';
 import { LoginView } from './components/LoginView';
+import BrushDemo from './components/BrushDemo';
 import { 
   addReservation, 
   addClient, 
@@ -74,8 +75,8 @@ function App() {
   const getAvailableSlotsDynamic = async (fecha, turno) => {
     const fechaObj = new Date(fecha + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
-    if (dayOfWeek === 1) return []; // Lunes cerrado
-    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos solo mediodía
+    if (dayOfWeek === 1) return []; // Lunes cerrado ambos turnos
+    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos cerrado turno noche
     
     try {
       // Cargar bloqueos específicos para esta fecha/turno
@@ -171,8 +172,8 @@ function App() {
   const getAvailableSlots = (fecha, turno) => {
     const fechaObj = new Date(fecha + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
-    if (dayOfWeek === 1) return []; // Lunes cerrado
-    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos solo mediodía
+    if (dayOfWeek === 1) return []; // Lunes cerrado ambos turnos
+    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos cerrado turno noche
     
     // Obtener reservas existentes para esta fecha/turno
     const reservasDelDia = data.reservas.filter(
@@ -214,8 +215,8 @@ function App() {
   const getAvailableSlotsForEdit = (fecha, turno, personas, excludeReservationId) => {
     const fechaObj = new Date(fecha + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
-    if (dayOfWeek === 1) return []; // Lunes cerrado
-    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos solo mediodía
+    if (dayOfWeek === 1) return []; // Lunes cerrado ambos turnos
+    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos cerrado turno noche
     
     // Obtener reservas existentes para esta fecha/turno, excluyendo la que estamos editando
     const reservasDelDia = data.reservas.filter(
@@ -665,9 +666,9 @@ function App() {
     }
   };
 
-  const handleContactWaitingClient = async (waitingReservationId) => {
+  const handleContactWaitingClient = async (waitingReservationId, waitingData = null) => {
     try {
-      await contactWaitingClient(waitingReservationId);
+      await contactWaitingClient(waitingReservationId, waitingData);
       return true;
     } catch (error) {
       console.error("Error al contactar cliente:", error);
@@ -712,6 +713,8 @@ function App() {
       return null;
     }
   };
+
+
 
   if (authState) {
     return <AdminView 

@@ -1,0 +1,72 @@
+/* Container principal */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Day item */
+.dayItem {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dayButton {
+  width: 100%;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.dayButton:hover {
+  background-color: rgb(249, 250, 251);
+}
+
+.dayInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dayDate {
+  font-weight: 500;
+  color: rgb(17, 24, 39);
+}
+
+.reservationCount {
+  background-color: rgb(219, 234, 254);
+  color: rgb(30, 64, 175);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+}
+
+.chevronIcon {
+  transition: transform 200ms ease;
+}
+
+.chevronIcon.expanded {
+  transform: rotate(180deg);
+}
+
+/* Reservations table container */
+.reservationsTableContainer {
+  border-top: 1px solid rgb(229, 231, 235);
+}
+
+/* Empty state */
+.emptyState {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  text-align: center;
+  color: rgb(107, 114, 128);
+} 

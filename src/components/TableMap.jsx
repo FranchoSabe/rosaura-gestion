@@ -360,19 +360,19 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
       <div className={styles.content}>
         {/* Mapa de Mesas */}
         <div className={styles.mapSection}>
-          <div className="flex justify-between items-center mb-3">
+          <div className={styles.mapHeader}>
             <h3 className={styles.sectionTitle}>Disposición de Mesas</h3>
-            <div className="flex items-center gap-4">
+            <div className={styles.indicators}>
               {/* Indicador de cupos walk-in */}
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                getWalkInCupos() < 8 ? 'bg-red-100 text-red-800' : 
-                getWalkInCupos() < 10 ? 'bg-yellow-100 text-yellow-800' : 
-                'bg-green-100 text-green-800'
+              <div className={`${styles.walkInIndicator} ${
+                getWalkInCupos() < 8 ? styles.lowCupos : 
+                getWalkInCupos() < 10 ? styles.mediumCupos : 
+                styles.highCupos
               }`}>
                 🚶 Walk-ins: {getWalkInCupos()} cupos
               </div>
               {assignmentMode && (
-                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                <div className={styles.assignmentIndicator}>
                   🎯 Modo Asignación
                 </div>
               )}
@@ -524,7 +524,7 @@ const TableMap = ({ reservations = [], formatDate, fixedDate = null, showDateSel
                 </span>
               </div>
             </div>
-            <div className="mt-2 text-xs text-gray-600">
+            <div className={styles.helpText}>
               💡 Click en las mesas para bloquear/desbloquear. El sistema redistribuye automáticamente.
             </div>
           </div>

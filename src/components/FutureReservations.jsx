@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ThumbsDown, MessageCircle, Edit2 } from 'lucide-react';
+import styles from './FutureReservations.module.css';
 
 const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -33,30 +34,30 @@ const FutureReservations = ({ reservations, ReservationsTable, onSetBlacklist, o
     const futureDates = getFutureReservationDates();
 
     return (
-        <div className="space-y-4">
+        <div className={styles.container}>
             {futureDates.length > 0 ? futureDates.map(date => {
                 const dayReservations = getReservationsForDay(date);
                 const isExpanded = expandedDay === date;
 
                 return (
-                    <div key={date} className="bg-white rounded-lg shadow-sm">
+                    <div key={date} className={styles.dayItem}>
                         <button
                             onClick={() => setExpandedDay(isExpanded ? null : date)}
-                            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-150"
+                            className={styles.dayButton}
                         >
-                            <div className="flex items-center space-x-4">
-                                <span className="font-medium text-gray-900">{formatDate(date)}</span>
-                                <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                            <div className={styles.dayInfo}>
+                                <span className={styles.dayDate}>{formatDate(date)}</span>
+                                <span className={styles.reservationCount}>
                                     {dayReservations.length} reservas
                                 </span>
                             </div>
                             <ChevronDown
-                                className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                className={`${styles.chevronIcon} ${isExpanded ? styles.expanded : ''}`}
                                 size={20}
                             />
                         </button>
                         {isExpanded && dayReservations.length > 0 && (
-                            <div className="border-t border-gray-200">
+                            <div className={styles.reservationsTableContainer}>
                                 <ReservationsTable
                                     reservations={dayReservations}
                                     onSetBlacklist={onSetBlacklist}
@@ -72,7 +73,7 @@ const FutureReservations = ({ reservations, ReservationsTable, onSetBlacklist, o
                     </div>
                 );
             }) : (
-                <div className="bg-white rounded-lg shadow-sm p-6 text-center text-gray-500">
+                <div className={styles.emptyState}>
                     No hay reservas programadas para fechas futuras (después de esta semana).
                 </div>
             )}

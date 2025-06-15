@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Users, Phone, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, Search, X, Edit2 } from 'lucide-react';
+import { Calendar, Clock, Users, Phone, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, FileSearch, X, Edit2, Feather, Heart } from 'lucide-react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../datepicker-custom.css";
+import ClientLayout from './ClientLayout';
+import styles from './ClientView.module.css';
+import buttonStyles from '../styles/shared/Buttons.module.css';
+import ReservationDetails from './ReservationDetails';
+import { isValidPhoneNumber } from 'react-phone-number-input';
 
 // Registrar el locale español
 registerLocale('es', es);
-import ClientLayout from './ClientLayout';
-import styles from './ClientView.module.css';
-import ReservationDetails from './ReservationDetails';
 
 const SearchReservationForm = ({ onSearch, onClose }) => {
   const [searchData, setSearchData] = useState({
@@ -22,17 +24,17 @@ const SearchReservationForm = ({ onSearch, onClose }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl text-white font-medium">Gestionar Reserva</h2>
-        <button onClick={onClose} className="text-white hover:text-gray-300">
+    <div className={styles.searchContainer}>
+      <div className={styles.searchHeader}>
+        <h2 className={styles.searchTitle}>Gestionar Reserva</h2>
+        <button onClick={onClose} className={styles.closeButton}>
           <X size={24} />
         </button>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-white mb-2">
-            <Search size={20} className="inline-block align-text-bottom mr-2" />Código de Reserva
+      <form onSubmit={handleSubmit} className={styles.searchForm}>
+        <div className={styles.fieldGroup}>
+          <label className={styles.labelWithIcon}>
+                            <FileSearch size={18} />Código de Reserva
           </label>
           <input
             type="text"
@@ -45,13 +47,13 @@ const SearchReservationForm = ({ onSearch, onClose }) => {
             pattern="[A-Z0-9]{6}"
             title="El código debe tener 6 caracteres (letras y números)"
           />
-          <p className="text-sm text-white opacity-70 mt-1">Ingresa el código que recibiste en tu confirmación</p>
+          <p className={styles.helpText}>Ingresa el código que recibiste en tu confirmación</p>
         </div>
         <button
           type="submit"
-          className={styles.mainButton}
+          className={buttonStyles.primaryButton}
         >
-          <Search size={20} />
+          <FileSearch size={18} />
           Buscar Reserva
         </button>
       </form>
@@ -63,46 +65,46 @@ const ReservationConfirmationModal = ({ reservation, onClose, formatDate }) => {
   if (!reservation) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-black bg-opacity-90 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full">
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 bg-opacity-20 rounded-full mb-4">
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <div className={styles.modalCenter}>
+          <div className={styles.successIcon}>
             <Check className="text-green-400" size={32} />
           </div>
           
-          <h2 className="text-xl font-bold text-white mb-4">Recibimos tu solicitud</h2>
+          <h2 className={styles.modalTitle}>Recibimos tu solicitud</h2>
           
-          <div className="bg-green-600 bg-opacity-20 p-4 rounded-xl border border-green-400 border-opacity-40">
-            <p className="text-white text-center">
+          <div className={styles.successMessage}>
+            <p className={styles.successMessageText}>
               En breve recibirás un mensaje de WhatsApp nuestro con la confirmación de tu reserva.
             </p>
-            <p className="text-white text-center font-semibold mt-2">
+            <p className={styles.successMessageBold}>
               ¡Muchas Gracias!
             </p>
           </div>
 
-          <div className="space-y-2 text-left bg-black bg-opacity-40 p-4 rounded-lg">
-            <div>
-              <p className="text-sm text-white opacity-70">Código de Reserva</p>
-              <p className="font-bold text-lg text-white">{reservation.reservationId}</p>
+          <div className={styles.reservationSummary}>
+            <div className={styles.summaryItem}>
+              <p className={styles.summaryLabel}>Código de Reserva</p>
+              <p className={styles.summaryValue}>{reservation.reservationId}</p>
             </div>
-            <div>
-              <p className="text-sm text-white opacity-70">Fecha</p>
-              <p className="font-medium text-white">{formatDate(reservation.fecha)}</p>
+            <div className={styles.summaryItem}>
+              <p className={styles.summaryLabel}>Fecha</p>
+              <p className={styles.summaryValueMedium}>{formatDate(reservation.fecha)}</p>
             </div>
-            <div>
-              <p className="text-sm text-white opacity-70">Horario</p>
-              <p className="font-medium text-white">{reservation.horario}</p>
+            <div className={styles.summaryItem}>
+              <p className={styles.summaryLabel}>Horario</p>
+              <p className={styles.summaryValueMedium}>{reservation.horario}</p>
             </div>
-            <div>
-              <p className="text-sm text-white opacity-70">Personas</p>
-              <p className="font-medium text-white">{reservation.personas}</p>
+            <div className={styles.summaryItem}>
+              <p className={styles.summaryLabel}>Personas</p>
+              <p className={styles.summaryValueMedium}>{reservation.personas}</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-full bg-green-600 bg-opacity-80 text-white py-3 px-4 rounded-xl hover:bg-opacity-100 transition-all duration-200 font-semibold"
+            className={styles.successButton}
           >
             Continuar
           </button>
@@ -133,6 +135,9 @@ export const ClientView = ({
   const [isModifying, setIsModifying] = useState(false);
   const [editingReservationId, setEditingReservationId] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  // Estado para ayuda del teléfono
+  const [showPhoneHelp, setShowPhoneHelp] = useState(false);
 
   const handleSearch = async (searchData) => {
     const result = await handleSearchReservation(searchData);
@@ -242,7 +247,7 @@ export const ClientView = ({
     const dayOfWeek = fechaObj.getDay();
     
     // Verificar si el día está cerrado
-    if (dayOfWeek === 1) return 'closed'; // Lunes cerrado
+    if (dayOfWeek === 1) return 'closed'; // Lunes cerrado ambos turnos
     
     // Si no hay turno o personas seleccionadas, no mostrar indicador
     if (!turno || !personas) return 'no-turno';
@@ -308,15 +313,15 @@ export const ClientView = ({
         return null; // No mostrar indicador para días cerrados o sin turno
       case 'full':
         return (
-          <div className="absolute top-2 right-2 bg-red-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-md"></div>
+                        <div className={`${styles.availabilityIndicator} ${styles.redAvailability}`}></div>
         );
       case 'low':
         return (
-          <div className="absolute top-2 right-2 bg-orange-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-md"></div>
+                        <div className={`${styles.availabilityIndicator} ${styles.orangeAvailability}`}></div>
         );
       case 'available':
         return (
-          <div className="absolute top-2 right-2 bg-green-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-md"></div>
+                        <div className={`${styles.availabilityIndicator} ${styles.greenAvailability}`}></div>
         );
       default:
         return null;
@@ -333,15 +338,15 @@ export const ClientView = ({
         return null;
       case 'full':
         return (
-          <div className="absolute top-1.5 right-1.5 bg-red-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-sm"></div>
+                        <div className={`${styles.availabilityIndicatorSmall} ${styles.redAvailability}`}></div>
         );
       case 'low':
         return (
-          <div className="absolute top-1.5 right-1.5 bg-orange-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-sm"></div>
+                        <div className={`${styles.availabilityIndicatorSmall} ${styles.orangeAvailability}`}></div>
         );
       case 'available':
         return (
-          <div className="absolute top-1.5 right-1.5 bg-green-400 bg-opacity-80 rounded-full w-1.5 h-1.5 shadow-sm"></div>
+                        <div className={`${styles.availabilityIndicatorSmall} ${styles.greenAvailability}`}></div>
         );
       default:
         return null;
@@ -351,13 +356,13 @@ export const ClientView = ({
   if (currentScreen === 'landing') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className={`${styles.screenContainer} flex flex-col min-h-screen`}>
-          <div className="flex-grow">
+        <div className={`${styles.screenContainer} ${styles.flex} ${styles.flexCol} ${styles.minHScreen}`}>
+          <div className={styles.flexGrow}>
             {/* Nueva sección hero profesional */}
             <div className={styles.heroSection}>
               <p className={styles.heroWelcome}>Bienvenido a</p>
               {LOGO_URL ? (
-                <img src={LOGO_URL} alt="Rosaura Logo" className="h-60 mx-auto" />
+                <img src={LOGO_URL} alt="Rosaura Logo" className={styles.logoImage} />
               ) : (
                 <h1 className={styles.heroTitle}>
                   <span className="letter">R</span>
@@ -372,37 +377,37 @@ export const ClientView = ({
               <p className={styles.heroSubtitle}>Reservas online</p>
             </div>
             
-            <div className={`${styles.buttonContainer} space-y-4 mb-4`}>
-              <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.mainButton}>
+            <div className={`${styles.buttonContainer} ${styles.spaceY4} ${styles.mb4}`}>
+              <button onClick={() => setCurrentScreen('fecha-personas')} className={buttonStyles.reserveButton}>
                 <Calendar size={20} />
-                Hacé tu reserva
+                Hacer una reserva
               </button>
               <button 
                 onClick={() => window.open('https://wa.me/5492213995351', '_blank')} 
-                className={styles.secondaryButton}
+                className={buttonStyles.whatsappButton}
               >
-                <MessageCircle size={20} className="text-green-500" />
-                Envianos un WhatsApp
+                <MessageCircle size={20} />
+                Escribir por Whatsapp
               </button>
               <button 
                 onClick={() => setShowSearchForm(true)} 
-                className={styles.secondaryButton}
+                className={buttonStyles.manageButton}
               >
-                <Search size={20} />
-                Gestionar mi reserva
+                <FileSearch size={20} />
+                Gestionar reserva
               </button>
             </div>
           </div>
-          <div className="mt-auto pb-4">
-            <button onClick={onAdminClick} className={styles.adminButton}>
+          <div className={`${styles.mtAuto} ${styles.pb4}`}>
+            <button onClick={onAdminClick} className={buttonStyles.adminButton}>
               Admin
             </button>
           </div>
         </div>
 
         {showSearchForm && !foundReservation && (
-          <div className={`${styles.modalOverlay} fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4`}>
-            <div className={`${styles.modalContent} bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full`}>
+          <div className={`${styles.modalOverlay} ${styles.fixed} ${styles.inset0} ${styles.bgBlack} ${styles.bgOpacity50} ${styles.flex} ${styles.itemsCenter} ${styles.justifyCenter} ${styles.p4}`}>
+            <div className={`${styles.modalContent} ${styles.bgBlack} ${styles.bgOpacity40} ${styles.backdropBlurSm} ${styles.roundedXl} ${styles.borderWhite} ${styles.borderOpacity20} ${styles.shadow2xl} ${styles.maxWMd} ${styles.wFull}`}>
               <SearchReservationForm
                 onSearch={handleSearch}
                 onClose={() => setShowSearchForm(false)}
@@ -412,8 +417,8 @@ export const ClientView = ({
         )}
 
         {foundReservation && (
-          <div className={`${styles.modalOverlay} fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4`}>
-            <div className={`${styles.modalContent} bg-black bg-opacity-40 backdrop-blur-sm rounded-xl p-6 border border-white border-opacity-20 shadow-2xl max-w-md w-full`}>
+          <div className={`${styles.modalOverlay} ${styles.fixed} ${styles.inset0} ${styles.bgBlack} ${styles.bgOpacity50} ${styles.flex} ${styles.itemsCenter} ${styles.justifyCenter} ${styles.p4}`}>
+            <div className={`${styles.modalContent} ${styles.bgBlack} ${styles.bgOpacity40} ${styles.backdropBlurSm} ${styles.roundedXl} ${styles.borderWhite} ${styles.borderOpacity20} ${styles.shadow2xl} ${styles.maxWMd} ${styles.wFull}`}>
               <ReservationDetails
                 reservation={foundReservation}
                 onClose={() => {
@@ -441,7 +446,7 @@ export const ClientView = ({
     const weekDays = generateWeekDays();
     
     const isDayDisabled = (date) => {
-      if (date.getDay() === 1) return true;
+      if (date.getDay() === 1) return true; // Lunes cerrado
       if (date > maxDate) return true;
       if (date < today) return true;
       return false;
@@ -449,12 +454,12 @@ export const ClientView = ({
     
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className="space-y-6">
-          {/* Selección de turno */}
+        <div className={styles.spaceY6}>
+          {/* Selección de fecha */}
           <div className={styles.formSection}>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-200 flex items-center">
-                <Clock size={20} className="inline-block align-text-bottom mr-2" />Turno
+            <div className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter} ${styles.mb2}`}>
+              <label className={`${styles.block} ${styles.textSm} ${styles.fontMedium} ${styles.textGray200} ${styles.flex} ${styles.itemsCenter}`}>
+                <Calendar size={18} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.mr2}`} />Fecha
               </label>
               <button 
                 onClick={() => {
@@ -472,38 +477,76 @@ export const ClientView = ({
                     }
                   });
                 }} 
-                className="text-green-700 text-lg font-medium hover:text-green-500 transition-colors"
+                className={`${styles.flex} ${styles.itemsCenter} ${styles.gap2} ${styles.textWhite} ${styles.opacity70} ${styles.hoverOpacity100} ${styles.transitionAll} ${styles.bgBlack} ${styles.bgOpacity20} ${styles.px3} ${styles.py2} ${styles.roundedFull}`}
               >
-                Volver
+                <ChevronLeft size={16} />
+                <span className={`${styles.textSm} ${styles.fontMedium}`}>Volver</span>
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className={styles.spaceY2}>
+              <div className={`${styles.grid} ${styles.gridCols3} ${styles.gap3}`}>
+                {weekDays.map((day) => {
+                  const isSelected = reservaData.fecha && 
+                    new Date(reservaData.fecha).toDateString() === day.date.toDateString();
+                  
+                  return (
+                    <button
+                      key={day.dateString}
+                      onClick={() => setReservaData({ ...reservaData, fecha: day.date })}
+                      className={`${isSelected ? buttonStyles.dateButtonSelected : buttonStyles.dateButtonUnselected} 
+                        ${styles.flex} ${styles.flexCol} ${styles.itemsCenter} ${styles.py3}`}
+                      type="button"
+                    >
+                      <span className={`${styles.textSm} ${styles.fontMedium}`}>{day.label}</span>
+                      <span className={`${styles.textSm} ${styles.opacity75}`}>{formatDayDisplay(day.date)}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => {
+                    setShowDatePicker(true);
+                  }}
+                  className={`${buttonStyles.dateButtonUnselected} ${styles.flex} ${styles.flexCol} ${styles.itemsCenter} ${styles.py3}`}
+                >
+                  <span className={`${styles.textSm} ${styles.fontMedium}`}>+ Fechas</span>
+                  <Calendar size={16} className={`${styles.textGray400} ${styles.mt1}`} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Selección de turno */}
+          <div className={styles.formSection}>
+            <label className={`${styles.block} ${styles.textSm} ${styles.fontMedium} ${styles.textGray200} ${styles.mb2} ${styles.flex} ${styles.itemsCenter}`}>
+              <Clock size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.mr2}`} />Turno
+            </label>
+            <div className={`${styles.grid} ${styles.gridCols2} ${styles.gap4}`}>
               <button
                 onClick={() => setReservaData({...reservaData, turno: 'mediodia'})} 
-                className={reservaData.turno === 'mediodia' ? styles.turnoButtonSelected : styles.turnoButtonUnselected}
+                className={reservaData.turno === 'mediodia' ? buttonStyles.turnoButtonSelected : buttonStyles.turnoButtonUnselected}
               >
-                <Sun size={20} className="inline-block align-text-bottom text-yellow-200" /> Mediodía
+                <Sun size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.textYellow200}`} /> Mediodía
               </button>
               <button
                 onClick={() => setReservaData({...reservaData, turno: 'noche'})} 
-                className={reservaData.turno === 'noche' ? styles.turnoButtonSelected : styles.turnoButtonUnselected}
+                className={reservaData.turno === 'noche' ? buttonStyles.turnoButtonSelected : buttonStyles.turnoButtonUnselected}
               >
-                <Moon size={20} className="inline-block align-text-bottom text-blue-300" /> Noche
+                <Moon size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.textBlue300}`} /> Noche
               </button>
             </div>
           </div>
 
           {/* Selección de cantidad de personas */}
           <div className={styles.formSection}>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              <Users size={20} className="inline-block align-text-bottom mr-2" />Cantidad de personas
+            <label className={`${styles.block} ${styles.textSm} ${styles.fontMedium} ${styles.textGray200} ${styles.mb2}`}>
+              <Users size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.mr2}`} />Cantidad de personas
             </label>
-            <div className="grid grid-cols-3 gap-2 mb-2">
+            <div className={`${styles.grid} ${styles.gridCols3} ${styles.gap2} ${styles.mb2}`}>
               {[1, 2, 3, 4, 5, 6].map(num => (
                 <button
                   key={num}
                   onClick={() => setReservaData({ ...reservaData, personas: num })}
-                  className={reservaData.personas === num ? styles.personasButtonSelected : styles.personasButtonUnselected}
+                  className={reservaData.personas === num ? buttonStyles.personasButtonSelected : buttonStyles.personasButtonUnselected}
                 >
                   {num}
                 </button>
@@ -515,79 +558,18 @@ export const ClientView = ({
                 const encodedMensaje = encodeURIComponent(mensaje);
                 window.open(`https://wa.me/5492213995351?text=${encodedMensaje}`, '_blank');
               }}
-              className={styles.secondaryButton}
+              className={buttonStyles.secondaryButton}
             >
               <MessageCircle size={18} />
               <span>7+</span>
             </button>
           </div>
 
-          {/* Selección de fecha */}
-          <div className={styles.formSection}>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-200 flex items-center">
-                <Calendar size={20} className="inline-block align-text-bottom mr-2" />Fecha
-              </label>
-            </div>
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-3">
-                {weekDays.map((day) => {
-                  const isSelected = reservaData.fecha && 
-                    new Date(reservaData.fecha).toDateString() === day.date.toDateString();
-                  // Solo mostrar indicador si hay turno Y personas seleccionadas
-                  const availabilityIndicator = (reservaData.turno && reservaData.personas) ? getAvailabilityIndicator(day.date) : null;
-                  
-                  return (
-                    <button
-                      key={day.dateString}
-                      onClick={() => setReservaData({ ...reservaData, fecha: day.date })}
-                      className={`${isSelected ? styles.dateButtonSelected : styles.dateButtonUnselected} 
-                        flex flex-col items-center py-3 relative`}
-                      type="button"
-                    >
-                      <span className="text-sm font-medium">{day.label}</span>
-                      <span className="text-xs opacity-75">{formatDayDisplay(day.date)}</span>
-                      {availabilityIndicator}
-                    </button>
-                  );
-                })}
-                <button
-                  onClick={() => {
-                    setShowDatePicker(true);
-                  }}
-                  className={`${styles.dateButtonUnselected} flex flex-col items-center py-3 relative`}
-                >
-                  <span className="text-sm font-medium">+ Fechas</span>
-                  <Calendar size={16} className="text-gray-400 mt-1" />
-                </button>
-              </div>
-              {/* Solo mostrar leyenda si hay turno Y personas seleccionadas */}
-              {(reservaData.turno && reservaData.personas) && (
-                  <div className="mt-3 text-center">
-                    <div className="flex items-center justify-center gap-4 text-xs text-white opacity-70">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-3 h-3 bg-green-400 bg-opacity-80 rounded-full shadow-sm"></span>
-                        <span>Disponible</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-3 h-3 bg-orange-400 bg-opacity-80 rounded-full shadow-sm"></span>
-                        <span>Poca disponibilidad</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-3 h-3 bg-red-400 bg-opacity-80 rounded-full shadow-sm"></span>
-                        <span>Sin lugar</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-            </div>
-          </div>
-
           {/* Botón para consultar disponibilidad */}
           <button 
             onClick={handleDateAndTurnoSubmit} 
             disabled={!reservaData.personas || !reservaData.fecha || !reservaData.turno}
-            className={styles.mainButton}
+            className={buttonStyles.primaryButton}
           >
             Consultar disponibilidad
           </button>
@@ -595,13 +577,13 @@ export const ClientView = ({
 
         {/* Modal del calendario completo */}
         {showDatePicker && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-black bg-opacity-90 backdrop-blur-sm rounded-xl p-4 border border-white border-opacity-20 shadow-2xl max-w-sm w-full mx-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl text-white font-medium">Seleccionar fecha</h2>
+          <div className={`${styles.fixed} ${styles.inset0} ${styles.bgBlack} ${styles.bgOpacity50} ${styles.flex} ${styles.itemsCenter} ${styles.justifyCenter} ${styles.p4} ${styles.z50}`}>
+            <div className={`${styles.bgBlack} ${styles.bgOpacity90} ${styles.backdropBlurSm} ${styles.roundedXl} ${styles.p4} ${styles.border} ${styles.borderWhite} ${styles.borderOpacity20} ${styles.shadow2xl} ${styles.maxWSm} ${styles.wFull} ${styles.mx4}`}>
+              <div className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter} ${styles.mb4}`}>
+                <h2 className={`${styles.textXl} ${styles.textWhite} ${styles.fontMedium}`}>Seleccionar fecha</h2>
                 <button 
                   onClick={() => setShowDatePicker(false)} 
-                  className="text-white hover:text-gray-300"
+                  className={`${styles.textWhite} ${styles.hoverTextGray300}`}
                 >
                   <X size={24} />
                 </button>
@@ -637,8 +619,6 @@ export const ClientView = ({
                   renderDayContents={(day, date) => (
                     <div className="relative flex items-center justify-center w-full h-full">
                       <span>{day}</span>
-                      {/* Solo mostrar indicador en calendario si hay turno Y personas seleccionadas */}
-                      {date && reservaData.turno && reservaData.personas && getCalendarAvailabilityIndicator(date)}
                     </div>
                   )}
                   inline
@@ -653,23 +633,7 @@ export const ClientView = ({
                 <p className="text-sm text-white opacity-70">
                   Los lunes permanecemos cerrados
                 </p>
-                {/* Solo mostrar leyenda en calendario si hay turno Y personas seleccionadas */}
-                {(reservaData.turno && reservaData.personas) && (
-                    <div className="flex items-center justify-center gap-4 text-xs text-white opacity-70">
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-3 h-3 bg-green-400 bg-opacity-80 rounded-full shadow-sm"></span>
-                        <span>Disponible</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-3 h-3 bg-orange-400 bg-opacity-80 rounded-full shadow-sm"></span>
-                        <span>Poca disponibilidad</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="inline-block w-3 h-3 bg-red-400 bg-opacity-80 rounded-full shadow-sm"></span>
-                        <span>Sin lugar</span>
-                      </div>
-                    </div>
-                 )}
+                
               </div>
             </div>
           </div>
@@ -721,7 +685,6 @@ export const ClientView = ({
         <div className={styles.container}>
           <button onClick={() => setCurrentScreen('horario')} className={styles.backButton}>
             <ChevronLeft size={20} />
-            Volver
           </button>
           <div className={styles.formContainer}>
             <h1 className={styles.title}>
@@ -761,46 +724,70 @@ export const ClientView = ({
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center">
                   <Phone size={16} className="mr-2" />Teléfono (WhatsApp)
+                  <button 
+                    type="button"
+                    onClick={() => setShowPhoneHelp(!showPhoneHelp)}
+                    className="ml-2 text-gray-400 hover:text-white"
+                  >
+                    <AlertCircle size={14} />
+                  </button>
                 </label>
+                
                 <div className="flex gap-2">
                   <select
                     value={reservaData.cliente.codigoPais || '54'}
-                    onChange={(e) => setReservaData({
-                      ...reservaData,
-                      cliente: {...reservaData.cliente, codigoPais: e.target.value}
-                    })}
-                    className={styles.select}
+                    onChange={(e) => {
+                      setReservaData({
+                        ...reservaData,
+                        cliente: {...reservaData.cliente, codigoPais: e.target.value}
+                      });
+                    }}
+                    className={styles.selectCountry}
                   >
-                    <option value="54">+54 (AR)</option>
-                    <option value="598">+598 (UY)</option>
-                    <option value="55">+55 (BR)</option>
-                    <option value="56">+56 (CL)</option>
-                    <option value="57">+57 (CO)</option>
-                    <option value="51">+51 (PE)</option>
-                    <option value="58">+58 (VE)</option>
-                    <option value="593">+593 (EC)</option>
-                    <option value="595">+595 (PY)</option>
-                    <option value="591">+591 (BO)</option>
+                    <option value="54">+54</option>
+                    <option value="598">+598</option>
+                    <option value="55">+55</option>
+                    <option value="1">+1</option>
                   </select>
                   <input
                     type="tel"
-                    value={reservaData.cliente.telefono}
+                    value={reservaData.cliente.telefono || ''}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 15) {
-                        setReservaData({
-                          ...reservaData,
-                          cliente: {...reservaData.cliente, telefono: value}
-                        });
-                      }
+                      const value = e.target.value;
+                      setReservaData({
+                        ...reservaData,
+                        cliente: {...reservaData.cliente, telefono: value}
+                      });
                     }}
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    className={styles.input}
-                    placeholder="221 1234567"
+                    className={`${styles.input} ${styles.phoneInputField} ${
+                      reservaData.cliente.telefono ? 
+                        (isValidPhoneNumber(`+${reservaData.cliente.codigoPais || '54'}${reservaData.cliente.telefono}`) ? styles.valid : styles.invalid)
+                        : ''
+                    }`}
+                    placeholder="Ingresa tu número de WhatsApp"
+                    style={{ flex: 1 }}
                   />
                 </div>
-                <p className="mt-1 text-sm text-gray-200">Ingresá el número sin el 0 inicial ni el 15</p>
+
+                {/* Ayuda contextual */}
+                {showPhoneHelp && (
+                  <div className="mt-2 p-3 bg-blue-500 bg-opacity-20 rounded-lg border border-blue-400 border-opacity-40">
+                    <p className="text-blue-300 text-sm font-medium mb-2">💡 Consejos:</p>
+                    <ul className="text-blue-200 text-xs space-y-1">
+                      <li>• Selecciona tu país en el selector</li>
+                      <li>• Ingresa solo números móviles con WhatsApp</li>
+                      <li>• Sin el 0 inicial ni el 15 para Argentina</li>
+                    </ul>
+                  </div>
+                )}
+
+                {/* Indicador de número válido */}
+                {reservaData.cliente.telefono && isValidPhoneNumber(`+${reservaData.cliente.codigoPais || '54'}${reservaData.cliente.telefono}`) && (
+                  <p className="mt-1 text-sm text-green-400 flex items-center">
+                    <Check size={14} className="mr-1" />
+                    Número válido para WhatsApp
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center">
@@ -818,7 +805,12 @@ export const ClientView = ({
               </div>
               <button
                 type="submit"
-                disabled={!reservaData.cliente.nombre || !reservaData.cliente.telefono || reservaData.cliente.telefono.length < 8}
+                disabled={
+                  !reservaData.cliente.nombre || 
+                  !reservaData.cliente.telefono || 
+                  !isValidPhoneNumber(`+${reservaData.cliente.codigoPais || '54'}${reservaData.cliente.telefono || ''}`) ||
+                  reservaData.cliente.nombre.length < 2
+                }
                 className={styles.mainButton}
               >
                 {reservaData.isModifying ? 'Guardar cambios' : (reservaData.willGoToWaitingList ? 'Agregar a lista de espera' : 'Confirmar reserva')}
@@ -886,7 +878,6 @@ export const ClientView = ({
               className={styles.mainButton}
             >
               <Check size={20} />
-              Volver al inicio
             </button>
           </div>
         </div>
@@ -961,7 +952,6 @@ export const ClientView = ({
               className={styles.mainButton}
             >
               <Check size={20} />
-              Volver al inicio
             </button>
           </div>
         </div>

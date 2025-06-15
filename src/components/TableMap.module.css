@@ -711,3 +711,54 @@
     display: none !important;
   }
 }
+
+/* Nuevos estilos para indicadores */
+.mapHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.indicators {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.walkInIndicator {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.lowCupos {
+  background-color: rgb(254, 226, 226);
+  color: rgb(153, 27, 27);
+}
+
+.mediumCupos {
+  background-color: rgb(254, 240, 138);
+  color: rgb(146, 64, 14);
+}
+
+.highCupos {
+  background-color: rgb(220, 252, 231);
+  color: rgb(21, 128, 61);
+}
+
+.assignmentIndicator {
+  background-color: rgb(219, 234, 254);
+  color: rgb(30, 64, 175);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.helpText {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: rgb(75, 85, 99);
+}
