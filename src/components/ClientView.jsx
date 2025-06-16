@@ -477,10 +477,9 @@ export const ClientView = ({
                     }
                   });
                 }} 
-                className={`${styles.flex} ${styles.itemsCenter} ${styles.gap2} ${styles.textWhite} ${styles.opacity70} ${styles.hoverOpacity100} ${styles.transitionAll} ${styles.bgBlack} ${styles.bgOpacity20} ${styles.px3} ${styles.py2} ${styles.roundedFull}`}
+                className={styles.backButtonStyled}
               >
-                <ChevronLeft size={16} />
-                <span className={`${styles.textSm} ${styles.fontMedium}`}>Volver</span>
+                <ChevronLeft size={18} />
               </button>
             </div>
             <div className={styles.spaceY2}>
