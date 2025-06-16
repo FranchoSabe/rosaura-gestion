@@ -202,7 +202,7 @@
   right: -13%;
   height: 130%;
   transform: translateY(-50%) translateX(3px);
-  background-image: url('/pincel2.svg');
+  /* background-image: url('/pincel2.svg'); - Archivo eliminado */
   background-size: 85% 85%;
   background-repeat: no-repeat;
   background-position: center;
@@ -312,7 +312,7 @@
   right: -13%;
   height: 120%;
   transform: translateY(-50%) translateX(3px);
-  background-image: url('/pincel2.svg');
+  /* background-image: url('/pincel2.svg'); - Archivo eliminado */
   background-size: 85% 85%;
   background-repeat: no-repeat;
   background-position: center;
@@ -358,7 +358,7 @@
   right: -13%;
   height: 120%;
   transform: translateY(-50%) translateX(3px);
-  background-image: url('/pincel2.svg');
+  /* background-image: url('/pincel2.svg'); - Archivo eliminado */
   background-size: 85% 85%;
   background-repeat: no-repeat;
   background-position: center;

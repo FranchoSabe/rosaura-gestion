@@ -58,7 +58,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/brush-strokes.svg#brush-main');
+  /* background-image: url('/brush-strokes.svg#brush-main'); - Archivo eliminado */
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;

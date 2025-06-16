@@ -25,29 +25,40 @@ const NotificationContainer = ({ notifications, onClose }) => {
 
   const getIcon = (type) => {
     switch (type) {
-      case 'success': return <CheckCircle size={20} className="text-green-600" />;
-      case 'error': return <XCircle size={20} className="text-red-600" />;
-      case 'warning': return <AlertTriangle size={20} className="text-yellow-600" />;
-      default: return <CheckCircle size={20} className="text-blue-600" />;
+      case 'success': return <CheckCircle size={20} style={{ color: '#059669' }} />;
+      case 'error': return <XCircle size={20} style={{ color: '#dc2626' }} />;
+      case 'warning': return <AlertTriangle size={20} style={{ color: '#d97706' }} />;
+      default: return <CheckCircle size={20} style={{ color: '#3b82f6' }} />;
     }
   };
 
-  const getStyles = (type) => {
+  const getNotificationClass = (type) => {
     switch (type) {
-      case 'success': return 'bg-green-50 border-green-200 text-green-800';
-      case 'error': return 'bg-red-50 border-red-200 text-red-800';
-      case 'warning': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-      default: return 'bg-blue-50 border-blue-200 text-blue-800';
+      case 'success': return `${styles.notification} ${styles.notificationSuccess}`;
+      case 'error': return `${styles.notification} ${styles.notificationError}`;
+      case 'warning': return `${styles.notification} ${styles.notificationWarning}`;
+      case 'info': return `${styles.notification} ${styles.notificationInfo}`;
+      default: return `${styles.notification} ${styles.notificationInfo}`;
     }
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className={styles.notificationContainer}>
       {notifications.map(notification => (
-        <div key={notification.id} className={`flex items-center gap-3 p-4 border rounded-lg shadow-lg ${getStyles(notification.type)}`}>
-          {getIcon(notification.type)}
-          <span className="font-medium">{notification.message}</span>
-          <button onClick={() => onClose(notification.id)} className="ml-auto">
+        <div key={notification.id} className={getNotificationClass(notification.type)}>
+          <div className={styles.notificationIcon}>
+            {getIcon(notification.type)}
+          </div>
+          <div className={styles.notificationContent}>
+            <div className={styles.notificationTitle}>
+              {notification.type === 'success' && 'Éxito'}
+              {notification.type === 'error' && 'Error'}
+              {notification.type === 'warning' && 'Advertencia'}
+              {notification.type === 'info' && 'Información'}
+            </div>
+            <div className={styles.notificationMessage}>{notification.message}</div>
+          </div>
+          <button onClick={() => onClose(notification.id)} className={styles.notificationClose}>
             <X size={16} />
           </button>
         </div>
@@ -59,16 +70,33 @@ const NotificationContainer = ({ notifications, onClose }) => {
 const ConfirmationModal = ({ confirmation, onConfirm, onCancel }) => {
   if (!confirmation) return null;
 
+  const getIcon = () => {
+    if (confirmation.title?.toLowerCase().includes('eliminar') || confirmation.title?.toLowerCase().includes('borrar')) {
+      return <XCircle size={24} style={{ color: '#dc2626' }} />;
+    }
+    if (confirmation.title?.toLowerCase().includes('lista negra')) {
+      return <ThumbsDown size={24} style={{ color: '#f59e0b' }} />;
+    }
+    return <AlertTriangle size={24} style={{ color: '#f59e0b' }} />;
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{confirmation.title}</h3>
-        <p className="text-gray-600 mb-6">{confirmation.message}</p>
-        <div className="flex justify-end gap-3">
-          <button onClick={onCancel} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+    <div className={styles.confirmationOverlay}>
+      <div className={styles.confirmationModal}>
+        <div className={styles.confirmationHeader}>
+          <div className={styles.confirmationIcon}>
+            {getIcon()}
+          </div>
+          <div className={styles.confirmationContent}>
+            <h3 className={styles.confirmationTitle}>{confirmation.title}</h3>
+            <p className={styles.confirmationMessage}>{confirmation.message}</p>
+          </div>
+        </div>
+        <div className={styles.confirmationActions}>
+          <button onClick={onCancel} className={styles.confirmationButtonCancel}>
             Cancelar
           </button>
-          <button onClick={onConfirm} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+          <button onClick={onConfirm} className={styles.confirmationButtonConfirm}>
             {confirmation.confirmText || 'Confirmar'}
           </button>
         </div>
@@ -81,30 +109,39 @@ const ConflictModal = ({ conflict, onForce, onCancel }) => {
   if (!conflict) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-        <div className="flex items-center mb-4">
-          <AlertTriangle className="text-yellow-500 mr-3" size={24} />
-          <h3 className="text-lg font-semibold text-gray-900">Conflicto de Mesa Detectado</h3>
-        </div>
-        <div className="mb-6">
-          <p className="text-gray-600 mb-3">{conflict.message}</p>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-sm text-yellow-800">
-              <strong>¿Deseas forzar la asignación?</strong> Esto reasignará la mesa y desasignará la reserva en conflicto.
-            </p>
+    <div className={styles.confirmationOverlay}>
+      <div className={styles.confirmationModal}>
+        <div className={styles.confirmationHeader}>
+          <div className={styles.confirmationIcon}>
+            <AlertTriangle size={24} style={{ color: '#f59e0b' }} />
+          </div>
+          <div className={styles.confirmationContent}>
+            <h3 className={styles.confirmationTitle}>Conflicto de Mesa Detectado</h3>
+            <p className={styles.confirmationMessage}>{conflict.message}</p>
+            <div style={{ 
+              backgroundColor: '#fef3c7', 
+              border: '1px solid #fbbf24', 
+              borderRadius: '0.5rem', 
+              padding: '0.75rem',
+              marginTop: '1rem'
+            }}>
+              <p style={{ fontSize: '0.875rem', color: '#92400e' }}>
+                <strong>¿Deseas forzar la asignación?</strong> Esto reasignará la mesa y desasignará la reserva en conflicto.
+              </p>
+            </div>
           </div>
         </div>
-        <div className="flex justify-end gap-3">
-          <button 
-            onClick={onCancel} 
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-          >
+        <div className={styles.confirmationActions}>
+          <button onClick={onCancel} className={styles.confirmationButtonCancel}>
             Cancelar
           </button>
           <button 
             onClick={onForce} 
-            className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+            style={{ 
+              backgroundColor: '#f59e0b',
+              color: 'white'
+            }}
+            className={styles.confirmationButton}
           >
             Forzar Asignación
           </button>
@@ -135,63 +172,76 @@ const TableReassignmentModal = ({ reassignmentInfo, reservationData, reservation
   const { icon, color, title } = getIconAndColor(reassignmentInfo.reason);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl">
-        <h3 className={`text-lg font-semibold mb-4 ${
-          color === 'amber' ? 'text-amber-600' : 
-          color === 'blue' ? 'text-blue-600' :
-          color === 'green' ? 'text-green-600' : 'text-gray-600'
-        }`}>
-          {icon} {title}
-        </h3>
-        
-        <div className="mb-6">
-          <p className="text-gray-700 mb-4">
-            {reassignmentInfo.message}
-          </p>
-
-          {reassignmentInfo.needsReassignment && (
-            <div className={`p-4 rounded-lg border ${
-              color === 'amber' ? 'bg-amber-50 border-amber-200' : 
-              color === 'blue' ? 'bg-blue-50 border-blue-200' :
-              color === 'green' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-            }`}>
-              <div className="space-y-2">
-                {reassignmentInfo.currentTable && (
-                  <div className="flex justify-between">
-                    <span className="font-medium">Mesa actual:</span>
-                    <span>Mesa {reassignmentInfo.currentTable} ({reassignmentInfo.currentCapacity || 0} personas)</span>
-                  </div>
-                )}
-                {reassignmentInfo.suggestedTable && (
-                  <div className="flex justify-between">
-                    <span className="font-medium">Nueva mesa:</span>
-                    <span>Mesa {reassignmentInfo.suggestedTable}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="font-medium">Cantidad de personas:</span>
-                  <span>{reassignmentInfo.newCapacity || 0} personas</span>
-                </div>
-              </div>
-            </div>
-          )}
+    <div className={styles.confirmationOverlay}>
+      <div className={styles.confirmationModal} style={{ maxWidth: '32rem' }}>
+        <div className={styles.confirmationHeader}>
+          <div className={styles.confirmationIcon}>
+            <span style={{ fontSize: '1.5rem' }}>{icon}</span>
+          </div>
+          <div className={styles.confirmationContent}>
+            <h3 className={styles.confirmationTitle} style={{
+              color: color === 'amber' ? '#d97706' : 
+                     color === 'blue' ? '#2563eb' :
+                     color === 'green' ? '#059669' : '#6b7280'
+            }}>
+              {title}
+            </h3>
+            <p className={styles.confirmationMessage}>
+              {reassignmentInfo.message}
+            </p>
+          </div>
         </div>
 
-        <div className="flex justify-end gap-3">
+        {reassignmentInfo.needsReassignment && (
+          <div style={{
+            padding: '1rem',
+            borderRadius: '0.5rem',
+            border: '1px solid',
+            backgroundColor: color === 'amber' ? '#fef3c7' : 
+                           color === 'blue' ? '#dbeafe' :
+                           color === 'green' ? '#dcfce7' : '#f9fafb',
+            borderColor: color === 'amber' ? '#fbbf24' : 
+                        color === 'blue' ? '#60a5fa' :
+                        color === 'green' ? '#86efac' : '#d1d5db',
+            margin: '1rem 1.5rem'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {reassignmentInfo.currentTable && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: '500' }}>Mesa actual:</span>
+                  <span>Mesa {reassignmentInfo.currentTable} ({reassignmentInfo.currentCapacity || 0} personas)</span>
+                </div>
+              )}
+              {reassignmentInfo.suggestedTable && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontWeight: '500' }}>Nueva mesa:</span>
+                  <span>Mesa {reassignmentInfo.suggestedTable}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: '500' }}>Cantidad de personas:</span>
+                <span>{reassignmentInfo.newCapacity || 0} personas</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={styles.confirmationActions}>
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className={styles.confirmationButtonCancel}
           >
             Cancelar
           </button>
           <button
             onClick={() => onConfirm(reservationData, reservationDetails, reassignmentInfo)}
-            className={`px-4 py-2 text-white rounded-lg transition-colors ${
-              color === 'amber' ? 'bg-amber-600 hover:bg-amber-700' : 
-              color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' :
-              color === 'green' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'
-            }`}
+            style={{
+              backgroundColor: color === 'amber' ? '#f59e0b' : 
+                              color === 'blue' ? '#3b82f6' :
+                              color === 'green' ? '#059669' : '#6b7280',
+              color: 'white'
+            }}
+            className={styles.confirmationButton}
           >
             {reassignmentInfo.needsReassignment ? 'Confirmar Cambios' : 'Continuar'}
           </button>
@@ -898,96 +948,96 @@ const ReservationsTable = ({
   }
 
   return (
-    <div className={`bg-white ${!compactMode ? 'rounded-lg shadow' : ''} overflow-hidden`}>
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead className={`bg-gray-50 ${compactMode ? 'text-xs' : ''}`}>
+    <div className={`${styles.modernTable} ${!compactMode ? 'rounded-lg shadow' : ''}`}>
+      <div style={{ overflowX: 'auto' }}>
+        <table className={styles.table}>
+          <thead className={styles.tableHeader}>
             <tr>
-              <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
+              <th className={styles.tableHeaderCell}>
                 Horario
               </th>
-              <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
+              <th className={styles.tableHeaderCell}>
                 Cliente
               </th>
-              <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
+              <th className={styles.tableHeaderCell}>
                 Personas
               </th>
-              <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
+              <th className={styles.tableHeaderCell}>
                 Comentarios
               </th>
               {tableAssignments && Object.keys(tableAssignments).length > 0 && (
-                <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
+                <th className={styles.tableHeaderCell}>
                   Mesa
                 </th>
               )}
-              <th className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${compactMode ? 'px-2 py-1' : ''}`}>
+              <th className={styles.tableHeaderCell}>
                 Acciones
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className={styles.tableBody}>
             {reservations
               .sort((a, b) => a.horario.localeCompare(b.horario))
               .map((reserva) => (
                 <tr 
                   key={`table-${reserva.id}`} 
-                  className={`hover:bg-gray-50 transition-colors ${
+                  className={`${styles.tableRow} ${
                     assignmentMode ? 'cursor-pointer' : ''
                   } ${
-                    selectedReservation?.id === reserva.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                    selectedReservation?.id === reserva.id ? styles.assignmentModeSelected : ''
                   }`}
                   onClick={() => assignmentMode && onReservationClick && onReservationClick(reserva)}
                 >
-                  <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
-                    <div className={`font-medium text-gray-900 ${compactMode ? 'text-xs' : ''}`}>
+                  <td className={styles.tableCell}>
+                    <div className={styles.clientName}>
                       {reserva.horario}
                     </div>
                   </td>
                   
-                  <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
+                  <td className={styles.tableCell}>
                     <div>
-                      <div className={`font-medium text-gray-900 ${compactMode ? 'text-xs' : ''}`}>
-                        {reserva.cliente.nombre}
+                      <div className={styles.clientName}>
+                        {reserva.cliente?.nombre || 'Sin nombre'}
                       </div>
-                      <div className={`text-gray-500 ${compactMode ? 'text-xs' : 'text-sm'}`}>
-                        {reserva.cliente.telefono}
+                      <div className={styles.clientPhone}>
+                        {reserva.cliente?.telefono || 'Sin teléfono'}
                       </div>
                     </div>
                   </td>
                   
-                  <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      reserva.personas <= 2 ? 'bg-green-100 text-green-800' :
-                      reserva.personas <= 4 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-orange-100 text-orange-800'
+                  <td className={styles.tableCell}>
+                    <span className={`${styles.modernBadge} ${
+                      reserva.personas <= 2 ? styles.personsBadgeGreen :
+                      reserva.personas <= 4 ? styles.personsBadgeYellow :
+                      styles.personsBadgeOrange
                     }`}>
                       {reserva.personas}
                     </span>
                   </td>
 
-                                     <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
-                     <div className="text-sm max-w-xs">
-                       {reserva.cliente.comentarios ? (
-                         <div className="text-xs text-gray-600 leading-relaxed italic">
-                           {reserva.cliente.comentarios.length > 60 
-                             ? `${reserva.cliente.comentarios.substring(0, 60)}...` 
-                             : reserva.cliente.comentarios
-                           }
-                         </div>
-                       ) : (
-                         <span className="text-gray-300 text-xs">—</span>
-                       )}
-                     </div>
-                   </td>
+                  <td className={styles.tableCell}>
+                    <div className={styles.clientStats}>
+                      {reserva.cliente?.comentarios ? (
+                        <div className={styles.waitingListComments}>
+                          {reserva.cliente.comentarios.length > 60 
+                            ? `${reserva.cliente.comentarios.substring(0, 60)}...` 
+                            : reserva.cliente.comentarios
+                          }
+                        </div>
+                      ) : (
+                        <span style={{ color: '#d1d5db', fontSize: '0.75rem' }}>—</span>
+                      )}
+                    </div>
+                  </td>
 
                   {tableAssignments && Object.keys(tableAssignments).length > 0 && (
-                    <td className={`px-3 py-2 whitespace-nowrap ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'}`}>
+                    <td className={styles.tableCell}>
                       {(reserva.mesaAsignada || tableAssignments[reserva.id]) && (
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        <span className={`${styles.modernBadge} ${
                           (() => {
                             const mesa = reserva.mesaAsignada || tableAssignments[reserva.id];
                             const isUnida = typeof mesa === 'string' && mesa.includes('+');
-                            return isUnida ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
+                            return isUnida ? styles.tableBadgeAmber : styles.tableBadgeBlue;
                           })()
                         }`}>
                           Mesa {(() => {
@@ -1002,8 +1052,8 @@ const ReservationsTable = ({
                     </td>
                   )}
                   
-                  <td className={`px-3 py-2 whitespace-nowrap text-right ${compactMode ? 'px-2 py-1 text-xs' : 'text-sm'} font-medium`}>
-                    <div className="flex items-center gap-1">
+                  <td className={styles.tableCell}>
+                    <div className={styles.modernActionContainer}>
                       {assignmentMode ? (
                         // Botón especial para modo asignación
                         <button
@@ -1011,10 +1061,10 @@ const ReservationsTable = ({
                             e.stopPropagation();
                             onReservationClick && onReservationClick(reserva);
                           }}
-                          className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                          className={`${styles.modernActionButton} ${
                             selectedReservation?.id === reserva.id
                               ? 'bg-blue-600 text-white'
-                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                              : styles.modernActionButton
                           }`}
                           title="Seleccionar para asignar mesa"
                         >
@@ -1024,13 +1074,13 @@ const ReservationsTable = ({
                         <>
                           {/* WhatsApp */}
                           <a
-                            href={`https://wa.me/${formatPhoneForWhatsApp(reserva.cliente.telefono)}?text=${encodeURIComponent(getWhatsAppMessage(reserva))}`}
+                            href={`https://wa.me/${formatPhoneForWhatsApp(reserva.cliente?.telefono || '')}?text=${encodeURIComponent(getWhatsAppMessage(reserva))}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-green-600 hover:text-green-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
+                            className={styles.modernActionButton}
                             title="Confirmar por WhatsApp"
                           >
-                            <MessageCircle size={compactMode ? 14 : 16} />
+                            <MessageCircle size={16} />
                           </a>
 
                           {/* Editar */}
@@ -1040,10 +1090,10 @@ const ReservationsTable = ({
                                 e.stopPropagation();
                                 setEditingReservation(reserva);
                               }}
-                              className={`text-blue-600 hover:text-blue-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
+                              className={styles.modernActionButton}
                               title="Editar reserva"
                             >
-                              <Edit2 size={compactMode ? 14 : 16} />
+                              <Edit2 size={16} />
                             </button>
                           )}
 
@@ -1053,10 +1103,10 @@ const ReservationsTable = ({
                               e.stopPropagation();
                               handleDelete(reserva);
                             }}
-                            className={`text-red-600 hover:text-red-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
+                            className={styles.modernActionButton}
                             title="Eliminar reserva"
                           >
-                            <Trash2 size={compactMode ? 14 : 16} />
+                            <Trash2 size={16} />
                           </button>
 
                           {/* Lista negra */}
@@ -1065,10 +1115,10 @@ const ReservationsTable = ({
                               e.stopPropagation();
                               handleBlacklist(reserva);
                             }}
-                            className={`text-gray-600 hover:text-gray-900 transition-colors ${compactMode ? 'p-1' : 'p-2'}`}
+                            className={styles.modernActionButton}
                             title="Agregar a lista negra"
                           >
-                            <ThumbsDown size={compactMode ? 14 : 16} />
+                            <ThumbsDown size={16} />
                           </button>
                         </>
                       )}
@@ -1698,36 +1748,36 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
   const withReservationsCount = clientsWithStats.filter(c => c.reservasPasadas > 0).length;
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Gestión de Clientes</h2>
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-600">
-              <span className="mr-4">Total: <strong>{consolidatedClients.length}</strong></span>
-              <span className="mr-4 text-blue-600">Con reservas: <strong>{withReservationsCount}</strong></span>
-              <span className="mr-4 text-green-600">Normales: <strong>{normalCount}</strong></span>
-              <span className="text-red-600">Lista negra: <strong>{blacklistedCount}</strong></span>
-            </div>
+    <div className={styles.clientsContainer}>
+      <div className={styles.clientsHeader}>
+        <h2 className={styles.clientsTitle}>Gestión de Clientes</h2>
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-600">
+            <span className="mr-4">Total: <strong>{consolidatedClients.length}</strong></span>
+            <span className="mr-4 text-blue-600">Con reservas: <strong>{withReservationsCount}</strong></span>
+            <span className="mr-4 text-green-600">Normales: <strong>{normalCount}</strong></span>
+            <span className="text-red-600">Lista negra: <strong>{blacklistedCount}</strong></span>
           </div>
         </div>
+      </div>
 
-        {/* Controles de búsqueda y filtros */}
-        <div className="mb-6 flex flex-wrap gap-4">
-          <div className="flex-1 min-w-64">
-            <input
-              type="text"
-              placeholder="Buscar por nombre o teléfono..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
+      {/* Controles de búsqueda y filtros */}
+      <div className={styles.clientsFilters}>
+        <div className="flex-1 min-w-64">
+          <input
+            type="text"
+            placeholder="Buscar por nombre o teléfono..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={styles.searchInput}
+          />
+        </div>
+        
+        <div className={styles.filtersRow}>
           <select
             value={filterBlacklist}
             onChange={(e) => setFilterBlacklist(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className={styles.filterSelect}
           >
             <option value="withReservations">Con reservas pasadas</option>
             <option value="all">Todos los clientes</option>
@@ -1738,7 +1788,7 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className={styles.filterSelect}
           >
             <option value="ultimaReserva">Más recientes primero</option>
             <option value="totalReservas">Por cantidad de reservas</option>
@@ -1748,7 +1798,7 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
         </div>
 
         {/* Lista de clientes */}
-        <div className="overflow-hidden rounded-lg border border-gray-200">
+        <div className={styles.clientsTableContainer}>
           {filteredAndSortedClients.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
               {searchTerm || filterBlacklist !== 'all' 
@@ -1758,38 +1808,38 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className={styles.clientsTable}>
+                <thead className={styles.clientsTableHeader}>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className={styles.clientsTableHeaderCell}>
                       Cliente
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className={styles.clientsTableHeaderCell}>
                       Teléfono
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className={styles.clientsTableHeaderCell}>
                       Reservas
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className={styles.clientsTableHeaderCell}>
                       Última Visita
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className={styles.clientsTableHeaderCell}>
                       Notas
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className={styles.clientsTableHeaderCell}>
                       Estado
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className={styles.clientsTableHeaderCell}>
                       Acciones
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className={styles.clientsTableBody}>
                   {filteredAndSortedClients.map((client) => (
-                    <tr key={client.id} className={client.listaNegra ? 'bg-red-50' : 'hover:bg-gray-50'}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                    <tr key={client.id} className={`${styles.clientsTableRow} ${client.listaNegra ? 'bg-red-50' : ''}`}>
+                      <td className={styles.clientsTableCell}>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{client.nombre}</div>
+                          <div className={styles.clientName}>{client.nombre}</div>
                           {client.comentarios && (
                             <div className="text-sm text-gray-500 truncate max-w-xs" title={client.comentarios}>
                               {client.comentarios}
@@ -1802,19 +1852,19 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className={styles.clientsTableCell}>
                         <a
                           href={`https://wa.me/${client.telefono.replace(/\D/g, '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-800 hover:underline"
+                          className={styles.clientPhone}
                         >
                           {client.telefono}
                         </a>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div>
-                          <div className="font-medium text-gray-900">
+                      <td className={styles.clientsTableCell}>
+                        <div className={styles.clientStats}>
+                          <div className={styles.clientName}>
                             Total: {client.totalReservas}
                           </div>
                           <div className="text-xs">
@@ -1827,10 +1877,10 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className={styles.clientsTableCell}>
                         {getLastReservationDate(client)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className={styles.clientsTableCell}>
                         <div className="text-sm max-w-xs">
                           {client.notasInternas ? (
                             <div className="text-xs text-gray-600 leading-relaxed italic">
@@ -1844,9 +1894,9 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className={styles.clientsTableCell}>
                         {client.listaNegra ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          <span className={styles.blacklistBadge}>
                             <ThumbsDown size={12} className="mr-1" />
                             Lista Negra
                           </span>
@@ -1857,14 +1907,14 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex flex-col gap-2">
+                      <td className={styles.clientsTableCell}>
+                        <div className={styles.clientActions}>
                           <button
                             onClick={() => handleToggleBlacklist(client)}
-                            className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                            className={`${styles.clientActionButton} ${
                               client.listaNegra
-                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                ? styles.actionButtonRemoveBlacklist
+                                : styles.actionButtonBlacklist
                             }`}
                           >
                             {client.listaNegra ? (
@@ -1881,7 +1931,7 @@ const ClientsView = ({ clients, reservations, onSetBlacklist, onUpdateClientNote
                           </button>
                           <button
                             onClick={() => handleEditNotes(client)}
-                            className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                            className={`${styles.clientActionButton} ${styles.actionButtonNotes}`}
                           >
                             <MessageCircle size={12} className="mr-1" />
                             Notas
@@ -1996,16 +2046,16 @@ const PanoramaView = ({ reservations, formatDate, onGoToDailyView, TurnoPreviewM
     };
   }, [reservations]);
 
-  const getOccupancyColor = (ocupacion) => {
-    if (ocupacion >= 90) return 'bg-red-500';
-    if (ocupacion >= 70) return 'bg-orange-500';
-    if (ocupacion >= 50) return 'bg-yellow-500';
-    if (ocupacion >= 30) return 'bg-blue-500';
-    return 'bg-gray-300';
+  const getOccupancyColorClass = (ocupacion) => {
+    if (ocupacion >= 90) return styles.occupancyFull;
+    if (ocupacion >= 70) return styles.occupancyVeryHigh;
+    if (ocupacion >= 50) return styles.occupancyHigh;
+    if (ocupacion >= 30) return styles.occupancyModerate;
+    return styles.occupancyLow;
   };
 
-  const getOccupancyTextColor = (ocupacion) => {
-    return ocupacion >= 30 ? 'text-white' : 'text-gray-700';
+  const getOccupancyTextClass = (ocupacion) => {
+    return ocupacion >= 30 ? styles.occupancyTextWhite : styles.occupancyTextLight;
   };
 
   // Función para abrir preview de turno
@@ -2026,52 +2076,52 @@ const PanoramaView = ({ reservations, formatDate, onGoToDailyView, TurnoPreviewM
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Panorama de Reservas - Próximos 7 Días</h2>
+    <div className={styles.panoramaContainer}>
+      <div className={styles.panoramaCard}>
+        <h2 className={styles.panoramaTitle}>Panorama de Reservas - Próximos 7 Días</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className={styles.panoramaGrid}>
           {next7Days.map((date, index) => {
             const stats = getDayStats(date);
             
             return (
-              <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <div className="text-center mb-4">
-                  <div className="text-lg font-semibold text-gray-900 capitalize">
+              <div key={index} className={styles.dayCard}>
+                <div className={styles.dayHeader}>
+                  <div className={styles.dayName}>
                     {stats.dayName}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className={styles.dayDate}>
                     {stats.dayNumber} {stats.month}
                   </div>
                 </div>
                 
-                <div className="space-y-3">
+                <div className={styles.shiftsContainer}>
                   {/* Mediodía */}
                   <div 
-                    className="bg-white rounded-lg p-3 border cursor-pointer hover:shadow-md transition-shadow"
+                    className={styles.shiftCard}
                     onClick={() => handleTurnoClick(stats.date, 'mediodia', stats.mediodiaReservations)}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1">
-                        <span className="text-amber-600">☀️</span>
-                        <span className="text-sm font-medium text-gray-700">Mediodía</span>
+                    <div className={styles.shiftHeader}>
+                      <div className={styles.shiftInfo}>
+                        <span className={styles.shiftIcon}>☀️</span>
+                        <span className={styles.shiftName}>Mediodía</span>
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className={styles.shiftReservations}>
                         {stats.mediodiaStats.reservations} reservas
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className={styles.occupancyBar}>
+                      <div className={styles.occupancyProgress}>
                         <div 
-                          className={`h-2 rounded-full ${getOccupancyColor(stats.mediodiaStats.ocupacion)} transition-all duration-300`}
+                          className={`${styles.occupancyFill} ${getOccupancyColorClass(stats.mediodiaStats.ocupacion)}`}
                           style={{ width: `${Math.min(stats.mediodiaStats.ocupacion, 100)}%` }}
                         ></div>
                       </div>
-                      <span className={`text-xs font-medium px-2 py-1 rounded ${getOccupancyColor(stats.mediodiaStats.ocupacion)} ${getOccupancyTextColor(stats.mediodiaStats.ocupacion)}`}>
+                      <span className={`${styles.occupancyBadge} ${getOccupancyColorClass(stats.mediodiaStats.ocupacion)} ${getOccupancyTextClass(stats.mediodiaStats.ocupacion)}`}>
                         {stats.mediodiaStats.ocupacion}%
                       </span>
                     </div>
-                    <div className="text-xs text-gray-600 mt-1">
+                    <div className={styles.occupancyPersons}>
                       {stats.mediodiaStats.personas} personas
                     </div>
                   </div>
@@ -2079,49 +2129,51 @@ const PanoramaView = ({ reservations, formatDate, onGoToDailyView, TurnoPreviewM
                   {/* Noche */}
                   {!stats.isDomingo ? (
                     <div 
-                      className="bg-white rounded-lg p-3 border cursor-pointer hover:shadow-md transition-shadow"
+                      className={styles.shiftCard}
                       onClick={() => handleTurnoClick(stats.date, 'noche', stats.nocheReservations)}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-blue-600">🌙</span>
-                          <span className="text-sm font-medium text-gray-700">Noche</span>
+                      <div className={styles.shiftHeader}>
+                        <div className={styles.shiftInfo}>
+                          <span className={styles.shiftIcon}>🌙</span>
+                          <span className={styles.shiftName}>Noche</span>
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className={styles.shiftReservations}>
                           {stats.nocheStats.reservations} reservas
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div className={styles.occupancyBar}>
+                        <div className={styles.occupancyProgress}>
                           <div 
-                            className={`h-2 rounded-full ${getOccupancyColor(stats.nocheStats.ocupacion)} transition-all duration-300`}
+                            className={`${styles.occupancyFill} ${getOccupancyColorClass(stats.nocheStats.ocupacion)}`}
                             style={{ width: `${Math.min(stats.nocheStats.ocupacion, 100)}%` }}
                           ></div>
                         </div>
-                        <span className={`text-xs font-medium px-2 py-1 rounded ${getOccupancyColor(stats.nocheStats.ocupacion)} ${getOccupancyTextColor(stats.nocheStats.ocupacion)}`}>
+                        <span className={`${styles.occupancyBadge} ${getOccupancyColorClass(stats.nocheStats.ocupacion)} ${getOccupancyTextClass(stats.nocheStats.ocupacion)}`}>
                           {stats.nocheStats.ocupacion}%
                         </span>
                       </div>
-                      <div className="text-xs text-gray-600 mt-1">
+                      <div className={styles.occupancyPersons}>
                         {stats.nocheStats.personas} personas
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-gray-100 rounded-lg p-3 border border-gray-300">
-                      <div className="flex items-center gap-1 mb-2">
-                        <span className="text-gray-400">🌙</span>
-                        <span className="text-sm font-medium text-gray-400">Noche</span>
+                    <div className={styles.shiftCardClosed}>
+                      <div className={styles.shiftHeader}>
+                        <div className={styles.shiftInfo}>
+                          <span className={styles.shiftIcon}>🌙</span>
+                          <span className={styles.shiftName}>Noche</span>
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-400">Cerrado los domingos</div>
+                      <div className={styles.occupancyPersons}>Cerrado los domingos</div>
                     </div>
                   )}
                 </div>
 
                 {/* Total del día */}
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-medium text-gray-700">Total del día:</span>
-                    <span className="text-xs font-bold text-gray-900">
+                <div className={styles.dayTotal}>
+                  <div className={styles.dayTotalContent}>
+                    <span className={styles.dayTotalLabel}>Total del día:</span>
+                    <span className={styles.dayTotalValue}>
                       {stats.totalReservations} reservas
                     </span>
                   </div>
@@ -2132,27 +2184,27 @@ const PanoramaView = ({ reservations, formatDate, onGoToDailyView, TurnoPreviewM
         </div>
 
         {/* Leyenda */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Leyenda de ocupación:</h3>
-          <div className="flex flex-wrap gap-4 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-300 rounded"></div>
+        <div className={styles.legend}>
+          <h3 className={styles.legendTitle}>Leyenda de ocupación:</h3>
+          <div className={styles.legendGrid}>
+            <div className={styles.legendItem}>
+              <div className={`${styles.legendColor} ${styles.occupancyLow}`}></div>
               <span>0-29% - Baja</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
+            <div className={styles.legendItem}>
+              <div className={`${styles.legendColor} ${styles.occupancyModerate}`}></div>
               <span>30-49% - Moderada</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+            <div className={styles.legendItem}>
+              <div className={`${styles.legendColor} ${styles.occupancyHigh}`}></div>
               <span>50-69% - Alta</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-orange-500 rounded"></div>
+            <div className={styles.legendItem}>
+              <div className={`${styles.legendColor} ${styles.occupancyVeryHigh}`}></div>
               <span>70-89% - Muy alta</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded"></div>
+            <div className={styles.legendItem}>
+              <div className={`${styles.legendColor} ${styles.occupancyFull}`}></div>
               <span>90%+ - Completa</span>
             </div>
           </div>
@@ -2976,33 +3028,33 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className={styles.todayContainer}>
       {/* Header con navegación de fechas y controles */}
-      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className={styles.todayHeader}>
+        <div className={styles.todayHeaderContent}>
+          <div className={styles.todayNavigation}>
             {/* Navegación de fechas */}
-            <div className="flex items-center gap-2">
+            <div className={styles.todayDateControls}>
               <button
                 onClick={goToPreviousDay}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                className={styles.navButton}
                 title="Día anterior"
               >
                 <ChevronLeft size={20} />
               </button>
               
-              <div className="relative">
+              <div className={styles.dateSelector}>
                 <button
                   onClick={() => setShowDatePicker(!showDatePicker)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-64"
+                  className={styles.dateSelectorButton}
                   title="Seleccionar fecha"
                 >
                   <Calendar size={16} />
-                  <span className="font-medium text-gray-900 truncate">{formatDate(selectedDate)}</span>
+                  <span className={styles.dateSelectorText}>{formatDate(selectedDate)}</span>
                 </button>
                 
                 {showDatePicker && (
-                  <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-lg shadow-lg border border-gray-200">
+                  <div className={styles.datePickerDropdown}>
                     <DatePicker
                       selected={new Date(selectedDate)}
                       onChange={handleDateSelect}
@@ -3023,7 +3075,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
               
               <button
                 onClick={goToNextDay}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"
+                className={styles.navButton}
                 title="Día siguiente"
               >
                 <ChevronRight size={20} />
@@ -3031,23 +3083,17 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
             </div>
             
             {/* Controles de Asignación */}
-            <div className="flex items-center gap-2">
+            <div className={styles.headerControlsGroup}>
               <button
                 onClick={() => setEditCuposMode(!editCuposMode)}
-                className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-                  editCuposMode
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={editCuposMode ? styles.editCuposButtonActive : styles.editCuposButtonInactive}
               >
                 {editCuposMode ? 'Modificando cupos' : 'Modificar cupos'}
               </button>
               
-
-              
               <button
                 onClick={handleFixTableAssignments}
-                className="px-3 py-1 rounded text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                className={styles.fixButton}
                 disabled={reservasTurnoSeleccionado.length === 0}
                 title="Corregir asignaciones incorrectas de reservas grandes"
               >
@@ -3056,18 +3102,14 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
               
               <button
                 onClick={handleManualAssignMode}
-                className={`px-3 py-1 rounded text-sm font-semibold transition-colors ${
-                  assignmentMode
-                    ? 'bg-purple-600 text-white hover:bg-purple-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={assignmentMode ? styles.manualAssignButtonActive : styles.manualAssignButtonInactive}
               >
                 {assignmentMode ? '✋ Modo Manual Activo' : '✋ Asignación Manual'}
               </button>
               
               <button
                 onClick={handleClearAssignments}
-                className="px-3 py-1 rounded text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className={styles.clearButton}
                 disabled={Object.keys(pendingAssignments).length === 0}
               >
                 🗑️ Limpiar Todo
@@ -3075,25 +3117,25 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className={styles.todayControls}>
             {/* Indicador de lista de espera */}
             {waitingList && waitingList.length > 0 && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-amber-100 border border-amber-300 rounded-lg text-amber-800">
+              <div className={styles.waitingIndicator}>
                 <Clock size={16} />
-                <span className="text-sm font-medium">
+                <span className={styles.waitingText}>
                   {waitingList.filter(w => w.status !== 'rejected').length} en espera
                 </span>
               </div>
             )}
 
             {/* Botones de turno */}
-            <div className="flex bg-white rounded-lg border border-gray-300 overflow-hidden">
+            <div className={styles.shiftSelector}>
               <button
                 onClick={() => setSelectedTurno('mediodia')}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                className={`${styles.shiftButton} ${
                   selectedTurno === 'mediodia'
-                    ? 'bg-amber-500 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? `${styles.shiftButtonActive} ${styles.shiftButtonMediodia}`
+                    : styles.shiftButtonInactive
                 }`}
               >
                 Mediodía
@@ -3101,12 +3143,12 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
               <button
                 onClick={() => setSelectedTurno('noche')}
                 disabled={new Date(selectedDate).getDay() === 0} // Desactivar en domingos
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                className={`${styles.shiftButton} ${
                   new Date(selectedDate).getDay() === 0 
-                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                    ? styles.controlButtonDisabled
                     : selectedTurno === 'noche'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? `${styles.shiftButtonActive} ${styles.shiftButtonNoche}`
+                    : styles.shiftButtonInactive
                 }`}
                 title={new Date(selectedDate).getDay() === 0 ? 'Los domingos no hay turno noche' : ''}
               >
@@ -3115,7 +3157,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
             </div>
 
             {/* Botón imprimir */}
-            <button onClick={handlePrint} className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+            <button onClick={handlePrint} className={styles.printButton}>
               <Printer size={16} />
               Imprimir
             </button>
@@ -3124,16 +3166,16 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
 
         {/* Información del modo asignación */}
         {assignmentMode && (
-          <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-            <div className="flex items-center gap-2 text-purple-800">
-              <span className="font-medium">✋ Modo Asignación Manual Activo</span>
+          <div className={`${styles.modeInfo} ${styles.modeInfoManual}`}>
+            <div className={styles.modeInfoContent}>
+              <span style={{ fontWeight: '500' }}>✋ Modo Asignación Manual Activo</span>
               {selectedReservation ? (
-                <span>- Reserva seleccionada: <strong>{selectedReservation.cliente.nombre}</strong> ({selectedReservation.personas} personas) - Haz click en una mesa</span>
+                <span>- Reserva seleccionada: <strong>{selectedReservation.cliente?.nombre}</strong> ({selectedReservation.personas} personas) - Haz click en una mesa</span>
               ) : (
                 <span>- Selecciona una reserva de la lista y luego haz click en una mesa del mapa</span>
               )}
             </div>
-            <div className="mt-2 text-xs text-purple-600">
+            <div className={styles.modeInfoSubtext}>
               💡 En modo manual tienes total libertad para asignar cualquier mesa disponible, incluso si no coincide con la lógica automática.
             </div>
           </div>
@@ -3141,9 +3183,9 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
         
         {/* Información de asignaciones automáticas */}
         {!assignmentMode && Object.keys(pendingAssignments).length > 0 && reservasTurnoSeleccionado.length > 0 && (
-          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 text-green-800">
-              <span className="font-medium">🤖 Asignación Automática Activa</span>
+          <div className={`${styles.modeInfo} ${styles.modeInfoAuto}`}>
+            <div className={styles.modeInfoContent}>
+              <span style={{ fontWeight: '500' }}>🤖 Asignación Automática Activa</span>
               <span>- Usa "🗑️ Limpiar Todo" + "✋ Asignación Manual" para control total</span>
             </div>
           </div>
@@ -3151,9 +3193,9 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
         
         {/* Información cuando no hay reservas */}
         {!assignmentMode && Object.keys(pendingAssignments).length === 0 && reservasTurnoSeleccionado.length === 0 && (
-          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="flex items-center gap-2 text-gray-600">
-              <span className="font-medium">📋 Sin reservas</span>
+          <div className={`${styles.modeInfo} ${styles.modeInfoEmpty}`}>
+            <div className={styles.modeInfoContent}>
+              <span style={{ fontWeight: '500' }}>📋 Sin reservas</span>
               <span>- Las nuevas reservas se asignarán automáticamente según la lógica inteligente</span>
             </div>
           </div>
@@ -3166,28 +3208,28 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
 
 
       {/* Contenido principal */}
-      <div className="flex">
+      <div className={styles.todayMainContent}>
         {/* Mapa de Mesas - Lado Izquierdo */}
-        <div className="w-1/2 p-6 border-r border-gray-200">
+        <div className={styles.mapSection}>
           {/* Controles de guardado - Solo mostrar si hay cambios pendientes */}
           {(Object.keys(pendingAssignments).length > 0 || !setsAreEqual(blockedTables, pendingBlockedTables)) && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-yellow-800">
+            <div className={styles.changesAlert}>
+              <div className={styles.changesAlertContent}>
+                <div className={styles.changesAlertText}>
                   <strong>Cambios pendientes:</strong> 
                   {Object.keys(pendingAssignments).length > 0 && ` ${Object.keys(pendingAssignments).length} asignaciones`}
                   {!setsAreEqual(blockedTables, pendingBlockedTables) && ` • Bloqueos modificados`}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className={styles.changesAlertButtons}>
                   <button
                     onClick={handleCancelChanges}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
+                    className={`${styles.alertButton} ${styles.alertButtonCancel}`}
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={handleSaveChanges}
-                    className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                    className={`${styles.alertButton} ${styles.alertButtonSave}`}
                   >
                     Guardar Cambios
                   </button>
@@ -3196,7 +3238,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
             </div>
           )}
           
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div style={{ backgroundColor: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}>
             <svg 
               viewBox="0 0 350 600" 
               className="w-full h-auto"
@@ -3391,28 +3433,28 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
         </div>
 
         {/* Barra Lateral Derecha - Tabla de Reservas */}
-        <div className="w-1/2 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
+        <div className={styles.reservationsSection}>
+          <div className={styles.reservationsHeader}>
+            <h3 className={styles.reservationsTitle}>
               {selectedTurno === 'mediodia' ? '☀️ Mediodía' : '🌙 Noche'} - {reservasPorTurno[selectedTurno].length} reservas
             </h3>
           </div>
 
           {/* Tabla de reservas moderna */}
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className={styles.reservationsTable}>
             {/* Indicador de modo asignación */}
             {assignmentMode && (
-              <div className="bg-blue-50 border-b border-blue-200 p-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-blue-800">
+              <div className={styles.assignmentModeAlert}>
+                <div className={styles.assignmentModeContent}>
+                  <div className={styles.assignmentModeText}>
                     <strong>Modo Asignación Activo</strong>
                     {selectedReservation && (
-                      <span className="ml-2">
+                      <span className={styles.assignmentModeSelected}>
                         • Seleccionado: {selectedReservation.cliente?.nombre} ({selectedReservation.personas} personas)
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-blue-600">
+                  <div className={styles.assignmentModeInstructions}>
                     Haz clic en una reserva para seleccionarla, luego en una mesa para asignarla
                   </div>
                 </div>
@@ -3451,35 +3493,35 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
       </div>
 
       {/* Info de impresión */}
-      <div className="hidden print:block p-4 text-center text-xs text-gray-500">
+      <div style={{ display: 'none' }} className="print:block p-4 text-center text-xs text-gray-500">
         Generado el {new Date().toLocaleString('es-AR')} | Rosaura - Sistema de Reservas
       </div>
 
       {/* Sección Lista de Espera - Movida al final */}
       {filteredWaitingList.length > 0 && (
-        <div className="mt-8 bg-white border border-amber-200 rounded-lg shadow-sm">
-          <div className="bg-amber-50 px-6 py-4 border-b border-amber-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-amber-800 flex items-center gap-2">
+        <div className={styles.waitingListContainer}>
+          <div className={styles.waitingListHeader}>
+            <div className={styles.waitingListHeaderContent}>
+              <h3 className={styles.waitingListTitle}>
                 ⏳ Lista de Espera 
                 {waitingListFilter === 'all' && `- ${formatDate(selectedDate)} - ${selectedTurno === 'mediodia' ? 'Mediodía' : 'Noche'}`}
                 {waitingListFilter === 'with-waiting' && '- Días con lista de espera'}
                 {waitingListFilter === 'only-waiting' && '- Solo reservas en espera'}
               </h3>
-              <span className="text-sm text-amber-600 font-medium">
+              <span className={styles.waitingListCount}>
                 {filteredWaitingList.length} {filteredWaitingList.length === 1 ? 'solicitud' : 'solicitudes'}
                 {searchWaitingTerm && ' (filtradas)'}
               </span>
             </div>
             
             {/* Filtros para lista de espera */}
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-amber-700 mb-1">Filtrar por lista de espera</label>
+            <div className={styles.waitingListFilters}>
+              <div className={styles.waitingListFilterGroup}>
+                <label className={styles.waitingListFilterLabel}>Filtrar por lista de espera</label>
                 <select
                   value={waitingListFilter}
                   onChange={(e) => setWaitingListFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-sm"
+                  className={styles.waitingListFilterSelect}
                 >
                   <option value="all">Todos los días</option>
                   <option value="with-waiting">Solo días con lista de espera</option>
@@ -3487,24 +3529,24 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-amber-700 mb-1">Buscar en lista de espera</label>
+              <div className={styles.waitingListFilterGroup}>
+                <label className={styles.waitingListFilterLabel}>Buscar en lista de espera</label>
                 <input
                   type="text"
                   placeholder="Nombre, teléfono..."
                   value={searchWaitingTerm}
                   onChange={(e) => setSearchWaitingTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
+                  className={styles.waitingListFilterInput}
                 />
               </div>
 
-              <div className="flex items-end">
+              <div className={styles.waitingListFilterActions}>
                 <button
                   onClick={() => {
                     setWaitingListFilter('all');
                     setSearchWaitingTerm('');
                   }}
-                  className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
+                  className={styles.waitingListClearButton}
                 >
                   Limpiar filtros
                 </button>
@@ -3512,8 +3554,8 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
             </div>
 
             {waitingListFilter !== 'all' && (
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-700">
+              <div className={styles.waitingListFilterInfo}>
+                <p className={styles.waitingListFilterInfoText}>
                   {waitingListFilter === 'with-waiting' && 'Mostrando solo días con lista de espera'}
                   {waitingListFilter === 'only-waiting' && 'Mostrando solo las reservas en lista de espera'}
                   {searchWaitingTerm && ` que coincidan con "${searchWaitingTerm}"`}
@@ -3522,19 +3564,19 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
             )}
           </div>
           
-          <div className="overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-amber-50 border-t border-amber-100">
+          <div className={styles.waitingListTable}>
+            <table className={styles.waitingListTableElement}>
+              <thead className={styles.waitingListTableHead}>
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Cliente</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Teléfono</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Personas</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Comentarios</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Estado</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-amber-800 uppercase tracking-wider">Acciones</th>
+                  <th className={styles.waitingListTableHeaderCell}>Cliente</th>
+                  <th className={styles.waitingListTableHeaderCell}>Teléfono</th>
+                  <th className={styles.waitingListTableHeaderCell}>Personas</th>
+                  <th className={styles.waitingListTableHeaderCell}>Comentarios</th>
+                  <th className={styles.waitingListTableHeaderCell}>Estado</th>
+                  <th className={styles.waitingListTableHeaderCell}>Acciones</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className={styles.waitingListTableBody}>
                 {filteredWaitingList.map((waiting) => {
                   // Obtener historial del cliente filtrando por nombre Y teléfono
                   const getClientHistory = (waiting) => {
@@ -3564,17 +3606,17 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
                   const clientHistory = getClientHistory(waiting);
                   
                   return (
-                    <tr key={waiting.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div>
-                          <div className="font-medium text-gray-900">{waiting.cliente.nombre}</div>
-                          <div className="text-xs text-gray-500">
+                    <tr key={waiting.id} className={styles.waitingListTableRow}>
+                      <td className={styles.waitingListTableCell}>
+                        <div className={styles.waitingListClientInfo}>
+                          <div className={styles.waitingListClientName}>{waiting.cliente.nombre}</div>
+                          <div className={styles.waitingListClientDetails}>
                             ID: {waiting.waitingId}
                             {clientHistory.length > 0 && (
-                              <span className="ml-2 text-blue-600">
+                              <span className={styles.waitingListClientHistory}>
                                 • {clientHistory.length} reserva{clientHistory.length !== 1 ? 's' : ''} 
                                 {clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length > 0 && (
-                                  <span className="font-medium">
+                                  <span className={styles.waitingListClientHistoryActive}>
                                     ({clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length} activa{clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length !== 1 ? 's' : ''})
                                   </span>
                                 )}
@@ -3583,44 +3625,44 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={styles.waitingListTableCell}>
                         <a 
                           href={`https://wa.me/${formatPhoneForWhatsApp(waiting.cliente.telefono)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-800 hover:underline text-sm"
+                          className={styles.waitingListPhoneLink}
                         >
                           {waiting.cliente.telefono}
                         </a>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {waiting.personas}
+                      <td className={styles.waitingListTableCell}>
+                        <span className={styles.waitingListPersons}>{waiting.personas}</span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500 max-w-xs truncate">
-                        {waiting.cliente.comentarios || '-'}
+                      <td className={styles.waitingListTableCell}>
+                        <span className={styles.waitingListComments}>{waiting.cliente.comentarios || '-'}</span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={styles.waitingListTableCell}>
                         {getWaitingStatusBadge(waiting)}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                      <td className={styles.waitingListTableCell}>
+                        <div className={styles.waitingListActions}>
                           <button
                             onClick={() => handleContactWaitingClient(waiting)}
-                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                            className={`${styles.modernActionButton} ${styles.success}`}
                             title="Contactar cliente"
                           >
                             <MessageCircle size={16} />
                           </button>
                           <button
                             onClick={() => handleQuickConfirmWaiting(waiting)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                            className={`${styles.modernActionButton} ${styles.primary}`}
                             title="Confirmar rápido"
                           >
                             <Check size={16} />
                           </button>
                           <button
                             onClick={() => handleRejectWaiting(waiting)}
-                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                            className={`${styles.modernActionButton} ${styles.danger}`}
                             title="Rechazar"
                           >
                             <X size={16} />
@@ -3956,30 +3998,36 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
       onClose();
     };
 
+    const handleOverlayClick = (e) => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    };
+
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-auto">
+      <div className={styles.modalOverlay} onClick={handleOverlayClick}>
+        <div className={styles.modalContainer}>
           {/* Header */}
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900">
+          <div className={styles.modalHeader}>
+            <div className={styles.modalHeaderContent}>
+              <h3>
                 Preview - {preview.dateLabel}
               </h3>
-              <p className="text-sm text-gray-600">
+              <p>
                 {preview.turno === 'mediodia' ? '☀️ Mediodía' : '🌙 Noche'} • {preview.reservas.length} reservas
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className={styles.modalHeaderActions}>
               <button
                 onClick={handleGoToDaily}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                className={styles.modalGoToDailyButton}
               >
                 <Calendar size={16} />
                 Ir a Gestión Diaria
               </button>
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className={styles.modalCloseButton}
               >
                 <X size={24} />
               </button>
@@ -3987,69 +4035,69 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
           </div>
 
           {/* Contenido */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className={styles.modalContent}>
+            <div className={styles.modalGrid}>
               {/* Mapa de Mesas - Preview Compacto */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Disposición de Mesas</h4>
-                <div className="bg-white rounded-lg p-4 border">
+              <div className={styles.modalSection}>
+                <h4 className={styles.modalSectionTitle}>Disposición de Mesas</h4>
+                <div className={styles.modalMapContainer}>
                   <RestaurantTableMap 
                     reservas={preview.reservas} 
                     fecha={preview.date}
                     turno={preview.turno}
                     previewMode={true}
-                    className="w-full h-auto max-w-md mx-auto"
+                    className={styles.modalMapSvg}
                     useRealAssignments={true}
                   />
                 </div>
               </div>
 
               {/* Lista de Reservas */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">
+              <div className={styles.modalSection}>
+                <h4 className={styles.modalSectionTitle}>
                   Reservas del Turno ({preview.reservas.length})
                 </h4>
                 
                 {preview.reservas.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Clock size={48} className="mx-auto mb-2 opacity-50" />
+                  <div className={styles.modalEmptyState}>
+                    <Clock size={48} className={styles.modalEmptyStateIcon} />
                     <p>No hay reservas para este turno</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                  <div className={styles.modalReservationsList}>
                     {preview.reservas
                       .sort((a, b) => a.horario.localeCompare(b.horario))
                       .map((reserva) => (
-                      <div key={`preview-${reserva.id}`} className="bg-white rounded-lg p-3 border border-gray-200">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium">
+                      <div key={`preview-${reserva.id}`} className={styles.modalReservationCard}>
+                        <div className={styles.modalReservationHeader}>
+                          <div className={styles.modalReservationContent}>
+                            <div className={styles.modalReservationBadges}>
+                              <span className={styles.modalTimeBadge}>
                                 {reserva.horario}
                               </span>
                               {(reserva.mesaAsignada || (tableAssignments && tableAssignments[reserva.id])) && (
-                                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                                <span className={styles.modalTableBadge}>
                                   Mesa {reserva.mesaAsignada || (tableAssignments && tableAssignments[reserva.id])}
                                 </span>
                               )}
                             </div>
-                            <div className="font-medium text-gray-900">
+                            <div className={styles.modalReservationName}>
                               {reserva.cliente?.nombre || 'Sin nombre'}
                             </div>
-                            <div className="text-sm text-gray-600">
-                              <span className="inline-flex items-center gap-1">
+                            <div className={styles.modalReservationDetails}>
+                              <span className={styles.modalReservationDetail}>
                                 <Users size={14} />
                                 {reserva.personas} personas
                               </span>
                               {reserva.cliente?.telefono && (
-                                <span className="ml-3 inline-flex items-center gap-1">
+                                <span className={styles.modalReservationDetail}>
                                   <Phone size={14} />
                                   {reserva.cliente.telefono}
                                 </span>
                               )}
                             </div>
                             {reserva.comentarios && (
-                              <div className="text-xs text-gray-500 mt-1 italic">
+                              <div className={styles.modalReservationComments}>
                                 "{reserva.comentarios}"
                               </div>
                             )}
@@ -4063,20 +4111,20 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
             </div>
 
             {/* Footer con resumen */}
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
-                <div className="bg-blue-100 border border-blue-200 rounded-lg p-4 shadow-sm">
-                  <div className="text-3xl font-bold text-blue-700">{preview.reservas.length}</div>
-                  <div className="text-sm font-medium text-blue-600 mt-1">Reservas</div>
+            <div className={styles.modalFooter}>
+              <div className={styles.modalStatsGrid}>
+                <div className={`${styles.modalStatCard} ${styles.modalStatCardBlue}`}>
+                  <div className={`${styles.modalStatNumber} ${styles.modalStatNumberBlue}`}>{preview.reservas.length}</div>
+                  <div className={`${styles.modalStatLabel} ${styles.modalStatLabelBlue}`}>Reservas</div>
                 </div>
-                <div className="bg-green-100 border border-green-200 rounded-lg p-4 shadow-sm">
-                  <div className="text-3xl font-bold text-green-700">
+                <div className={`${styles.modalStatCard} ${styles.modalStatCardGreen}`}>
+                  <div className={`${styles.modalStatNumber} ${styles.modalStatNumberGreen}`}>
                     {preview.reservas.reduce((sum, r) => sum + r.personas, 0)}
                   </div>
-                  <div className="text-sm font-medium text-green-600 mt-1">Personas</div>
+                  <div className={`${styles.modalStatLabel} ${styles.modalStatLabelGreen}`}>Personas</div>
                 </div>
-                <div className="bg-yellow-100 border border-yellow-200 rounded-lg p-4 shadow-sm">
-                  <div className="text-3xl font-bold text-yellow-700">
+                <div className={`${styles.modalStatCard} ${styles.modalStatCardYellow}`}>
+                  <div className={`${styles.modalStatNumber} ${styles.modalStatNumberYellow}`}>
                     {(() => {
                       const isCurrentView = preview.date === currentDate && preview.turno === currentTurno;
                       if (isCurrentView && tableAssignments) {
@@ -4087,10 +4135,10 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
                       }
                     })()}
                   </div>
-                  <div className="text-sm font-medium text-yellow-600 mt-1">Mesas Ocupadas</div>
+                  <div className={`${styles.modalStatLabel} ${styles.modalStatLabelYellow}`}>Mesas Ocupadas</div>
                 </div>
-                <div className="bg-orange-100 border border-orange-200 rounded-lg p-4 shadow-sm">
-                  <div className="text-3xl font-bold text-orange-700">
+                <div className={`${styles.modalStatCard} ${styles.modalStatCardOrange}`}>
+                  <div className={`${styles.modalStatNumber} ${styles.modalStatNumberOrange}`}>
                     {(() => {
                       // Calcular cupos walk-in dinámicos
                       const isCurrentView = preview.date === currentDate && preview.turno === currentTurno;
@@ -4104,13 +4152,13 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
                       }, 0);
                     })()}
                   </div>
-                  <div className="text-sm font-medium text-orange-600 mt-1">Cupos Walk-in</div>
+                  <div className={`${styles.modalStatLabel} ${styles.modalStatLabelOrange}`}>Cupos Walk-in</div>
                 </div>
-                <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 shadow-sm">
-                  <div className="text-3xl font-bold text-purple-700">
+                <div className={`${styles.modalStatCard} ${styles.modalStatCardPurple}`}>
+                  <div className={`${styles.modalStatNumber} ${styles.modalStatNumberPurple}`}>
                     {Math.round((preview.reservas.reduce((sum, r) => sum + r.personas, 0) / 36) * 100)}%
                   </div>
-                  <div className="text-sm font-medium text-purple-600 mt-1">Ocupación</div>
+                  <div className={`${styles.modalStatLabel} ${styles.modalStatLabelPurple}`}>Ocupación</div>
                 </div>
               </div>
             </div>
@@ -4134,7 +4182,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
           <div className={styles.userSection}>
             <button 
               onClick={() => setShowCreateReservationModal(true)} 
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 mr-4"
+              className={styles.createReservationButton}
             >
               <Users size={16} />
               Crear Reserva
