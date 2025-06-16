@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { AdminView } from './components/AdminView';
 import { ClientView } from './components/ClientView';
 import { LoginView } from './components/LoginView';
-import BrushDemo from './components/BrushDemo';
 import { 
   addReservation, 
   addClient, 

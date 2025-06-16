@@ -30,7 +30,6 @@
   right: -13%;
   height: 130%;
   transform: translateY(-50%) translateX(3px);
-  /* background-image: url('/pincel2.svg'); - Archivo eliminado */
   background-size: 85% 85%;
   background-repeat: no-repeat;
   background-position: center;
@@ -112,6 +111,22 @@
 
 .reserveButton:hover::before {
   left: 0;
+}
+
+/* Efecto al tocar en móvil */
+.reserveButton:active {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+  color: black;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease-out;
+  box-shadow: 
+    0 12px 40px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.reserveButton:active::before {
+  left: 0;
+  transition: left 0.3s ease-out;
 }
 
 .reserveButton:disabled {
@@ -207,6 +222,22 @@
   left: 0;
 }
 
+/* Efecto al tocar en móvil */
+.whatsappButton:active {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+  color: black;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease-out;
+  box-shadow: 
+    0 12px 40px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.whatsappButton:active::before {
+  left: 0;
+  transition: left 0.3s ease-out;
+}
+
 /* Botón de gestión */
 .manageButton {
   width: 100%;
@@ -257,6 +288,22 @@
 
 .manageButton:hover::before {
   left: 0;
+}
+
+/* Efecto al tocar en móvil */
+.manageButton:active {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+  color: black;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease-out;
+  box-shadow: 
+    0 12px 40px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.manageButton:active::before {
+  left: 0;
+  transition: left 0.3s ease-out;
 }
 
 /* Botones de selección - Turno */
@@ -476,6 +523,15 @@
   color: black;
 }
 
+/* Efectos para iconos al tocar en móvil */
+.reserveButton:active svg,
+.whatsappButton:active svg,
+.manageButton:active svg {
+  transform: scale(1.1);
+  color: black;
+  transition: transform 0.2s ease, color 0.3s ease-out;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .primaryButton, .whatsappButton, .manageButton {
@@ -497,5 +553,42 @@
   .dateButtonSelected, .dateButtonUnselected {
     padding: 0.625rem;
     min-height: 56px;
+  }
+}
+
+/* Mejoras específicas para dispositivos táctiles */
+@media (hover: none) and (pointer: coarse) {
+  /* En dispositivos sin hover (móviles), mejorar el feedback táctil */
+  .reserveButton:active,
+  .whatsappButton:active,
+  .manageButton:active {
+    transform: scale(0.98);
+    transition: all 0.1s ease-out;
+  }
+  
+  /* Hacer que la barra se llene más rápido en dispositivos táctiles */
+  .reserveButton:active::before,
+  .whatsappButton:active::before,
+  .manageButton:active::before {
+    transition: left 0.2s ease-out;
+  }
+  
+  /* Mantener el efecto un poco más tiempo en táctil */
+  .reserveButton:focus,
+  .whatsappButton:focus,
+  .manageButton:focus {
+    color: black;
+  }
+  
+  .reserveButton:focus::before,
+  .whatsappButton:focus::before,
+  .manageButton:focus::before {
+    left: 0;
+  }
+  
+  .reserveButton:focus svg,
+  .whatsappButton:focus svg,
+  .manageButton:focus svg {
+    color: black;
   }
 } 
