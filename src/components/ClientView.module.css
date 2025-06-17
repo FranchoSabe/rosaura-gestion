@@ -2536,3 +2536,594 @@ label svg {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
+
+/* Estilos específicos para pantallas mejoradas */
+
+/* Contenedor principal para pantallas mejoradas */
+.enhancedScreenContainer {
+  padding: 2rem 1.5rem;
+  max-width: 34rem;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3rem;
+}
+
+/* Sección de fecha mejorada */
+.enhancedDateSection {
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.enhancedSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.enhancedSectionTitle {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Grid de fechas mejorado */
+.enhancedDateGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.enhancedDateButton {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.25rem;
+  color: white;
+  padding: 2rem 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 6rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  position: relative;
+  overflow: hidden;
+}
+
+.enhancedDateButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 0;
+}
+
+.enhancedDateButton:hover::before {
+  left: 0;
+}
+
+.enhancedDateButton:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+}
+
+.enhancedDateButtonSelected {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.3) 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+}
+
+.enhancedDateButtonSelected::before {
+  left: 0;
+}
+
+.enhancedDateButtonContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.enhancedDateLabel {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.enhancedDateDay {
+  font-size: 1rem;
+  opacity: 0.8;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.enhancedMoreDatesButton {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.25rem;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 1.5rem 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 5rem;
+  border-style: dashed;
+}
+
+.enhancedMoreDatesButton:hover {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Sección de turno mejorada */
+.enhancedTurnoSection {
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.enhancedTurnoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.enhancedTurnoButton {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.25rem;
+  color: white;
+  padding: 2rem 1.5rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 6rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  font-size: 1.375rem;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+.enhancedTurnoButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 0;
+}
+
+.enhancedTurnoButton:hover::before {
+  left: 0;
+}
+
+.enhancedTurnoButton:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+}
+
+.enhancedTurnoButtonSelected {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.3) 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+}
+
+.enhancedTurnoButtonSelected::before {
+  left: 0;
+}
+
+.enhancedTurnoButtonContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Botón continuar mejorado */
+.enhancedContinueButton {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 1.5rem;
+  color: white;
+  font-weight: 700;
+  padding: 1.75rem 2rem;
+  font-size: 1.375rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 4rem;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  margin-top: 2rem;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.enhancedContinueButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: white;
+  transition: left 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 0;
+}
+
+.enhancedContinueButton:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-3px);
+  color: black;
+  box-shadow: 0 16px 50px 0 rgba(0, 0, 0, 0.5);
+}
+
+.enhancedContinueButton:hover::before {
+  left: 0;
+}
+
+.enhancedContinueButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.enhancedContinueButton:disabled::before {
+  left: -100%;
+}
+
+.enhancedContinueButtonContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Pantalla de personas mejorada */
+.enhancedPersonasSection {
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.enhancedContextInfo {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  margin-bottom: 2.5rem;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.enhancedContextTitle {
+  color: white;
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.enhancedContextSubtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.enhancedPersonasGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.enhancedPersonasButton {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  color: white;
+  padding: 2rem 1rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 5rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  font-size: 1.75rem;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+}
+
+.enhancedPersonasButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  transition: left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 0;
+}
+
+.enhancedPersonasButton:hover::before {
+  left: 0;
+}
+
+.enhancedPersonasButton:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+}
+
+.enhancedPersonasButtonSelected {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.3) 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+}
+
+.enhancedPersonasButtonSelected::before {
+  left: 0;
+}
+
+.enhancedPersonasButtonContent {
+  position: relative;
+  z-index: 1;
+}
+
+.enhancedSevenPlusButton {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.4) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  color: white;
+  padding: 1.25rem 1.5rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 6px 24px 0 rgba(0, 0, 0, 0.25);
+  font-size: 1.125rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.enhancedSevenPlusButton:hover {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* Responsive para pantallas mejoradas */
+@media (max-width: 640px) {
+  .enhancedScreenContainer {
+    padding: 1.5rem 1rem;
+    gap: 2.5rem;
+  }
+
+  .enhancedSectionTitle {
+    font-size: 1.25rem;
+  }
+
+  .enhancedDateGrid {
+    gap: 0.75rem;
+  }
+
+  .enhancedDateButton,
+  .enhancedMoreDatesButton {
+    padding: 1.25rem 0.75rem;
+    min-height: 4.5rem;
+  }
+
+  .enhancedTurnoButton {
+    padding: 1.5rem 1rem;
+    font-size: 1.125rem;
+    min-height: 5rem;
+  }
+
+  .enhancedContinueButton {
+    padding: 1.5rem 1.5rem;
+    font-size: 1.25rem;
+    min-height: 3.5rem;
+  }
+
+  .enhancedContextInfo {
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .enhancedContextTitle {
+    font-size: 1.25rem;
+  }
+
+  .enhancedPersonasGrid {
+    gap: 0.75rem;
+  }
+
+  .enhancedPersonasButton {
+    padding: 1.5rem 0.75rem;
+    min-height: 4rem;
+    font-size: 1.375rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .enhancedScreenContainer {
+    padding: 1rem 0.75rem;
+    gap: 2rem;
+  }
+
+  .enhancedDateButton,
+  .enhancedMoreDatesButton {
+    padding: 1rem 0.5rem;
+    min-height: 4rem;
+  }
+
+  .enhancedDateLabel {
+    font-size: 1rem;
+  }
+
+  .enhancedTurnoButton {
+    padding: 1.25rem 0.75rem;
+    font-size: 1rem;
+    min-height: 4.5rem;
+  }
+
+  .enhancedPersonasButton {
+    padding: 1.25rem 0.5rem;
+    min-height: 3.5rem;
+    font-size: 1.25rem;
+  }
+}
+
+/* ------------------ Slider de fechas ------------------ */
+.dateSliderWrapper {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.dateSlider {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 0 4rem; /* más espacio para flechas */
+  scroll-snap-type: x mandatory;
+  align-items: center;
+}
+
+.dateSlider::-webkit-scrollbar {
+  display: none; /* ocultar scrollbar */
+}
+
+.sliderButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.3);
+  backdrop-filter: blur(6px);
+  color: white;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.3s;
+  pointer-events: auto;
+}
+
+.sliderButton:hover {
+  background: rgba(0,0,0,0.7);
+}
+
+.sliderPrev {
+  left: 0.75rem;
+}
+
+.sliderNext {
+  right: 0.75rem;
+}
+
+.sliderDay {
+  flex: 0 0 6rem;
+  height: 6rem;
+  background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 1.25rem;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  gap: 0.25rem;
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.3s, border 0.3s;
+  scroll-snap-align: center;
+}
+
+.sliderDay span:nth-child(1){
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.sliderDaySelected{
+  flex: 0 0 8rem;
+  height: 8rem;
+  border-color: rgba(255,255,255,0.5);
+  z-index: 1;
+  transform: scale(1);
+}
+
+.sliderDaySelected span:nth-child(1){
+  font-size:1.25rem;
+}
+
+.sliderDaySelected span:nth-child(2){
+  font-size:1.125rem;
+}
+
+@media(max-width:640px){
+  .enhancedScreenContainer{
+    max-width: 100%;
+  }
+  .dateSlider{
+    padding:0 3.5rem;
+  }
+  .sliderDay{
+    flex:0 0 5rem;
+    height:5rem;
+  }
+  .sliderDaySelected{
+    flex:0 0 6rem;
+    height:6rem;
+  }
+}

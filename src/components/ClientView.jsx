@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, Clock, Users, Phone, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, FileSearch, X, Edit2, Feather, Heart } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Calendar, Clock, Users, Phone, MessageCircle, ChevronLeft, Check, AlertCircle, User, Sun, Moon, FileSearch, X, Edit2, Feather, Heart, ChevronRight } from 'lucide-react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -139,6 +139,8 @@ export const ClientView = ({
   // Estado para ayuda del teléfono
   const [showPhoneHelp, setShowPhoneHelp] = useState(false);
 
+  const sliderRef = useRef(null);
+
   const handleSearch = async (searchData) => {
     const result = await handleSearchReservation(searchData);
     if (result) {
@@ -229,7 +231,7 @@ export const ClientView = ({
     if (dayIndex === 0) return 'Hoy';
     if (dayIndex === 1) return 'Mañana';
     
-    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     return dayNames[date.getDay()];
   };
 
@@ -353,6 +355,26 @@ export const ClientView = ({
     }
   };
 
+  // Seleccionar fecha predeterminada al montar la pantalla
+  useEffect(() => {
+    if (!reservaData.fecha) {
+      const todayLocal = new Date();
+      todayLocal.setHours(0, 0, 0, 0);
+      setReservaData(prev => ({ ...prev, fecha: todayLocal }));
+    }
+  }, []);
+
+  useEffect(() => {
+    // center scroll when fecha cambia
+    if (sliderRef.current && reservaData.fecha) {
+      const children = Array.from(sliderRef.current.children);
+      const sel = children.find(ch=> new Date(ch.getAttribute('data-date'))?.toDateString() === new Date(reservaData.fecha).toDateString());
+      if(sel){
+        sel.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+      }
+    }
+  }, [reservaData.fecha]);
+
   if (currentScreen === 'landing') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
@@ -378,7 +400,7 @@ export const ClientView = ({
             </div>
             
             <div className={`${styles.buttonContainer} ${styles.spaceY4} ${styles.mb4}`}>
-              <button onClick={() => setCurrentScreen('fecha-personas')} className={buttonStyles.reserveButton}>
+              <button onClick={() => setCurrentScreen('fecha-turno')} className={buttonStyles.reserveButton}>
                 <Calendar size={20} />
                 Hacer una reserva
               </button>
@@ -437,6 +459,294 @@ export const ClientView = ({
     );
   }
 
+  // Nueva pantalla: solo fecha y turno
+  if (currentScreen === 'fecha-turno') {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 1);
+    
+    const weekDays = generateWeekDays();
+    
+    const isDayDisabled = (date) => {
+      if (date.getDay() === 1) return true; // Lunes cerrado
+      if (date > maxDate) return true;
+      if (date < today) return true;
+      return false;
+    };
+    
+    return (
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+        <div className={styles.enhancedScreenContainer}>
+          {/* Selección de fecha */}
+          <div className={styles.enhancedDateSection}>
+            <div className={styles.enhancedSectionHeader}>
+              <div className={styles.enhancedSectionTitle}>
+                <Calendar size={24} />
+                Fecha
+              </div>
+              <button 
+                onClick={() => {
+                  setCurrentScreen('landing');
+                  setReservaData({
+                    fecha: '',
+                    personas: '',
+                    turno: '',
+                    horario: '',
+                    cliente: { 
+                      nombre: '', 
+                      telefono: '', 
+                      codigoPais: '54',
+                      comentarios: '' 
+                    }
+                  });
+                }} 
+                className={styles.backButtonStyled}
+              >
+                <ChevronLeft size={18} />
+              </button>
+            </div>
+            
+            {/* Slider fechas */}
+            <div className={styles.dateSliderWrapper}>
+              <button
+                className={`${styles.sliderButton} ${styles.sliderPrev}`}
+                onClick={() => {
+                  // scroll y cambiar fecha
+                  if (sliderRef.current) sliderRef.current.scrollBy({left: -130, behavior:'smooth'});
+                  if (reservaData.fecha) {
+                    const newDate = new Date(reservaData.fecha);
+                    newDate.setDate(newDate.getDate() - 1);
+                    const limitDate = new Date();
+                    limitDate.setHours(0,0,0,0);
+                    if (newDate >= limitDate) {
+                      setReservaData(prev => ({ ...prev, fecha: newDate }));
+                    }
+                  }
+                }}
+              >
+                <ChevronLeft size={20}/>
+              </button>
+              <div className={styles.dateSlider} ref={sliderRef}>
+                {Array.from({length: 31}, (_, i) => {
+                  const dateObj = new Date();
+                  dateObj.setDate(dateObj.getDate()+i);
+                  const label = getDayLabel(dateObj, i);
+                  const isSelected = reservaData.fecha && new Date(reservaData.fecha).toDateString() === dateObj.toDateString();
+                  return (
+                    <button
+                      key={dateObj.toDateString()}
+                      data-date={dateObj.toDateString()}
+                      onClick={(e) => {
+                        setReservaData({...reservaData, fecha: dateObj});
+                        e.currentTarget.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+                      }}
+                      className={`${styles.sliderDay} ${isSelected ? styles.sliderDaySelected : ''}`}
+                      type="button"
+                    >
+                      <span>{label}</span>
+                      <span>{formatDayDisplay(dateObj)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                className={`${styles.sliderButton} ${styles.sliderNext}`}
+                onClick={() => {
+                  if (sliderRef.current) sliderRef.current.scrollBy({left: 130, behavior:'smooth'});
+                  if (reservaData.fecha) {
+                    const newDate = new Date(reservaData.fecha);
+                    newDate.setDate(newDate.getDate() + 1);
+                    const maxDateLimit = new Date();
+                    maxDateLimit.setMonth(maxDateLimit.getMonth() + 1);
+                    maxDateLimit.setHours(0,0,0,0);
+                    if (newDate <= maxDateLimit) {
+                      setReservaData(prev => ({ ...prev, fecha: newDate }));
+                    }
+                  }
+                }}
+              >
+                <ChevronRight size={20}/>
+              </button>
+            </div>
+          </div>
+
+          {/* Selección de turno */}
+          <div className={styles.enhancedTurnoSection}>
+            <div className={styles.enhancedSectionTitle}>
+              <Clock size={24} />
+              Turno
+            </div>
+            
+            <div className={styles.enhancedTurnoGrid}>
+              <button
+                onClick={() => setReservaData({...reservaData, turno: 'mediodia'})} 
+                className={`${styles.enhancedTurnoButton} ${reservaData.turno === 'mediodia' ? styles.enhancedTurnoButtonSelected : ''}`}
+              >
+                <div className={styles.enhancedTurnoButtonContent}>
+                  <Sun size={24} className={styles.textYellow200} />
+                  Mediodía
+                </div>
+              </button>
+              <button
+                onClick={() => setReservaData({...reservaData, turno: 'noche'})} 
+                className={`${styles.enhancedTurnoButton} ${reservaData.turno === 'noche' ? styles.enhancedTurnoButtonSelected : ''}`}
+              >
+                <div className={styles.enhancedTurnoButtonContent}>
+                  <Moon size={24} className={styles.textBlue300} />
+                  Noche
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Botón para continuar a selección de personas */}
+          <button 
+            onClick={() => setCurrentScreen('personas-disponibilidad')} 
+            disabled={!reservaData.fecha || !reservaData.turno}
+            className={styles.enhancedContinueButton}
+          >
+            <div className={styles.enhancedContinueButtonContent}>
+              Continuar
+            </div>
+          </button>
+        </div>
+
+        {/* Modal del calendario completo */}
+        {showDatePicker && (
+          <div className={`${styles.fixed} ${styles.inset0} ${styles.bgBlack} ${styles.bgOpacity50} ${styles.flex} ${styles.itemsCenter} ${styles.justifyCenter} ${styles.p4} ${styles.z50}`}>
+            <div className={`${styles.bgBlack} ${styles.bgOpacity90} ${styles.backdropBlurSm} ${styles.roundedXl} ${styles.p4} ${styles.border} ${styles.borderWhite} ${styles.borderOpacity20} ${styles.shadow2xl} ${styles.maxWSm} ${styles.wFull} ${styles.mx4}`}>
+              <div className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter} ${styles.mb4}`}>
+                <h2 className={`${styles.textXl} ${styles.textWhite} ${styles.fontMedium}`}>Seleccionar fecha</h2>
+                <button 
+                  onClick={() => setShowDatePicker(false)} 
+                  className={`${styles.textWhite} ${styles.hoverTextGray300}`}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="w-full">
+                <DatePicker
+                  selected={reservaData.fecha}
+                  onChange={(date) => {
+                    if (date) {
+                      const selectedDate = new Date(date);
+                      selectedDate.setHours(0, 0, 0, 0);
+                      
+                      // Verificar que no sea lunes
+                      if (selectedDate.getDay() !== 1) {
+                        setReservaData({ ...reservaData, fecha: selectedDate });
+                        setShowDatePicker(false);
+                      } else {
+                        alert('Los lunes permanecemos cerrados. Por favor selecciona otro día.');
+                      }
+                    }
+                  }}
+                  minDate={new Date()}
+                  maxDate={(() => {
+                    const maxDate = new Date();
+                    maxDate.setMonth(maxDate.getMonth() + 1);
+                    return maxDate;
+                  })()}
+                  filterDate={(date) => {
+                    // Filtrar lunes
+                    return date.getDay() !== 1;
+                  }}
+                  renderDayContents={(day, date) => (
+                    <div className="relative flex items-center justify-center w-full h-full">
+                      <span>{day}</span>
+                    </div>
+                  )}
+                  inline
+                  locale="es"
+                  dateFormat="dd/MM/yyyy"
+                  calendarClassName="custom-green-calendar"
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="mt-4 text-center space-y-2">
+                <p className="text-sm text-white opacity-70">
+                  Los lunes permanecemos cerrados
+                </p>
+                
+              </div>
+            </div>
+          </div>
+        )}
+      </ClientLayout>
+    );
+  }
+
+  // Nueva pantalla: solo personas y consulta de disponibilidad
+  if (currentScreen === 'personas-disponibilidad') {
+    return (
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+        <div className={styles.spaceY6}>
+          {/* Información de fecha y turno seleccionados */}
+          <div className={styles.formSection}>
+            <div className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter} ${styles.mb4}`}>
+              <div>
+                <h2 className={`${styles.textLg} ${styles.fontMedium} ${styles.textWhite}`}>
+                  {formatDate(reservaData.fecha)}
+                </h2>
+                <p className={`${styles.textSm} ${styles.textGray300}`}>
+                  Turno {reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}
+                </p>
+              </div>
+              <button 
+                onClick={() => setCurrentScreen('fecha-turno')} 
+                className={styles.backButtonStyled}
+              >
+                <ChevronLeft size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Selección de cantidad de personas */}
+          <div className={styles.formSection}>
+            <label className={`${styles.block} ${styles.textSm} ${styles.fontMedium} ${styles.textGray200} ${styles.mb2}`}>
+              <Users size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.mr2}`} />Cantidad de personas
+            </label>
+            <div className={`${styles.grid} ${styles.gridCols3} ${styles.gap2} ${styles.mb2}`}>
+              {[1, 2, 3, 4, 5, 6].map(num => (
+                <button
+                  key={num}
+                  onClick={() => setReservaData({ ...reservaData, personas: num })}
+                  className={reservaData.personas === num ? buttonStyles.personasButtonSelected : buttonStyles.personasButtonUnselected}
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                const mensaje = `Hola, quiero hacer una reserva para ${reservaData.fecha ? formatDate(reservaData.fecha) : 'un día'} para 7 o más personas en el turno ${reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}`;
+                const encodedMensaje = encodeURIComponent(mensaje);
+                window.open(`https://wa.me/5492213995351?text=${encodedMensaje}`, '_blank');
+              }}
+              className={buttonStyles.secondaryButton}
+            >
+              <MessageCircle size={18} />
+              <span>7+</span>
+            </button>
+          </div>
+
+          {/* Botón para consultar disponibilidad */}
+          <button 
+            onClick={handleDateAndTurnoSubmit} 
+            disabled={!reservaData.personas}
+            className={buttonStyles.primaryButton}
+          >
+            Consultar disponibilidad
+          </button>
+        </div>
+      </ClientLayout>
+    );
+  }
+
+  // Mantengo la pantalla original de fecha-personas para compatibilidad con modificaciones
   if (currentScreen === 'fecha-personas') {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -491,7 +801,11 @@ export const ClientView = ({
                   return (
                     <button
                       key={day.dateString}
-                      onClick={() => setReservaData({ ...reservaData, fecha: day.date })}
+                      data-date={day.dateString}
+                      onClick={(e) => {
+                        setReservaData({ ...reservaData, fecha: day.date });
+                        e.currentTarget.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+                      }}
                       className={`${isSelected ? buttonStyles.dateButtonSelected : buttonStyles.dateButtonUnselected} 
                         ${styles.flex} ${styles.flexCol} ${styles.itemsCenter} ${styles.py3}`}
                       type="button"
@@ -567,7 +881,7 @@ export const ClientView = ({
           {/* Botón para consultar disponibilidad */}
           <button 
             onClick={handleDateAndTurnoSubmit} 
-            disabled={!reservaData.personas || !reservaData.fecha || !reservaData.turno}
+            disabled={!reservaData.personas}
             className={buttonStyles.primaryButton}
           >
             Consultar disponibilidad
@@ -640,13 +954,13 @@ export const ClientView = ({
       </ClientLayout>
     );
   }
-  
+
   if (currentScreen === 'horario') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className={`${styles.screenContainer}`}>
         <div className="mb-6">
-          <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.backButton}><ChevronLeft size={16} /></button>
+          <button onClick={() => setCurrentScreen(reservaData.isModifying ? 'fecha-personas' : 'personas-disponibilidad')} className={styles.backButton}><ChevronLeft size={16} /></button>
           <h1 className="text-xl font-bold text-white inline-block">Horarios</h1>
         </div>
         <div className="space-y-4">
@@ -669,7 +983,7 @@ export const ClientView = ({
             <div className="text-center py-8">
               <AlertCircle className="mx-auto mb-4" size={48} />
               <p>No hay horarios disponibles para esta fecha y turno.</p>
-              <button onClick={() => setCurrentScreen('fecha-personas')} className={styles.secondaryButton}>Volver a seleccionar fecha</button>
+              <button onClick={() => setCurrentScreen(reservaData.isModifying ? 'fecha-personas' : 'personas-disponibilidad')} className={styles.secondaryButton}>Volver a seleccionar fecha</button>
             </div>
           )}
         </div>
