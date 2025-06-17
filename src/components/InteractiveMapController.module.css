@@ -3,23 +3,46 @@
 .interactiveMapController {
   /* Contenedor principal del mapa interactivo */
   position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .mapContainer {
-  /* Contenedor del SVG */
+  /* Contenedor del SVG - ocupa todo el espacio disponible */
   user-select: none;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  padding: 0.25rem;
+}
+
+.mapSvg {
+  /* SVG optimizado para ocupar el máximo espacio */
+  width: 100%;
+  height: 100%;
+  max-height: 700px;
+  min-height: 500px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  background: #fafafa;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .statusBar {
   /* Barra de estado superior */
   border-radius: 8px;
   margin-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .infoPanel {
   /* Panel de información lateral */
   border-radius: 8px;
   margin-top: 1rem;
+  flex-shrink: 0;
 }
 
 .legend {
@@ -42,18 +65,21 @@
   /* Mesa disponible */
   fill: #e5e7eb;
   stroke: #6b7280;
+  stroke-width: 2;
 }
 
 .tableOccupied {
   /* Mesa ocupada */
   fill: #fca5a5;
   stroke: #dc2626;
+  stroke-width: 2;
 }
 
 .tableBlocked {
   /* Mesa bloqueada para walk-in */
   fill: #fbbf24;
   stroke: #d97706;
+  stroke-width: 2;
 }
 
 .tableHovered {
@@ -61,6 +87,7 @@
   fill: #34d399;
   stroke: #059669;
   filter: brightness(1.1);
+  stroke-width: 3;
 }
 
 .tableSelected {
@@ -75,6 +102,7 @@
   fill: #a78bfa;
   stroke: #8b5cf6;
   stroke-dasharray: 5,5;
+  stroke-width: 2;
 }
 
 .tableText {
@@ -87,13 +115,13 @@
 .tableNumber {
   /* Número de mesa */
   font-weight: bold;
-  font-size: 12px;
+  font-size: 18px;
   fill: #374151;
 }
 
 .tableCapacity {
   /* Capacidad de mesa */
-  font-size: 10px;
+  font-size: 14px;
   fill: #6b7280;
 }
 
@@ -152,6 +180,16 @@
     max-width: 100%;
   }
   
+  .mapContainer {
+    padding: 0.25rem;
+    min-height: 300px;
+  }
+  
+  .mapSvg {
+    min-height: 300px;
+    max-height: 400px;
+  }
+  
   .statusBar {
     margin-bottom: 0.5rem;
     padding: 0.5rem;
@@ -163,21 +201,20 @@
   }
   
   .tableText {
-    font-size: 10px;
+    font-size: 12px;
   }
   
   .tableNumber {
-    font-size: 10px;
+    font-size: 14px;
   }
   
   .tableCapacity {
-    font-size: 8px;
+    font-size: 10px;
   }
 }
 
-/* Modo compacto */
 .compact {
-  max-width: 300px;
+  min-height: 300px;
 }
 
 .compact .tableText {
@@ -185,9 +222,223 @@
 }
 
 .compact .tableNumber {
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .compact .tableCapacity {
-  font-size: 7px;
+  font-size: 8px;
+}
+
+/* Estilos para el popup de detalles de reserva */
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.reservationPopup {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideIn 0.2s ease-out;
+}
+
+.popupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.popupTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+.popupCloseButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: #6b7280;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.popupCloseButton:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.popupContent {
+  padding: 1.25rem;
+}
+
+.reservationInfo {
+  margin-bottom: 1.5rem;
+}
+
+.clientName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.reservationDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+.detailRow svg {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.commentSection {
+  background: #f3f4f6;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+}
+
+.commentSection strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.commentSection p {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.popupActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.editButton {
+  background: #3b82f6;
+  color: white;
+}
+
+.editButton:hover {
+  background: #2563eb;
+}
+
+.contactButton {
+  background: #10b981;
+  color: white;
+}
+
+.contactButton:hover {
+  background: #059669;
+}
+
+.deleteButton {
+  background: #ef4444;
+  color: white;
+}
+
+.deleteButton:hover {
+  background: #dc2626;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsive para el popup */
+@media (max-width: 768px) {
+  .reservationPopup {
+    width: 95%;
+    max-width: none;
+    margin: 1rem;
+  }
+  
+  .popupHeader {
+    padding: 0.75rem 1rem;
+  }
+  
+  .popupContent {
+    padding: 1rem;
+  }
+  
+  .clientName {
+    font-size: 1.1rem;
+  }
+  
+  .popupActions {
+    flex-direction: column;
+  }
+  
+  .actionButton {
+    flex: none;
+    width: 100%;
+  }
 } 

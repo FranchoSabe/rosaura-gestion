@@ -6,6 +6,7 @@ import { formatPhoneForWhatsApp } from '../utils';
 import CreateReservationModal from './modals/CreateReservationModal';
 import EditReservationModal from './modals/EditReservationModal';
 import { UNIFIED_TABLES_LAYOUT } from '../utils/tablesLayout';
+import InteractiveMapController from './InteractiveMapController';
 
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
@@ -2073,6 +2074,10 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
 
   const handleContactWaitingClient = async (waiting) => {
     try {
+      // Abrir WhatsApp directamente
+      const whatsappUrl = `https://wa.me/${formatPhoneForWhatsApp(waiting.cliente.telefono)}`;
+      window.open(whatsappUrl, '_blank');
+      
       // Pasar los datos del cliente para el mensaje automático
       await onContactWaitingClient(waiting.id, waiting);
       
@@ -2684,198 +2689,44 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
             </div>
           )}
           
-          <div style={{ backgroundColor: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}>
-            <svg 
-              viewBox="0 0 350 600" 
-              className="w-full h-auto"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Fondo del restaurante */}
-              <rect x="0" y="0" width="350" height="600" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
+          <InteractiveMapController
+            fecha={formatDate(selectedDate)}
+            turno={selectedTurno}
+            reservas={reservasTurnoSeleccionado}
+            mode={editCuposMode ? 'cupos' : (assignmentMode ? 'assignment' : 'view')}
+            tableAssignments={pendingAssignments}
+            blockedTables={pendingBlockedTables}
+            onTableClick={handleTableClick}
+            onBlockedTablesChange={setPendingBlockedTables}
+            selectedReservation={selectedReservation}
+            showNotification={showNotification}
+            onEditReservation={(reservation) => {
+              setEditingReservation(reservation);
+            }}
+            onDeleteReservation={async (reservation) => {
+              const confirmed = await showConfirmation({
+                title: 'Eliminar Reserva',
+                message: `¿Estás seguro de que deseas eliminar la reserva de ${reservation.cliente?.nombre}?`,
+                confirmText: 'Eliminar',
+                cancelText: 'Cancelar'
+              });
               
-              {/* Líneas divisorias */}
-              <line x1="190" y1="140" x2="260" y2="140" stroke="#374151" strokeWidth="2" />
-              
-              {/* Mesas */}
-                              {UNIFIED_TABLES_LAYOUT.map((table) => {
-                const isOcupada = isMesaOcupada(table.id);
-                const isBloqueada = pendingBlockedTables.has(table.id);
-                const isUnida = isTableJoined(table.id);
-                const estado = isOcupada ? 'occupied' : isBloqueada ? 'blocked' : 'available';
-                
-                const strokeColor = isOcupada ? '#dc2626' : isBloqueada ? '#f59e0b' : '#0c4900';
-
-                return (
-                  <g key={`today-map-table-${table.id}`}>
-                    <rect
-                      x={table.x}
-                      y={table.y}
-                      width={table.width}
-                      height={table.height}
-                      fill="#ffffff"
-                      stroke={strokeColor}
-                      strokeWidth={isUnida ? "3" : "2"}
-                      strokeDasharray={isUnida ? "8,4" : "none"}
-                      rx="3"
-                      className="cursor-pointer"
-                      onClick={() => handleTableClick(table.id)}
-                    />
-                    <text
-                      x={table.x + table.width / 2}
-                      y={table.y + table.height / 2 + ((isOcupada || isBloqueada) ? -5 : 6)}
-                      textAnchor="middle"
-                      fontSize="16"
-                      fontWeight="bold"
-                      fill="#0c4900"
-                    >
-                      {table.id}
-                    </text>
-                    {isOcupada && (
-                      <g>
-                        {/* + para mesas ocupadas */}
-                        <line
-                          x1={table.x + table.width / 2 - 5}
-                          y1={table.y + table.height / 2 + 10}
-                          x2={table.x + table.width / 2 + 5}
-                          y2={table.y + table.height / 2 + 10}
-                          stroke="#2563eb"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                        <line
-                          x1={table.x + table.width / 2}
-                          y1={table.y + table.height / 2 + 5}
-                          x2={table.x + table.width / 2}
-                          y2={table.y + table.height / 2 + 15}
-                          stroke="#2563eb"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </g>
-                    )}
-                    {isBloqueada && (
-                      <g>
-                        {/* X para mesas bloqueadas */}
-                        <line
-                          x1={table.x + table.width / 2 - 4}
-                          y1={table.y + table.height / 2 + 6}
-                          x2={table.x + table.width / 2 + 4}
-                          y2={table.y + table.height / 2 + 14}
-                          stroke="#dc2626"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                        <line
-                          x1={table.x + table.width / 2 + 4}
-                          y1={table.y + table.height / 2 + 6}
-                          x2={table.x + table.width / 2 - 4}
-                          y2={table.y + table.height / 2 + 14}
-                          stroke="#dc2626"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </g>
-                    )}
-                    {/* Indicador visual para mesas unidas */}
-                    {isUnida && (
-                      <circle
-                        cx={table.x + table.width - 10}
-                        cy={table.y + 10}
-                        r="6"
-                        fill="#f59e0b"
-                        stroke="#ffffff"
-                        strokeWidth="1"
-                      />
-                    )}
-                  </g>
-                );
-              })}
-              
-              {/* Leyenda */}
-              <g>
-                <rect x="20" y="575" width="13" height="10" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
-                <text x="37" y="582" fontSize="8" fill="#6b7280">Libre</text>
-                <rect x="65" y="575" width="13" height="10" fill="#ffffff" stroke="#2563eb" strokeWidth="1" rx="1" />
-                {/* + para reservadas */}
-                <line x1="69" y1="580" x2="74" y2="580" stroke="#2563eb" strokeWidth="1" strokeLinecap="round" />
-                <line x1="71.5" y1="577" x2="71.5" y2="583" stroke="#2563eb" strokeWidth="1" strokeLinecap="round" />
-                <text x="82" y="582" fontSize="8" fill="#6b7280">Reservada</text>
-                <rect x="130" y="575" width="13" height="10" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
-                {/* X para walk-in */}
-                <line x1="134" y1="577" x2="139" y2="583" stroke="#dc2626" strokeWidth="1" strokeLinecap="round" />
-                <line x1="139" y1="577" x2="134" y2="583" stroke="#dc2626" strokeWidth="1" strokeLinecap="round" />
-                <text x="147" y="582" fontSize="8" fill="#6b7280">Walk-in</text>
-                <rect x="190" y="575" width="13" height="10" fill="#ffffff" stroke="#0c4900" strokeWidth="2" strokeDasharray="6,2" rx="1" />
-                <circle cx="198" cy="577" r="3" fill="#f59e0b" stroke="#ffffff" strokeWidth="0.5" />
-                <text x="207" y="582" fontSize="8" fill="#6b7280">Unidas</text>
-              </g>
-            </svg>
-          </div>
-
-          {/* Orden de reserva */}
-          <div className="mt-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">Orden de Reserva (Optimizado)</h4>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div><span className="font-medium">2 pers:</span> {RESERVATION_ORDER[2].join(' → ')}</div>
-              <div><span className="font-medium">4 pers:</span> {RESERVATION_ORDER[4].join(' → ')}</div>
-              <div><span className="font-medium">6 pers:</span> {RESERVATION_ORDER[6].join(' → ')}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                ℹ️ Mesas 2 y 3 al final para preservar combinación 2+3
-              </div>
-            </div>
-            <div className="mt-2 text-xs text-gray-500">
-              <div className="font-medium text-blue-600">Para 4 personas:</div>
-              <div>1° Mesas individuales disponibles</div>
-              <div>2° Mesas bloqueadas (liberando automáticamente)</div>
-              <div>3° Mesas unidas (11+21, 1+31, 14+24)</div>
-              
-              <div className="font-medium text-blue-600 mt-2">Para 5-6 personas:</div>
-              <div>• 6 pers: Mesa 7 → Mesa 2+3</div>
-              <div>• 5 pers: Mesa 7 → Mesa 2+3</div>
-            </div>
-          </div>
-
-          {/* Sistema de flexibilidad */}
-          <div className="mt-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">Sistema Flexible Walk-in</h4>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">Cupos Walk-in:</span> 
-                <span className="font-bold text-blue-600">{calculateWalkInQuotas(pendingBlockedTables)} personas</span>
-                {editCuposMode && (
-                  <button
-                    onClick={handleResetToDefaultQuotas}
-                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                  >
-                    Restablecer ({calculateWalkInQuotas(new Set([4, 5, 14, 24]))})
-                  </button>
-                )}
-              </div>
-              {editCuposMode && (
-                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-                  <div className="text-xs text-blue-800 font-medium">🛠️ Modo Edición de Cupos Activo</div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    Haz click en las mesas para bloquear/desbloquear. Las mesas bloqueadas se reservan para walk-ins.
-                  </div>
-                </div>
-              )}
-              <div className="text-xs text-gray-500">
-                • Al liberar mesa de 4 → Bloquea mesa de 2 automáticamente
-              </div>
-              <div className="text-xs text-gray-500">
-                • Mantiene equilibrio entre reservas y walk-ins
-              </div>
-              
-              <div className="mt-2"><span className="font-medium">Mesas Combinables:</span></div>
-              <div className="ml-2">• Mesa 11 + 21 (2+2) → 4 personas</div>
-              <div className="ml-2">• Mesa 1 + 31 (2+2) → 4 personas</div>
-              <div className="ml-2">• Mesa 14 + 24 (2+2) → 4 personas</div>
-              <div className="ml-2">• Mesa 2 + 3 (2+4) → 6 personas</div>
-              <div className="text-xs text-gray-500 mt-1">
-                ℹ️ Se usan automáticamente según disponibilidad y prioridad
-              </div>
-            </div>
-          </div>
+              if (confirmed) {
+                await onDeleteReservation(reservation.id);
+                showNotification('success', 'Reserva eliminada correctamente');
+              }
+            }}
+            onContactClient={(reservation) => {
+              if (reservation.cliente?.telefono) {
+                const message = `¡Hola ${reservation.cliente.nombre}! Te contactamos desde Rosaura sobre tu reserva para ${reservation.personas} personas el ${formatDate(reservation.fecha)} a las ${reservation.horario}. ¡Te esperamos! 🌹`;
+                const whatsappUrl = `https://wa.me/${reservation.cliente.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+              } else {
+                showNotification('warning', 'No hay número de teléfono disponible');
+              }
+            }}
+            formatDate={formatDate}
+          />
         </div>
 
         {/* Barra Lateral Derecha - Tabla de Reservas */}
@@ -3292,15 +3143,12 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
 
     return (
       <svg 
-        viewBox="0 0 350 600" 
+        viewBox="0 0 230 450" 
         className={className}
         xmlns="http://www.w3.org/2000/svg"
       >
         {/* Fondo del restaurante */}
-        <rect x="0" y="0" width="350" height="600" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
-        
-        {/* Líneas divisorias */}
-        <line x1="190" y1="140" x2="260" y2="140" stroke="#374151" strokeWidth="2" />
+        <rect x="0" y="0" width="230" height="450" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
         
         {/* Mesas */}
         {LAYOUT.map((table) => {
@@ -3328,7 +3176,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
                 x={table.x + table.width / 2}
                 y={table.y + table.height / 2 + ((isOcupada || isBloqueada) ? -5 : 6)}
                 textAnchor="middle"
-                fontSize="16"
+                fontSize="18"
                 fontWeight="bold"
                 fill="#0c4900"
               >
@@ -3395,25 +3243,11 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
           );
         })}
         
-        {/* Leyenda (solo en preview para ahorrar espacio) */}
+        {/* Leyenda simplificada */}
         {previewMode && (
-          <g>
-            <rect x="20" y="575" width="13" height="10" fill="#ffffff" stroke="#0c4900" strokeWidth="1" rx="1" />
-            <text x="37" y="582" fontSize="8" fill="#6b7280">Libre</text>
-            <rect x="65" y="575" width="13" height="10" fill="#ffffff" stroke="#2563eb" strokeWidth="1" rx="1" />
-            {/* + para reservadas */}
-            <line x1="69" y1="580" x2="74" y2="580" stroke="#2563eb" strokeWidth="1" strokeLinecap="round" />
-            <line x1="71.5" y1="577" x2="71.5" y2="583" stroke="#2563eb" strokeWidth="1" strokeLinecap="round" />
-            <text x="82" y="582" fontSize="8" fill="#6b7280">Reservada</text>
-            <rect x="130" y="575" width="13" height="10" fill="#ffffff" stroke="#dc2626" strokeWidth="1" rx="1" />
-            {/* X para walk-in */}
-            <line x1="134" y1="577" x2="139" y2="583" stroke="#dc2626" strokeWidth="1" strokeLinecap="round" />
-            <line x1="139" y1="577" x2="134" y2="583" stroke="#dc2626" strokeWidth="1" strokeLinecap="round" />
-            <text x="147" y="582" fontSize="8" fill="#6b7280">Walk-in</text>
-            <rect x="190" y="575" width="13" height="10" fill="#ffffff" stroke="#0c4900" strokeWidth="2" strokeDasharray="6,2" rx="1" />
-            <circle cx="198" cy="577" r="3" fill="#f59e0b" stroke="#ffffff" strokeWidth="0.5" />
-            <text x="207" y="582" fontSize="8" fill="#6b7280">Unidas</text>
-          </g>
+          <text x="115" y="435" textAnchor="middle" fontSize="8" fill="#6b7280">
+            Verde: Libre | Azul: Reservada | Rojo: Walk-in
+          </text>
         )}
       </svg>
     );

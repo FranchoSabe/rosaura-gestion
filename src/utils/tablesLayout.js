@@ -5,36 +5,36 @@
  * Evita dependencias circulares al ser un archivo independiente.
  */
 
-// Layout unificado de mesas - Versión optimizada
+// Layout unificado de mesas - Versión con mesas más grandes
 export const UNIFIED_TABLES_LAYOUT = [
-  // Zona superior (mesas horizontales para 4 personas)
-  { id: 12, x: 50, y: 30, width: 70, height: 40, capacity: 4 },
-  { id: 13, x: 140, y: 30, width: 70, height: 40, capacity: 4 },
+  // Zona superior (mesas horizontales para 4 personas) - más grandes
+  { id: 12, x: 15, y: 10, width: 85, height: 45, capacity: 4 },
+  { id: 13, x: 110, y: 10, width: 85, height: 45, capacity: 4 },
 
-  // Zona superior-media (mesas cuadradas para 2 personas)
-  { id: 21, x: 50, y: 85, width: 40, height: 40, capacity: 2 },
-  { id: 11, x: 50, y: 135, width: 40, height: 40, capacity: 2 },
-  { id: 24, x: 140, y: 85, width: 40, height: 40, capacity: 2 },
-  { id: 14, x: 190, y: 85, width: 40, height: 40, capacity: 2 },
+  // Zona superior-media (mesas cuadradas para 2 personas) - más grandes
+  { id: 21, x: 15, y: 65, width: 45, height: 45, capacity: 2 },
+  { id: 11, x: 15, y: 120, width: 45, height: 45, capacity: 2 },
+  { id: 24, x: 105, y: 65, width: 45, height: 45, capacity: 2 },
+  { id: 14, x: 160, y: 65, width: 45, height: 45, capacity: 2 },
 
-  // Zona central (mesas horizontales)
-  { id: 10, x: 50, y: 190, width: 70, height: 35, capacity: 4 },
-  { id: 9, x: 50, y: 235, width: 70, height: 35, capacity: 4 },
-  { id: 8, x: 50, y: 280, width: 40, height: 40, capacity: 2 },
+  // Zona central (mesas horizontales) - más grandes
+  { id: 10, x: 15, y: 175, width: 85, height: 40, capacity: 4 },
+  { id: 9, x: 15, y: 225, width: 85, height: 40, capacity: 4 },
+  { id: 8, x: 15, y: 275, width: 45, height: 45, capacity: 2 },
 
-  // Columna central
-  { id: 6, x: 140, y: 180, width: 35, height: 60, capacity: 4 },
-  { id: 7, x: 140, y: 250, width: 50, height: 70, capacity: 6 },
+  // Columna central - más grandes
+  { id: 6, x: 110, y: 165, width: 40, height: 70, capacity: 4 },
+  { id: 7, x: 110, y: 245, width: 55, height: 75, capacity: 6 },
 
-  // Columna derecha
-  { id: 5, x: 220, y: 155, width: 35, height: 60, capacity: 4 },
-  { id: 4, x: 220, y: 225, width: 35, height: 60, capacity: 4 },
-  { id: 3, x: 220, y: 295, width: 35, height: 60, capacity: 4 },
-  { id: 2, x: 220, y: 365, width: 40, height: 40, capacity: 2 },
+  // Columna derecha - más grandes
+  { id: 5, x: 175, y: 140, width: 40, height: 70, capacity: 4 },
+  { id: 4, x: 175, y: 220, width: 40, height: 70, capacity: 4 },
+  { id: 3, x: 175, y: 300, width: 40, height: 70, capacity: 4 },
+  { id: 2, x: 175, y: 380, width: 45, height: 45, capacity: 2 },
 
-  // Zona inferior
-  { id: 1, x: 125, y: 365, width: 40, height: 40, capacity: 2 },
-  { id: 31, x: 170, y: 365, width: 40, height: 40, capacity: 2 },
+  // Zona inferior - más grandes
+  { id: 1, x: 85, y: 380, width: 45, height: 45, capacity: 2 },
+  { id: 31, x: 135, y: 380, width: 45, height: 45, capacity: 2 },
 ];
 
 // Orden de asignación de mesas optimizado
