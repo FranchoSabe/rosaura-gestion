@@ -6,7 +6,7 @@
   min-height: 100vh;
   padding: 2rem 1.5rem;
   gap: 1.5rem;
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 auto;
   overflow-y: auto;
   position: relative;
@@ -111,7 +111,7 @@
 
 .content {
   width: 100%;
-  max-width: 28rem;
+  max-width: 36rem;
   z-index: 10;
   position: relative;
   padding: 1rem;
@@ -201,5 +201,14 @@
     opacity: 1;
     transform: scale(1);
     filter: blur(0);
+  }
+}
+
+@media(min-width:1024px){
+  .container{
+    max-width: 800px;
+  }
+  .content{
+    max-width: 48rem;
   }
 } 

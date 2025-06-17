@@ -3126,4 +3126,25 @@ label svg {
     flex:0 0 6rem;
     height:6rem;
   }
+  .sliderButton{
+    display:none;
+  }
+}
+
+/* Desktop breakpoint */
+@media(min-width:1024px){
+  .enhancedScreenContainer{
+    max-width:48rem;
+  }
+  .dateSlider{
+    padding:0 8rem;
+  }
+  .sliderDay{
+    flex:0 0 7rem;
+    height:7rem;
+  }
+  .sliderDaySelected{
+    flex:0 0 10rem;
+    height:10rem;
+  }
 }
