@@ -5,6 +5,7 @@ import { sanitizeData } from '../utils/validation';
 import { formatPhoneForWhatsApp } from '../utils';
 import CreateReservationModal from './modals/CreateReservationModal';
 import EditReservationModal from './modals/EditReservationModal';
+import { UNIFIED_TABLES_LAYOUT } from '../utils/tablesLayout';
 
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
@@ -1719,26 +1720,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   const [waitingListFilter, setWaitingListFilter] = useState('all'); // 'all', 'with-waiting', 'only-waiting'
   const [searchWaitingTerm, setSearchWaitingTerm] = useState('');
 
-  // Layout de mesas - con tamaños estandarizados
-  const TABLES_LAYOUT = [
-    { id: 12, x: 50, y: 30, width: 70, height: 40, capacity: 4 }, // rectangular horizontal (tamaño estándar)
-    { id: 13, x: 140, y: 30, width: 70, height: 40, capacity: 4 }, // rectangular horizontal (tamaño estándar)
-    { id: 21, x: 50, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
-    { id: 11, x: 50, y: 135, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
-    { id: 24, x: 140, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
-    { id: 14, x: 190, y: 85, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (tamaño estándar)
-    { id: 10, x: 50, y: 190, width: 70, height: 35, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
-    { id: 9, x: 50, y: 235, width: 70, height: 35, capacity: 4 }, // rectangular horizontal (igual que 12 y 13)
-    { id: 8, x: 50, y: 280, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2)
-    { id: 6, x: 140, y: 180, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
-    { id: 7, x: 140, y: 250, width: 50, height: 70, capacity: 6 }, // rectangular vertical más grande (sin cambios)
-    { id: 5, x: 220, y: 155, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
-    { id: 4, x: 220, y: 225, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
-    { id: 3, x: 220, y: 295, width: 35, height: 60, capacity: 4 }, // rectangular vertical (área igual que 12 y 13)
-    { id: 2, x: 220, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (sin cambios)
-    { id: 1, x: 125, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2) - reposicionada
-    { id: 31, x: 170, y: 365, width: 40, height: 40, capacity: 2 }, // cuadrada pequeña (igual que 2) - reposicionad
-  ];
+  // Layout de mesas UNIFICADO - usando la versión centralizada
 
   // Orden de reserva de mesas - Actualizado
   const RESERVATION_ORDER = {
@@ -1965,7 +1947,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
       }
 
       // Validar capacidad de la mesa antes de asignar (solo si no se ofreció combinación o se canceló)
-      const selectedTable = TABLES_LAYOUT.find(t => t.id === tableId);
+              const selectedTable = UNIFIED_TABLES_LAYOUT.find(t => t.id === tableId);
       if (selectedTable && selectedTable.capacity < personas) {
         const confirmed = await showConfirmation({
           title: 'Capacidad Insuficiente',
@@ -2715,7 +2697,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
               <line x1="190" y1="140" x2="260" y2="140" stroke="#374151" strokeWidth="2" />
               
               {/* Mesas */}
-              {TABLES_LAYOUT.map((table) => {
+                              {UNIFIED_TABLES_LAYOUT.map((table) => {
                 const isOcupada = isMesaOcupada(table.id);
                 const isBloqueada = pendingBlockedTables.has(table.id);
                 const isUnida = isTableJoined(table.id);
@@ -3242,26 +3224,8 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
     className = "w-full h-auto",
     useRealAssignments = false
   }) => {
-    // Layout de mesas - usar el mismo que el principal
-    const LAYOUT = customLayout || [
-      { id: 12, x: 50, y: 30, width: 70, height: 40, capacity: 4 },
-      { id: 13, x: 140, y: 30, width: 70, height: 40, capacity: 4 },
-      { id: 21, x: 50, y: 85, width: 40, height: 40, capacity: 2 },
-      { id: 11, x: 50, y: 135, width: 40, height: 40, capacity: 2 },
-      { id: 24, x: 140, y: 85, width: 40, height: 40, capacity: 2 },
-      { id: 14, x: 190, y: 85, width: 40, height: 40, capacity: 2 },
-      { id: 10, x: 50, y: 190, width: 70, height: 35, capacity: 4 },
-      { id: 9, x: 50, y: 235, width: 70, height: 35, capacity: 4 },
-      { id: 8, x: 50, y: 280, width: 40, height: 40, capacity: 2 },
-      { id: 6, x: 140, y: 180, width: 35, height: 60, capacity: 4 },
-      { id: 7, x: 140, y: 250, width: 50, height: 70, capacity: 6 },
-      { id: 5, x: 220, y: 155, width: 35, height: 60, capacity: 4 },
-      { id: 4, x: 220, y: 225, width: 35, height: 60, capacity: 4 },
-      { id: 3, x: 220, y: 295, width: 35, height: 60, capacity: 4 },
-      { id: 2, x: 220, y: 365, width: 40, height: 40, capacity: 2 },
-      { id: 1, x: 125, y: 365, width: 40, height: 40, capacity: 2 },
-      { id: 31, x: 170, y: 365, width: 40, height: 40, capacity: 2 },
-    ];
+    // Layout de mesas - usar el unificado
+    const LAYOUT = customLayout || UNIFIED_TABLES_LAYOUT;
 
     // Calcular asignaciones - usar asignaciones reales si están disponibles
     const { assignments, blockedTables: previewBlockedTables } = useMemo(() => {
@@ -3611,7 +3575,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
                         return blockedTables;
                       })();
                       return [...blockedTablesForCalc].reduce((total, tableId) => {
-                        const table = TABLES_LAYOUT.find(t => t.id === tableId);
+                        const table = UNIFIED_TABLES_LAYOUT.find(t => t.id === tableId);
                         return total + (table ? table.capacity : 0);
                       }, 0);
                     })()}

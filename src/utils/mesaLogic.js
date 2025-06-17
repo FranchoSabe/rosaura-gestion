@@ -11,65 +11,19 @@
   - Mejorada validación de conflictos para evitar asignaciones duplicadas
 */
 
-// Layout de mesas (coincide con el utilizado hasta ahora)
-export const TABLES_LAYOUT = [
-  // Zona superior (alineadas verticalmente - horizontales para 4 personas)
-  { id: 12, x: 50, y: 40, width: 80, height: 50, capacity: 4 },
-  { id: 13, x: 140, y: 40, width: 80, height: 50, capacity: 4 },
+// Layout de mesas UNIFICADO - importado desde el archivo centralizado
+import { 
+  UNIFIED_TABLES_LAYOUT, 
+  UNIFIED_RESERVATION_ORDER, 
+  UNIFIED_TABLE_COMBINATIONS, 
+  UNIFIED_DEFAULT_BLOCKED_TABLES 
+} from './tablesLayout';
 
-  // Zona superior-media (mesas modulares cuadradas para 2 personas)
-  { id: 21, x: 50, y: 110, width: 50, height: 50, capacity: 2 },
-  { id: 11, x: 50, y: 170, width: 50, height: 50, capacity: 2 },
-  { id: 24, x: 140, y: 110, width: 50, height: 50, capacity: 2 },
-  { id: 14, x: 200, y: 110, width: 50, height: 50, capacity: 2 },
-
-  // Zona central (después de la división principal)
-  { id: 10, x: 50, y: 230, width: 80, height: 50, capacity: 4 },
-  { id: 9, x: 50, y: 290, width: 80, height: 50, capacity: 4 },
-  { id: 8, x: 50, y: 350, width: 50, height: 50, capacity: 2 },
-
-  // Columna central
-  { id: 6, x: 150, y: 230, width: 50, height: 80, capacity: 4 },
-  { id: 7, x: 150, y: 320, width: 60, height: 90, capacity: 6 },
-
-  // Columna derecha
-  { id: 5, x: 230, y: 195, width: 50, height: 80, capacity: 4 },
-  { id: 4, x: 230, y: 285, width: 50, height: 80, capacity: 4 },
-  { id: 3, x: 230, y: 375, width: 50, height: 80, capacity: 4 },
-  { id: 2, x: 230, y: 465, width: 50, height: 50, capacity: 2 },
-
-  // Inferior
-  { id: 1, x: 120, y: 465, width: 50, height: 50, capacity: 2 },
-  { id: 31, x: 180, y: 465, width: 50, height: 50, capacity: 2 },
-];
-
-// Orden de reserva de mesas por capacidad - OPTIMIZADO para preservar Mesa 2+3 y cupos walk-in
-export const RESERVATION_ORDER = {
-  2: [8, 11, 21, 1, 31, 2, 14, 24], // Mesa 2 antes que las bloqueadas, mesas bloqueadas al final
-  4: [9, 10, 6, 12, 13, 3, 4, 5], // Mesa 3 antes que las bloqueadas, mesas bloqueadas al final
-  6: [7],
-};
-
-// Configuración de mesas que se pueden unir para formar capacidades mayores
-export const TABLE_COMBINATIONS = {
-  // Mesas de 2 que se pueden unir para formar mesas de 4
-  joinableFor4: [
-    { tables: [11, 21], combinedCapacity: 4, name: "Mesa 11+21" },
-    { tables: [1, 31], combinedCapacity: 4, name: "Mesa 1+31" },
-    { tables: [14, 24], combinedCapacity: 4, name: "Mesa 14+24" }
-  ],
-  // Mesas de 2 que se pueden unir para formar mesas de 6
-  joinableFor6: [
-    { tables: [2, 3], combinedCapacity: 6, name: "Mesa 2+3" }
-  ]
-};
-
-// Bloqueos por defecto - TOTAL: 12 cupos walk-in (4+4+2+2=12)
-export const DEFAULT_BLOCKED_TABLES = {
-  4: [4, 5], // Mesas 4 y 5 (4 personas cada una) = 8 cupos
-  2: [14, 24], // Mesas 14 y 24 (2 personas cada una) = 4 cupos
-  // TOTAL: 12 cupos walk-in predeterminados
-};
+// Re-exportar con nombres compatibles (para compatibilidad con código existente)
+export const TABLES_LAYOUT = UNIFIED_TABLES_LAYOUT;
+export const RESERVATION_ORDER = UNIFIED_RESERVATION_ORDER;
+export const TABLE_COMBINATIONS = UNIFIED_TABLE_COMBINATIONS;
+export const DEFAULT_BLOCKED_TABLES = UNIFIED_DEFAULT_BLOCKED_TABLES;
 
 export const setsAreEqual = (a, b) => a.size === b.size && [...a].every((x) => b.has(x));
 

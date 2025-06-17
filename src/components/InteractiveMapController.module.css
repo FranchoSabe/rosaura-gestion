@@ -1,0 +1,193 @@
+/* InteractiveMapController.module.css */
+
+.interactiveMapController {
+  /* Contenedor principal del mapa interactivo */
+  position: relative;
+}
+
+.mapContainer {
+  /* Contenedor del SVG */
+  user-select: none;
+}
+
+.statusBar {
+  /* Barra de estado superior */
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.infoPanel {
+  /* Panel de información lateral */
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.legend {
+  /* Leyenda de estados */
+  opacity: 0.9;
+}
+
+.tableElement {
+  /* Elemento mesa base */
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.tableElement:hover {
+  opacity: 0.8;
+  filter: brightness(1.1);
+}
+
+.tableAvailable {
+  /* Mesa disponible */
+  fill: #e5e7eb;
+  stroke: #6b7280;
+}
+
+.tableOccupied {
+  /* Mesa ocupada */
+  fill: #fca5a5;
+  stroke: #dc2626;
+}
+
+.tableBlocked {
+  /* Mesa bloqueada para walk-in */
+  fill: #fbbf24;
+  stroke: #d97706;
+}
+
+.tableHovered {
+  /* Mesa en hover */
+  fill: #34d399;
+  stroke: #059669;
+  filter: brightness(1.1);
+}
+
+.tableSelected {
+  /* Mesa seleccionada */
+  fill: #60a5fa;
+  stroke: #2563eb;
+  stroke-width: 3px;
+}
+
+.tableJoined {
+  /* Mesa unida con otra */
+  fill: #a78bfa;
+  stroke: #8b5cf6;
+  stroke-dasharray: 5,5;
+}
+
+.tableText {
+  /* Texto de mesa */
+  pointer-events: none;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.tableNumber {
+  /* Número de mesa */
+  font-weight: bold;
+  font-size: 12px;
+  fill: #374151;
+}
+
+.tableCapacity {
+  /* Capacidad de mesa */
+  font-size: 10px;
+  fill: #6b7280;
+}
+
+.connectionLine {
+  /* Línea de conexión entre mesas unidas */
+  stroke-dasharray: 5,5;
+  opacity: 0.7;
+  animation: dash 1.5s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.occupancyIndicator {
+  /* Indicador de ocupación */
+  pointer-events: none;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Estados de modo */
+.modeView {
+  /* Modo visualización */
+}
+
+.modeAssignment {
+  /* Modo asignación */
+  border: 2px solid #059669;
+}
+
+.modeCupos {
+  /* Modo edición de cupos */
+  border: 2px solid #d97706;
+}
+
+.modePreview {
+  /* Modo vista previa */
+  opacity: 0.9;
+  filter: grayscale(0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .interactiveMapController {
+    max-width: 100%;
+  }
+  
+  .statusBar {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .infoPanel {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .tableText {
+    font-size: 10px;
+  }
+  
+  .tableNumber {
+    font-size: 10px;
+  }
+  
+  .tableCapacity {
+    font-size: 8px;
+  }
+}
+
+/* Modo compacto */
+.compact {
+  max-width: 300px;
+}
+
+.compact .tableText {
+  font-size: 10px;
+}
+
+.compact .tableNumber {
+  font-size: 9px;
+}
+
+.compact .tableCapacity {
+  font-size: 7px;
+} 
