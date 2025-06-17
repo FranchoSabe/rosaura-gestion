@@ -406,7 +406,7 @@ export const ClientView = ({
           }
         }
       }
-    }, 120); // debounce 120ms
+    }, 50); // debounce 50ms
   };
 
   if (currentScreen === 'landing') {
