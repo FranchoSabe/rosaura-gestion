@@ -140,6 +140,7 @@ export const ClientView = ({
   const [showPhoneHelp, setShowPhoneHelp] = useState(false);
 
   const sliderRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
 
   const handleSearch = async (searchData) => {
     const result = await handleSearchReservation(searchData);
@@ -375,6 +376,39 @@ export const ClientView = ({
     }
   }, [reservaData.fecha]);
 
+  const handleSliderScroll = () => {
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (!sliderRef.current) return;
+      const slider = sliderRef.current;
+      const sliderRect = slider.getBoundingClientRect();
+      const centerX = sliderRect.left + sliderRect.width / 2;
+
+      let closestEl = null;
+      let closestDist = Infinity;
+
+      Array.from(slider.children).forEach(node => {
+        const rect = node.getBoundingClientRect();
+        const nodeCenter = rect.left + rect.width / 2;
+        const dist = Math.abs(nodeCenter - centerX);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestEl = node;
+        }
+      });
+
+      if (closestEl) {
+        const dateAttr = closestEl.getAttribute('data-date');
+        if (dateAttr) {
+          const dateObj = new Date(dateAttr);
+          if (!reservaData.fecha || dateObj.toDateString() !== new Date(reservaData.fecha).toDateString()) {
+            setReservaData(prev => ({ ...prev, fecha: dateObj }));
+          }
+        }
+      }
+    }, 120); // debounce 120ms
+  };
+
   if (currentScreen === 'landing') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
@@ -527,7 +561,7 @@ export const ClientView = ({
               >
                 <ChevronLeft size={20}/>
               </button>
-              <div className={styles.dateSlider} ref={sliderRef}>
+              <div className={styles.dateSlider} ref={sliderRef} onScroll={handleSliderScroll}>
                 {Array.from({length: 31}, (_, i) => {
                   const dateObj = new Date();
                   dateObj.setDate(dateObj.getDate()+i);
