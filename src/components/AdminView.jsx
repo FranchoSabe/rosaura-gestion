@@ -463,7 +463,7 @@ const ReservationsTable = ({
               .sort((a, b) => a.horario.localeCompare(b.horario))
               .map((reserva) => (
                 <tr 
-                  key={`table-${reserva.id}`} 
+                  key={`reservations-table-${reserva.id}-${reserva.horario}`} 
                   className={`${styles.tableRow} ${
                     assignmentMode ? 'cursor-pointer' : ''
                   } ${
@@ -892,7 +892,7 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
               filteredWaitingList.map((waiting) => {
                 const clientHistory = getClientHistory(waiting);
                 return (
-                  <tr key={waiting.id} className="hover:bg-gray-50">
+                  <tr key={`waiting-list-view-${waiting.id}`} className="hover:bg-gray-50">
                     <td className="px-4 py-2">
                       <div>
                         <div className="font-medium text-gray-900 whitespace-nowrap">{waiting.cliente.nombre}</div>
@@ -2724,7 +2724,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
                 const strokeColor = isOcupada ? '#dc2626' : isBloqueada ? '#f59e0b' : '#0c4900';
 
                 return (
-                  <g key={table.id}>
+                  <g key={`today-map-table-${table.id}`}>
                     <rect
                       x={table.x}
                       y={table.y}
@@ -3070,7 +3070,7 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
                   const clientHistory = getClientHistory(waiting);
                   
                   return (
-                    <tr key={waiting.id} className={styles.waitingListTableRow}>
+                    <tr key={`today-waiting-${waiting.id}`} className={styles.waitingListTableRow}>
                       <td className={styles.waitingListTableCell}>
                         <div className={styles.waitingListClientInfo}>
                           <div className={styles.waitingListClientName}>{waiting.cliente.nombre}</div>
@@ -3347,7 +3347,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
           const strokeColor = isOcupada ? '#dc2626' : isBloqueada ? '#f59e0b' : '#0c4900';
 
           return (
-            <g key={table.id}>
+                            <g key={`preview-map-table-${table.id}`}>
               <rect
                 x={table.x}
                 y={table.y}
@@ -3532,7 +3532,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
                     {preview.reservas
                       .sort((a, b) => a.horario.localeCompare(b.horario))
                       .map((reserva) => (
-                      <div key={`preview-${reserva.id}`} className={styles.modalReservationCard}>
+                      <div key={`preview-modal-${reserva.id}-${reserva.horario}`} className={styles.modalReservationCard}>
                         <div className={styles.modalReservationHeader}>
                           <div className={styles.modalReservationContent}>
                             <div className={styles.modalReservationBadges}>
