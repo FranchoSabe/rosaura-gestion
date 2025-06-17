@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ChevronDown, ThumbsDown, MessageCircle, Check, Edit2, Trash2, CheckCircle, X, XCircle, AlertTriangle, Sun, Moon, Clock, Printer, ChevronLeft, ChevronRight, Calendar, Users, Phone } from 'lucide-react';
 import styles from './AdminView.module.css';
 import { sanitizeData } from '../utils/validation';
+import { formatPhoneForWhatsApp } from '../utils';
+import CreateReservationModal from './modals/CreateReservationModal';
 
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
@@ -917,16 +919,7 @@ const ReservationsTable = ({
     }
   };
 
-  const formatPhoneForWhatsApp = (phone) => {
-    let cleaned = phone.replace(/\D/g, '');
-    if (cleaned.startsWith('54')) {
-      return cleaned;
-    }
-    if (cleaned.startsWith('9')) {
-      return `54${cleaned}`;
-    }
-    return `549${cleaned}`;
-  };
+
 
   const getWhatsAppMessage = (reserva) => {
     return `¡Hola ${reserva.cliente.nombre}! Te confirmamos tu reserva en Rosaura:
@@ -1210,16 +1203,7 @@ const WaitingListView = ({ waitingList, reservations, clients, onConfirmWaitingR
     }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); // Ordenar por fecha más reciente
   };
 
-  const formatPhoneForWhatsApp = (phone) => {
-    if (!phone) return '';
-    let cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.startsWith('0')) {
-      cleanPhone = '54' + cleanPhone.substring(1);
-    } else if (!cleanPhone.startsWith('54')) {
-      cleanPhone = '54' + cleanPhone;
-    }
-    return cleanPhone;
-  };
+
 
   const handleContactClient = async (waiting) => {
     try {
@@ -2614,16 +2598,6 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   }, []);
 
   // Funciones para manejo de lista de espera
-  const formatPhoneForWhatsApp = (phone) => {
-    if (!phone) return '';
-    let cleanPhone = phone.replace(/\D/g, '');
-    if (cleanPhone.startsWith('0')) {
-      cleanPhone = '54' + cleanPhone.substring(1);
-    } else if (!cleanPhone.startsWith('54')) {
-      cleanPhone = '54' + cleanPhone;
-    }
-    return cleanPhone;
-  };
 
   const handleContactWaitingClient = async (waiting) => {
     try {

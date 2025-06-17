@@ -2356,6 +2356,9 @@
   padding: 0;
   max-height: calc(95vh - 100px);
   overflow: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .modalGrid {
@@ -2364,6 +2367,7 @@
   gap: 0;
   height: calc(95vh - 180px);
   min-height: 600px;
+  width: 100%;
 }
 
 .modalSection {
@@ -2372,6 +2376,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  min-width: 0;
 }
 
 .modalSection:first-child {
@@ -2396,6 +2402,7 @@
   border-radius: 8px;
   padding: 0.75rem;
   min-height: 400px;
+  width: 100%;
 }
 
 .modalMapSvg {
@@ -2405,6 +2412,7 @@
   max-height: 100%;
   min-height: 350px;
   object-fit: contain;
+  display: block;
 }
 
 .modalReservationsList {
@@ -2415,6 +2423,8 @@
   flex-direction: column;
   gap: 0.75rem;
   max-height: calc(95vh - 350px);
+  width: 100%;
+  min-width: 0;
 }
 
 .modalReservationsList::-webkit-scrollbar {
