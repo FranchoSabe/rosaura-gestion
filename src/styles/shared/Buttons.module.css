@@ -1,14 +1,15 @@
 /* Botones principales */
 .primaryButton {
-  width: 100%;
+  width: auto;
+  min-width: 200px;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 1rem;
   backdrop-filter: blur(8px);
   color: white;
-  font-weight: 600;
-  padding: 1.1rem 1.5rem;
-  font-size: 1.125rem;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
   margin-bottom: 0.75rem;
   transition: all 0.3s ease;
   display: flex;
@@ -69,7 +70,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 1rem;
   color: white;
-  font-weight: 600;
+  font-weight: 500;
   padding: 1.1rem 1.5rem;
   font-size: 1.125rem;
   margin-bottom: 0.75rem;
@@ -178,7 +179,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 1rem;
   color: white;
-  font-weight: 600;
+  font-weight: 500;
   padding: 1.1rem 1.5rem;
   font-size: 1.125rem;
   margin-bottom: 0.75rem;
@@ -246,7 +247,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 1rem;
   color: white;
-  font-weight: 600;
+  font-weight: 500;
   padding: 1.1rem 1.5rem;
   font-size: 1.125rem;
   margin-bottom: 0.75rem;
@@ -599,5 +600,15 @@
   .whatsappButton:focus svg,
   .manageButton:focus svg {
     color: black;
+  }
+}
+
+@media (min-width: 640px) {
+  .reserveButton,
+  .whatsappButton,
+  .manageButton {
+    width: auto;
+    min-width: 200px;
+    padding: 0.85rem 1.5rem;
   }
 } 

@@ -204,7 +204,7 @@ export const ClientView = ({
     let dayCount = 0;
     let i = 0;
     
-    // Generar hasta 5 días disponibles (sin lunes) para hacer espacio a "más fechas"
+    // Generar hasta 5 días disponibles (sin lunes)
     while (dayCount < 5 && i < 14) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
@@ -434,7 +434,7 @@ export const ClientView = ({
             </div>
             
             <div className={`${styles.buttonContainer} ${styles.spaceY4} ${styles.mb4}`}>
-              <button onClick={() => setCurrentScreen('fecha-turno')} className={buttonStyles.reserveButton}>
+              <button onClick={() => setCurrentScreen('fecha-select')} className={buttonStyles.reserveButton}>
                 <Calendar size={20} />
                 Hacer una reserva
               </button>
@@ -443,7 +443,7 @@ export const ClientView = ({
                 className={buttonStyles.whatsappButton}
               >
                 <MessageCircle size={20} />
-                Escribir por Whatsapp
+                Whatsapp
               </button>
               <button 
                 onClick={() => setShowSearchForm(true)} 
@@ -493,8 +493,8 @@ export const ClientView = ({
     );
   }
 
-  // Nueva pantalla: solo fecha y turno
-  if (currentScreen === 'fecha-turno') {
+  // Nueva pantalla: solo fecha (hoy/mañana/+ fechas)
+  if (currentScreen === 'fecha-select') {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const maxDate = new Date();
@@ -541,103 +541,41 @@ export const ClientView = ({
               </button>
             </div>
             
-            {/* Slider fechas */}
-            <div className={styles.dateSliderWrapper}>
+            {/* Grid de 3 tarjetas: Hoy, Mañana, +Fechas */}
+            <div className={styles.enhancedDateGrid} style={{gridTemplateColumns:'repeat(2,1fr)'}}>
+              {[0,1].map((offset) => {
+                const dateObj = new Date();
+                dateObj.setDate(dateObj.getDate() + offset);
+                const label = getDayLabel(dateObj, offset);
+                const isSelected = reservaData.fecha && new Date(reservaData.fecha).toDateString() === dateObj.toDateString();
+                return (
+                  <button
+                    key={`quick-${offset}`}
+                    onClick={() => setReservaData({...reservaData, fecha: dateObj})}
+                    className={`${styles.enhancedDateButton} ${isSelected ? styles.enhancedDateButtonSelected : ''}`}
+                    type="button"
+                  >
+                    <div className={styles.enhancedDateButtonContent}>
+                      <span className={styles.enhancedDateLabel}>{label}</span>
+                      <span className={styles.enhancedDateDay}>{formatDayDisplay(dateObj)}</span>
+                    </div>
+                  </button>
+                );
+              })}
               <button
-                className={`${styles.sliderButton} ${styles.sliderPrev}`}
-                onClick={() => {
-                  // scroll y cambiar fecha
-                  if (sliderRef.current) sliderRef.current.scrollBy({left: -130, behavior:'smooth'});
-                  if (reservaData.fecha) {
-                    const newDate = new Date(reservaData.fecha);
-                    newDate.setDate(newDate.getDate() - 1);
-                    const limitDate = new Date();
-                    limitDate.setHours(0,0,0,0);
-                    if (newDate >= limitDate) {
-                      setReservaData(prev => ({ ...prev, fecha: newDate }));
-                    }
-                  }
-                }}
+                onClick={() => setShowDatePicker(true)}
+                className={`${styles.enhancedMoreDatesButton} ${styles.moreDatesFull}`}
               >
-                <ChevronLeft size={20}/>
-              </button>
-              <div className={styles.dateSlider} ref={sliderRef} onScroll={handleSliderScroll}>
-                {Array.from({length: 31}, (_, i) => {
-                  const dateObj = new Date();
-                  dateObj.setDate(dateObj.getDate()+i);
-                  const label = getDayLabel(dateObj, i);
-                  const isSelected = reservaData.fecha && new Date(reservaData.fecha).toDateString() === dateObj.toDateString();
-                  return (
-                    <button
-                      key={dateObj.toDateString()}
-                      data-date={dateObj.toDateString()}
-                      onClick={(e) => {
-                        setReservaData({...reservaData, fecha: dateObj});
-                        e.currentTarget.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
-                      }}
-                      className={`${styles.sliderDay} ${isSelected ? styles.sliderDaySelected : ''}`}
-                      type="button"
-                    >
-                      <span>{label}</span>
-                      <span>{formatDayDisplay(dateObj)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                className={`${styles.sliderButton} ${styles.sliderNext}`}
-                onClick={() => {
-                  if (sliderRef.current) sliderRef.current.scrollBy({left: 130, behavior:'smooth'});
-                  if (reservaData.fecha) {
-                    const newDate = new Date(reservaData.fecha);
-                    newDate.setDate(newDate.getDate() + 1);
-                    const maxDateLimit = new Date();
-                    maxDateLimit.setMonth(maxDateLimit.getMonth() + 1);
-                    maxDateLimit.setHours(0,0,0,0);
-                    if (newDate <= maxDateLimit) {
-                      setReservaData(prev => ({ ...prev, fecha: newDate }));
-                    }
-                  }
-                }}
-              >
-                <ChevronRight size={20}/>
+                <Calendar size={16} />
+                <span>+ Fechas</span>
               </button>
             </div>
           </div>
 
-          {/* Selección de turno */}
-          <div className={styles.enhancedTurnoSection}>
-            <div className={styles.enhancedSectionTitle}>
-              <Clock size={24} />
-              Turno
-            </div>
-            
-            <div className={styles.enhancedTurnoGrid}>
-              <button
-                onClick={() => setReservaData({...reservaData, turno: 'mediodia'})} 
-                className={`${styles.enhancedTurnoButton} ${reservaData.turno === 'mediodia' ? styles.enhancedTurnoButtonSelected : ''}`}
-              >
-                <div className={styles.enhancedTurnoButtonContent}>
-                  <Sun size={24} className={styles.textYellow200} />
-                  Mediodía
-                </div>
-              </button>
-              <button
-                onClick={() => setReservaData({...reservaData, turno: 'noche'})} 
-                className={`${styles.enhancedTurnoButton} ${reservaData.turno === 'noche' ? styles.enhancedTurnoButtonSelected : ''}`}
-              >
-                <div className={styles.enhancedTurnoButtonContent}>
-                  <Moon size={24} className={styles.textBlue300} />
-                  Noche
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Botón para continuar a selección de personas */}
+          {/* Botón continuar a seleccionar turno */}
           <button 
-            onClick={() => setCurrentScreen('personas-disponibilidad')} 
-            disabled={!reservaData.fecha || !reservaData.turno}
+            onClick={() => setCurrentScreen('turno-select')} 
+            disabled={!reservaData.fecha}
             className={styles.enhancedContinueButton}
           >
             <div className={styles.enhancedContinueButtonContent}>
@@ -713,6 +651,31 @@ export const ClientView = ({
     );
   }
 
+  // Nueva pantalla: Selección de turno solamente
+  if (currentScreen === 'turno-select') {
+    return (
+      <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
+        <div className={styles.enhancedScreenContainer}>
+          <div className={styles.enhancedTurnoSection}>
+            <div className={styles.enhancedSectionHeader}>
+              <div className={styles.enhancedSectionTitle}>
+                <Clock size={24} /> Turno
+              </div>
+              <button onClick={()=>setCurrentScreen('fecha-select')} className={styles.backButtonStyled}>
+                 <ChevronLeft size={18}/>
+              </button>
+            </div>
+            <div className={styles.enhancedTurnoGrid}>
+              <button onClick={()=>setReservaData({...reservaData, turno:'mediodia'})} className={`${styles.enhancedTurnoButton} ${reservaData.turno==='mediodia'?styles.enhancedTurnoButtonSelected:''}`}> <div className={styles.enhancedTurnoButtonContent}><Sun size={36} className={styles.textYellow200}/> Mediodía</div></button>
+              <button onClick={()=>setReservaData({...reservaData, turno:'noche'})} className={`${styles.enhancedTurnoButton} ${reservaData.turno==='noche'?styles.enhancedTurnoButtonSelected:''}`}> <div className={styles.enhancedTurnoButtonContent}><Moon size={36} className={styles.textBlue300}/> Noche</div></button>
+            </div>
+          </div>
+          <button onClick={()=>setCurrentScreen('personas-disponibilidad')} disabled={!reservaData.turno} className={styles.enhancedContinueButton}><div className={styles.enhancedContinueButtonContent}>Continuar</div></button>
+        </div>
+      </ClientLayout>
+    );
+  }
+
   // Nueva pantalla: solo personas y consulta de disponibilidad
   if (currentScreen === 'personas-disponibilidad') {
     return (
@@ -730,7 +693,7 @@ export const ClientView = ({
                 </p>
               </div>
               <button 
-                onClick={() => setCurrentScreen('fecha-turno')} 
+                onClick={() => setCurrentScreen('fecha-select')} 
                 className={styles.backButtonStyled}
               >
                 <ChevronLeft size={18} />
@@ -855,8 +818,8 @@ export const ClientView = ({
                   }}
                   className={`${buttonStyles.dateButtonUnselected} ${styles.flex} ${styles.flexCol} ${styles.itemsCenter} ${styles.py3}`}
                 >
-                  <span className={`${styles.textSm} ${styles.fontMedium}`}>+ Fechas</span>
-                  <Calendar size={16} className={`${styles.textGray400} ${styles.mt1}`} />
+                  <Calendar size={16} />
+                  <span>+ Fechas</span>
                 </button>
               </div>
             </div>
