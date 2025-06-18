@@ -1720,6 +1720,8 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   // Nuevo filtro para lista de espera
   const [waitingListFilter, setWaitingListFilter] = useState('all'); // 'all', 'with-waiting', 'only-waiting'
   const [searchWaitingTerm, setSearchWaitingTerm] = useState('');
+  // --- NUEVO: modo para unir mesas manualmente ---
+
 
   // Layout de mesas UNIFICADO - usando la versión centralizada
 
@@ -2478,6 +2480,9 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
     return unidas.has(tableId);
   };
 
+  // --- NUEVO: alternar modo unir mesas ---
+
+
   return (
     <div className={styles.todayContainer}>
       {/* Header con navegación de fechas y controles */}
@@ -2542,14 +2547,6 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
                 {editCuposMode ? 'Modificando cupos' : 'Modificar cupos'}
               </button>
               
-              <button
-                onClick={handleFixTableAssignments}
-                className={styles.fixButton}
-                disabled={reservasTurnoSeleccionado.length === 0}
-                title="Corregir asignaciones incorrectas de reservas grandes"
-              >
-                🔧 Corregir
-              </button>
               
               <button
                 onClick={handleManualAssignMode}

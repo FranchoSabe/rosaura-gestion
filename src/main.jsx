@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
+import Router from './router'
 import './index.css'
 import { checkRequiredEnvVars } from './utils/envCheck'
 
@@ -16,7 +17,7 @@ if (!checkRequiredEnvVars()) {
 } else {
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
-      <App />
+      <Router />
     </React.StrictMode>
   )
 }

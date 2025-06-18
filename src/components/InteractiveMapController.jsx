@@ -163,7 +163,7 @@ const InteractiveMapController = ({
     
     return (
       <g 
-        key={`table-${id}`}
+        key={`table-${id}-${mode}`}
         className="cursor-pointer"
         onClick={(e) => handleTableClick(id, e)}
         onMouseEnter={() => setHoveredTable(id)}
@@ -245,6 +245,7 @@ const InteractiveMapController = ({
             />
           </g>
         )}
+
       </g>
     );
   }, [getTableState, occupiedTables, blockedTables, handleTableClick]);
@@ -278,12 +279,16 @@ const InteractiveMapController = ({
             </text>
           )}
           
+
+          
           {/* Leyenda simplificada cuando no hay modo especial */}
           {mode === 'view' && (
             <text x="115" y="435" textAnchor="middle" fontSize="8" fill="#6b7280">
               Verde: Libre | Azul: Reservada | Amarillo: Walk-in
             </text>
           )}
+          
+
         </svg>
       </div>
       

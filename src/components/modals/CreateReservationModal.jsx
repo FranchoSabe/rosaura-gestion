@@ -25,14 +25,24 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
   });
 
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const updateSlots = async () => {
-      const slots = await getAvailableSlots(
+      const rawSlots = await getAvailableSlots(
         newReservation.fecha.toISOString().split('T')[0],
         newReservation.turno
       );
-      setAvailableSlots(slots);
+
+      // Adaptar: si la función devuelve array de strings, transformamos
+      const normalized = Array.isArray(rawSlots) && typeof rawSlots[0] === 'string' 
+        ? HORARIOS[newReservation.turno].map(hor => ({
+            horario: hor,
+            cuposDisponibles: rawSlots.includes(hor) ? 6 : 0 // asumimos máx 6
+          }))
+        : rawSlots;
+
+      setAvailableSlots(normalized);
     };
     updateSlots();
   }, [newReservation.fecha, newReservation.turno, getAvailableSlots]);
@@ -40,19 +50,26 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevenir envíos duplicados
+    if (isSaving) return;
+    setIsSaving(true);
+
     // Validaciones
     if (!newReservation.cliente.nombre.trim()) {
       showNotification('error', 'El nombre es obligatorio');
+      setIsSaving(false);
       return;
     }
 
     if (!newReservation.cliente.telefono.trim()) {
       showNotification('error', 'El teléfono es obligatorio');
+      setIsSaving(false);
       return;
     }
 
     if (!isValidPhoneNumber(newReservation.cliente.telefono, 'AR')) {
       showNotification('error', 'Formato de teléfono inválido');
+      setIsSaving(false);
       return;
     }
 
@@ -69,6 +86,7 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
 
     if (!horarioDisponible) {
       showNotification('error', 'El horario seleccionado no tiene cupos suficientes');
+      setIsSaving(false);
       return;
     }
 
@@ -90,6 +108,8 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
     } catch (error) {
       showNotification('error', 'Error al crear la reserva');
       console.error('Error:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -283,9 +303,10 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
             <button
               type="submit"
               className={styles.saveButton}
+              disabled={isSaving}
             >
               <Save size={16} />
-              Crear Reserva
+              {isSaving ? 'Guardando…' : 'Crear Reserva'}
             </button>
           </div>
         </form>

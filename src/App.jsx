@@ -48,6 +48,7 @@ function App() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [showWaitingListModal, setShowWaitingListModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Suscribirse a cambios en tiempo real
   useEffect(() => {
@@ -384,6 +385,9 @@ function App() {
   };
 
   const handleContactoSubmit = async () => {
+    // Prevenir envíos duplicados
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       // Convertir fecha a string si es necesario
       const fechaString = reservaData.fecha instanceof Date 
@@ -513,6 +517,8 @@ function App() {
     } catch (error) {
       console.error("Error al crear reserva:", error);
       alert("Error al crear la reserva. Por favor, intenta nuevamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
