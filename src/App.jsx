@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AdminView } from './components/AdminView';
 import { ClientView } from './components/ClientView';
 import { LoginView } from './components/LoginView';
+import AppRouter from './router/AppRouter';
 import { 
   addReservation, 
   addClient, 
@@ -721,10 +722,15 @@ function App() {
 
 
 
-  if (authState) {
-    return <AdminView 
-      data={data} 
-      auth={authState} 
+  // Usar el nuevo sistema de routing modular
+  return (
+    <AppRouter
+      // Props para auth state
+      authState={authState}
+      
+      // Props para admin
+      data={data}
+      auth={authState}
       onLogout={handleLogout}
       onSetBlacklist={handleSetBlacklist}
       onUpdateClientNotes={handleUpdateClientNotes}
@@ -742,33 +748,20 @@ function App() {
       isValidDate={isValidDate}
       formatDate={formatDate}
       HORARIOS={HORARIOS}
-    />;
-  }
-
-  if (currentScreen === 'login') {
-    return <LoginView 
-      handleLogin={handleLogin} 
-      setScreen={setCurrentScreen} 
-      BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL} 
-    />;
-  }
-
-  return (
-    <ClientView
+      
+      // Props para client
       LOGO_URL={LOGO_URL}
       BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}
-      onAdminClick={() => setCurrentScreen('login')}
-      reservaData={reservaData}
-      setReservaData={setReservaData}
       currentScreen={currentScreen}
       setCurrentScreen={setCurrentScreen}
+      reservaData={reservaData}
+      setReservaData={setReservaData}
       availableSlots={availableSlots}
       showConfirmation={showConfirmation}
       setShowConfirmation={setShowConfirmation}
       handleDateAndTurnoSubmit={handleDateAndTurnoSubmit}
       handleHorarioSelect={handleHorarioSelect}
       handleContactoSubmit={handleContactoSubmit}
-      formatDate={formatDate}
       handleSearchReservation={handleSearchReservation}
       handleUpdateReservation={handleUpdateReservation}
       handleDeleteReservation={handleDeleteReservation}
@@ -778,6 +771,7 @@ function App() {
       setShowWaitingListModal={setShowWaitingListModal}
       waitingList={data.waitingList || []}
       allReservations={data.reservas || []}
+      handleLogin={handleLogin}
     />
   );
 }

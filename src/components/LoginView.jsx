@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ClientLayout from './ClientLayout';
 import styles from './LoginView.module.css';
 
@@ -7,12 +8,26 @@ export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
-    const onSubmit = (e) => {
-        e.preventDefault(); // Evita que la página se recargue
-        const loginError = handleLogin(username, password);
-        if (loginError) {
-            setError(loginError);
+    const onSubmit = async (e) => {
+        e.preventDefault(); 
+        setIsLoading(true);
+        setError('');
+        
+        try {
+            const loginError = await handleLogin(username, password);
+            if (loginError) {
+                setError(loginError);
+            } else {
+                // Login exitoso - navegar a admin
+                navigate('/admin');
+            }
+        } catch (err) {
+            setError('Error al iniciar sesión. Intenta nuevamente.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -43,10 +58,10 @@ export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
 
                 {error && <p className={styles.error}>{error}</p>}
 
-                <button type="submit" className={styles.submitButton}>
-                    Iniciar Sesión
+                <button type="submit" className={styles.submitButton} disabled={isLoading}>
+                    {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </button>
-                <button type="button" onClick={() => setScreen('landing')} className={styles.backButton}>
+                <button type="button" onClick={() => navigate('/client')} className={styles.backButton}>
                     Volver al inicio
                 </button>
             </form>

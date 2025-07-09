@@ -1,16 +1,16 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 
-// Router principal: por el momento solo envuelve a App.
-// Más adelante reemplazaremos <App /> por páginas separadas.
+/**
+ * Router principal de la aplicación
+ * Envuelve la aplicación con BrowserRouter y delega el routing a App.jsx
+ * que ahora usa el nuevo sistema modular de rutas
+ */
 export default function Router() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Ruta comodín: todo va a App hasta refactor completo */}
-        <Route path="/*" element={<App />} />
-      </Routes>
+      <App />
     </BrowserRouter>
   );
 } 
