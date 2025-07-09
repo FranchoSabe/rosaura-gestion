@@ -1314,72 +1314,122 @@
 }
 
 /* Botones modernos para acciones */
-.modernActionButton {
+.modernTable .modernActionButton {
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  color: #6b7280;
+  transition: all 0.15s ease-in-out;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 8px;
-  border: none;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  text-decoration: none;
-  min-height: 36px;
-  white-space: nowrap;
+  min-width: 32px;
+  min-height: 32px;
+  flex-shrink: 0;
 }
 
-.modernActionButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.modernTable .modernActionButton:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
 }
 
-.modernActionButton:active {
-  transform: translateY(0);
+.modernTable .modernActionButton:active {
+  background-color: #f3f4f6;
+  transform: scale(0.95);
 }
 
-/* Variantes de colores para botones */
-.modernActionButton.primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+/* Botón WhatsApp - Verde */
+.modernTable .modernActionButton.whatsapp {
+  background-color: #10b981;
   color: white;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  border-color: #059669;
 }
 
-.modernActionButton.primary:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+.modernTable .modernActionButton.whatsapp:hover {
+  background-color: #059669;
+  border-color: #047857;
 }
 
-.modernActionButton.success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+/* Botón Editar - Azul */
+.modernTable .modernActionButton.edit {
+  background-color: #3b82f6;
   color: white;
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+  border-color: #2563eb;
 }
 
-.modernActionButton.success:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+.modernTable .modernActionButton.edit:hover {
+  background-color: #2563eb;
+  border-color: #1d4ed8;
 }
 
-.modernActionButton.success.contacted {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #166534;
-  border: 1px solid #86efac;
-  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
-}
-
-.modernActionButton.success.contacted:hover {
-  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
-  color: #14532d;
-}
-
-.modernActionButton.danger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+/* Botón Eliminar - Rojo */
+.modernTable .modernActionButton.delete {
+  background-color: #ef4444;
   color: white;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  border-color: #dc2626;
 }
 
-.modernActionButton.danger:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+.modernTable .modernActionButton.delete:hover {
+  background-color: #dc2626;
+  border-color: #b91c1c;
+}
+
+/* Botón Lista Negra - Naranja */
+.modernTable .modernActionButton.blacklist {
+  background-color: #f97316;
+  color: white;
+  border-color: #ea580c;
+}
+
+.modernTable .modernActionButton.blacklist:hover {
+  background-color: #ea580c;
+  border-color: #c2410c;
+}
+
+.modernTable .modernActionButton.primary {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #2563eb;
+}
+
+.modernTable .modernActionButton.primary:hover {
+  background-color: #2563eb;
+  border-color: #1d4ed8;
+}
+
+.modernTable .modernActionButton.success {
+  background-color: #10b981;
+  color: white;
+  border-color: #059669;
+}
+
+.modernTable .modernActionButton.success:hover {
+  background-color: #059669;
+  border-color: #047857;
+}
+
+.modernTable .modernActionButton.success.contacted {
+  background-color: #06b6d4;
+  color: white;
+  border-color: #0891b2;
+}
+
+.modernTable .modernActionButton.success.contacted:hover {
+  background-color: #0891b2;
+  border-color: #0e7490;
+}
+
+.modernTable .modernActionButton.danger {
+  background-color: #ef4444;
+  color: white;
+  border-color: #dc2626;
+}
+
+.modernTable .modernActionButton.danger:hover {
+  background-color: #dc2626;
+  border-color: #b91c1c;
 }
 
 /* Badges y estados modernos */
@@ -1439,30 +1489,49 @@
   color: #d97706 !important;
 }
 
-/* Contenedor de acciones mejorado */
-.modernActionContainer {
+/* Contenedor de acciones mejorado - Solo para tablas de reservas */
+.modernTable .modernActionContainer {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 160px;
+  white-space: nowrap;
 }
 
-/* Responsive para móviles */
+/* Responsive para móviles - Solo para tablas de reservas */
 @media (max-width: 768px) {
   .modernTable th,
   .modernTable td {
-    padding: 12px 16px;
+    padding: 8px 12px;
   }
 
-  .modernActionButton {
+  .modernTable .modernActionButton {
     font-size: 12px;
-    padding: 6px 12px;
-    min-height: 32px;
+    padding: 0.25rem;
+    min-height: 28px;
+    min-width: 28px;
   }
 
-  .modernActionContainer {
-    gap: 6px;
+  .modernTable .modernActionContainer {
+    gap: 4px;
+    flex-wrap: wrap;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modernTable .modernActionContainer {
+    flex-direction: column;
+    gap: 2px;
+    min-width: 32px;
+  }
+  
+  .modernTable .modernActionButton {
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0.25rem;
   }
 }
 
@@ -1949,26 +2018,31 @@
   display: flex;
   gap: 2rem;
   padding: 1rem;
+  min-height: 0;
+  max-height: calc(100vh - 300px);
+  overflow: hidden;
 }
 
 .mapSection {
-  width: 50%;
-  padding: 1.5rem;
-  border-right: 1px solid #e5e7eb;
-  background-color: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
+  width: 50%;                             /* Ocupa exactamente la mitad del ancho */
+  padding: 1.5rem;                        /* Relleno interno de 24px */
+  border-right: 1px solid #e5e7eb;        /* Borde derecho gris claro (separador) */
+  background-color: white;                /* Fondo blanco sólido */
+  border-radius: 0.75rem;                 /* Bordes redondeados de 12px */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);  /* Sombra sutil hacia abajo */
+  display: grid;
+  vertical-align: middle;                      /* Flexbox para elementos internos */
+  min-height: 0;                          /* Permite que se reduzca si es necesario */
+  overflow: hidden;                       /* Oculta desbordamiento interno */
 }
 
 /* Estilos para el contenido de información debajo del mapa */
 .mapSection h4 {
-  color: #374151;
-  font-weight: 600;
-  font-size: 0.875rem;
-  margin-bottom: 0.5rem;
-  margin-top: 1rem;
+  color: #374151;                         /* Color gris oscuro (#374151 = gray-700) */
+  font-weight: 600;                       /* Peso de fuente semi-bold */
+  font-size: 0.875rem;                    /* Tamaño de fuente de 14px */
+  margin-bottom: 0.5rem;                  /* Margen inferior de 8px */
+  margin-top: 1rem;                       /* Margen superior de 16px */
 }
 
 .mapSection div:last-child {
@@ -1989,6 +2063,10 @@
   background-color: white;
   border-radius: 0.75rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .reservationsHeader {
@@ -2008,7 +2086,9 @@
   background-color: white;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
-  overflow: hidden;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .changesAlert {
@@ -2251,6 +2331,8 @@
   
   .todayMainContent {
     flex-direction: column;
+    max-height: none;
+    overflow: visible;
   }
   
   .mapSection,
@@ -2258,10 +2340,18 @@
     width: 100%;
     border-right: none;
     padding: 1rem;
+    min-height: auto;
+    overflow: visible;
   }
   
   .mapSection {
     border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .reservationsTable {
+    overflow-y: visible;
+    max-height: none;
+    flex: none;
   }
   
   .todayMainContent {

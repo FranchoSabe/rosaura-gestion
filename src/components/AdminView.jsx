@@ -281,9 +281,10 @@ const ReservationsTable = ({
   assignmentMode = false,
   onReservationClick = null,
   selectedReservation = null,
-  tableAssignments = {}
+  tableAssignments = {},
+  editingReservation,
+  setEditingReservation
 }) => {
-  const [editingReservation, setEditingReservation] = useState(null);
   const [tableReassignmentInfo, setTableReassignmentInfo] = useState(null);
   const [pendingReservationData, setPendingReservationData] = useState(null);
   const [savedReservationDetails, setSavedReservationDetails] = useState(null);
@@ -562,7 +563,7 @@ const ReservationsTable = ({
                             href={`https://wa.me/${formatPhoneForWhatsApp(reserva.cliente?.telefono || '')}?text=${encodeURIComponent(getWhatsAppMessage(reserva))}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={styles.modernActionButton}
+                            className={`${styles.modernActionButton} ${styles.whatsapp}`}
                             title="Confirmar por WhatsApp"
                           >
                             <MessageCircle size={16} />
@@ -575,7 +576,7 @@ const ReservationsTable = ({
                                 e.stopPropagation();
                                 setEditingReservation(reserva);
                               }}
-                              className={styles.modernActionButton}
+                              className={`${styles.modernActionButton} ${styles.edit}`}
                               title="Editar reserva"
                             >
                               <Edit2 size={16} />
@@ -588,7 +589,7 @@ const ReservationsTable = ({
                               e.stopPropagation();
                               handleDelete(reserva);
                             }}
-                            className={styles.modernActionButton}
+                            className={`${styles.modernActionButton} ${styles.delete}`}
                             title="Eliminar reserva"
                           >
                             <Trash2 size={16} />
@@ -600,7 +601,7 @@ const ReservationsTable = ({
                               e.stopPropagation();
                               handleBlacklist(reserva);
                             }}
-                            className={styles.modernActionButton}
+                            className={`${styles.modernActionButton} ${styles.blacklist}`}
                             title="Agregar a lista negra"
                           >
                             <ThumbsDown size={16} />
@@ -614,18 +615,6 @@ const ReservationsTable = ({
           </tbody>
         </table>
       </div>
-
-      {editingReservation && (
-        <EditReservationModal
-          reservation={editingReservation}
-          onClose={() => setEditingReservation(null)}
-          onSave={handleSave}
-          getAvailableSlotsForEdit={getAvailableSlotsForEdit}
-          isValidDate={isValidDate}
-          HORARIOS={HORARIOS}
-          showNotification={showNotification}
-        />
-      )}
 
       {tableReassignmentInfo && (
         <TableReassignmentModal
@@ -1703,7 +1692,7 @@ const PanoramaView = ({ reservations, formatDate, onGoToDailyView, TurnoPreviewM
 };
 
 // Componente optimizado para vista "Hoy"
-const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDeleteReservation, getAvailableSlotsForEdit, isValidDate, HORARIOS, showNotification, showConfirmation, formatDate, waitingList = [], onConfirmWaitingReservation, onDeleteWaitingReservation, onMarkAsNotified, onContactWaitingClient, onRejectWaitingReservation, getAvailableSlots, initialDate, initialTurno, onDateTurnoSet, onSaveBlockedTables, onLoadBlockedTables }) => {
+const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDeleteReservation, getAvailableSlotsForEdit, isValidDate, HORARIOS, showNotification, showConfirmation, formatDate, waitingList = [], onConfirmWaitingReservation, onDeleteWaitingReservation, onMarkAsNotified, onContactWaitingClient, onRejectWaitingReservation, getAvailableSlots, initialDate, initialTurno, onDateTurnoSet, onSaveBlockedTables, onLoadBlockedTables, editingReservation, setEditingReservation }) => {
   const [selectedDate, setSelectedDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
   const [selectedTurno, setSelectedTurno] = useState(initialTurno || 'mediodia');
   const [assignmentMode, setAssignmentMode] = useState(false);
@@ -2781,6 +2770,8 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
               }}
               selectedReservation={selectedReservation}
               tableAssignments={pendingAssignments}
+              editingReservation={editingReservation}
+              setEditingReservation={setEditingReservation}
             />
           </div>
         </div>
@@ -2989,6 +2980,7 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
   const [selectedDateFromPanorama, setSelectedDateFromPanorama] = useState(null);
   const [selectedTurnoFromPanorama, setSelectedTurnoFromPanorama] = useState(null);
   const [showCreateReservationModal, setShowCreateReservationModal] = useState(false);
+  const [editingReservation, setEditingReservation] = useState(null);
 
   // Función para mostrar notificaciones
   const showNotification = useCallback((type, message) => {
@@ -3522,6 +3514,8 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
             }}
             onSaveBlockedTables={onSaveBlockedTables}
             onLoadBlockedTables={onLoadBlockedTables}
+            editingReservation={editingReservation}
+            setEditingReservation={setEditingReservation}
           />
         )}
 
@@ -3561,6 +3555,29 @@ export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClient
           />
         )}
       </div>
+
+      {/* Modal para editar reserva - Debe estar al final para el z-index correcto */}
+      {editingReservation && (
+        <EditReservationModal
+          reservation={editingReservation}
+          onClose={() => setEditingReservation(null)}
+          onSave={async (updatedData) => {
+            try {
+              await onUpdateReservation(editingReservation.id, updatedData, true);
+              setEditingReservation(null);
+              showNotification('success', 'Reserva actualizada correctamente');
+            } catch (error) {
+              console.error('Error al actualizar reserva:', error);
+              showNotification('error', 'Error al actualizar la reserva');
+            }
+          }}
+          getAvailableSlotsForEdit={getAvailableSlotsForEdit}
+          isValidDate={isValidDate}
+          HORARIOS={HORARIOS}
+          showNotification={showNotification}
+          isAdmin={true}
+        />
+      )}
     </div>
   );
 }; 
