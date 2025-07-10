@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
-import { PhoneInput } from '../../shared/components/ui/Input';
-import { sanitizeData } from '../../utils/validation';
-import styles from './EditReservationModal.module.css';
+import { PhoneInput } from '../../ui/Input';
+import { sanitizeData } from '../../../../utils/validation';
+import styles from './index.module.css';
 
 const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsForEdit, isValidDate, HORARIOS, showNotification, isAdmin = true }) => {
   // Función para formatear el teléfono existente a formato E.164

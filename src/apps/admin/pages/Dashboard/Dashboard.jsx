@@ -7,8 +7,8 @@ import "../../../../datepicker-custom.css";
 
 import { formatPhoneForWhatsApp } from '../../../../utils/phoneUtils';
 import InteractiveMapController from '../../../../shared/components/InteractiveMap/InteractiveMapController';
-import CreateReservationModal from '../../../../components/modals/CreateReservationModal';
-import EditReservationModal from '../../../../components/modals/EditReservationModal';
+import CreateReservationModal from '../../../../shared/components/modals/CreateReservationModal';
+import EditReservationModal from '../../../../shared/components/modals/EditReservationModal';
 import { UNIFIED_TABLES_LAYOUT } from '../../../../utils/tablesLayout';
 import { TABLES_LAYOUT, calculateAutoAssignments, setsAreEqual, detectWalkInQuotaChanges, calculateWalkInQuotas } from '../../../../utils/mesaLogic';
 import { saveTableAssignments, saveBlockedTables, loadBlockedTables, reassignTableManually, validateTableAssignment, checkTableReassignmentNeeded } from '../../../../utils/mesaLogic';

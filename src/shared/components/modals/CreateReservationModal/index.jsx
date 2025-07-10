@@ -4,11 +4,11 @@ import { X, Save, Calendar, Clock, Users, MessageSquare, AlertCircle } from 'luc
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
-import "../../datepicker-custom.css";
+import "../../../../datepicker-custom.css";
 import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
-import { PhoneInput } from '../../shared/components/ui/Input';
-import { sanitizeData } from '../../utils/validation';
-import styles from './CreateReservationModal.module.css';
+import { PhoneInput } from '../../ui/Input';
+import { sanitizeData } from '../../../../utils/validation';
+import styles from './index.module.css';
 
 // Registrar locale español para el DatePicker
 registerLocale('es', es);

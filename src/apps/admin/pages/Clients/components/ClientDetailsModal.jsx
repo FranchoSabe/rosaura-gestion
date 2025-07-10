@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Calendar, Clock, Users, Phone, MessageSquare, AlertTriangle, Trash2, MapPin, Edit2, ChevronDown, ChevronUp, User } from 'lucide-react';
 import EditClientModal from './EditClientModal';
-import EditReservationModal from '../../../../../components/modals/EditReservationModal';
+import EditReservationModal from '../../../../../shared/components/modals/EditReservationModal';
 import styles from './ClientDetailsModal.module.css';
 
 const ClientDetailsModal = ({ 

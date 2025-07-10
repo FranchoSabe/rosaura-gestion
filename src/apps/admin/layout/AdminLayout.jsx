@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Users, LogOut } from 'lucide-react';
-import CreateReservationModal from '../../../components/modals/CreateReservationModal';
+import CreateReservationModal from '../../../shared/components/modals/CreateReservationModal';
 import styles from './AdminLayout.module.css';
 
 /**

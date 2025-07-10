@@ -2,7 +2,6 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PrivateRoute from './PrivateRoute';
 import AdminLayout from '../apps/admin/layout/AdminLayout';
-import { AdminView } from '../components/AdminView';
 import Dashboard from '../apps/admin/pages/Dashboard/Dashboard';
 import Panorama from '../apps/admin/pages/Panorama/Panorama';
 import Clients from '../apps/admin/pages/Clients/Clients';
@@ -11,12 +10,11 @@ import WaitingList from '../apps/admin/pages/WaitingList/WaitingList';
 /**
  * Router para la aplicación de administración
  * 
- * MIGRACIÓN EN PROGRESO - FASE 2:
- * ✅ /admin/dashboard -> Dashboard.jsx (Vista "HOY" extraída)
- * ✅ /admin/panorama -> Panorama.jsx (Vista "PANORAMA" extraída)
- * ✅ /admin/clients -> Clients.jsx (Vista "CLIENTES" extraída)
- * ✅ /admin/waiting-list -> WaitingList.jsx (Vista "LISTA DE ESPERA" extraída)
- * 🔄 /admin/full -> AdminView.jsx (respaldo durante migración)
+ * MIGRACIÓN COMPLETADA ✅:
+ * ✅ /admin/dashboard -> Dashboard.jsx (Vista "HOY" migrada)
+ * ✅ /admin/panorama -> Panorama.jsx (Vista "PANORAMA" migrada)
+ * ✅ /admin/clients -> Clients.jsx (Vista "CLIENTES" migrada)
+ * ✅ /admin/waiting-list -> WaitingList.jsx (Vista "LISTA DE ESPERA" migrada)
  */
 const AdminRouter = (props) => {
   return (
@@ -160,13 +158,7 @@ const AdminRouter = (props) => {
             element={<Navigate to="/admin/dashboard" replace />} 
           />
           
-          {/* Ruta de respaldo - AdminView completo para testing */}
-          <Route 
-            path="/full" 
-            element={
-              <AdminView {...props} />
-            } 
-          />
+
           
           {/* Catch-all redirige a dashboard */}
           <Route 
