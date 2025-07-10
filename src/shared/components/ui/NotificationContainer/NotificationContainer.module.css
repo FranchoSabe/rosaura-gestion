@@ -1,0 +1,116 @@
+/* Sistema de notificaciones profesional */
+.notificationContainer {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 24rem;
+}
+
+.notification {
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.2), 
+    0 4px 6px -2px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 20rem;
+  animation: slideIn 0.2s ease-out;
+  backdrop-filter: none;
+}
+
+.notificationSuccess {
+  border-left-color: #059669;
+  background-color: #ffffff;
+}
+
+.notificationError {
+  border-left-color: #dc2626;
+  background-color: #ffffff;
+}
+
+.notificationWarning {
+  border-left-color: #f59e0b;
+  background-color: #ffffff;
+}
+
+.notificationInfo {
+  border-left-color: #3b82f6;
+  background-color: #ffffff;
+}
+
+.notificationIcon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notificationContent {
+  flex: 1;
+}
+
+.notificationTitle {
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+  color: #111827;
+}
+
+.notificationMessage {
+  color: #374151;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.notificationClose {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notificationClose:hover {
+  color: #6b7280;
+  background-color: #f3f4f6;
+}
+
+/* Animación simplificada y más sutil */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive para móviles */
+@media (max-width: 640px) {
+  .notificationContainer {
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+  }
+  
+  .notification {
+    min-width: auto;
+  }
+} 

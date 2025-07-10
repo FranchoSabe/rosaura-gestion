@@ -1,0 +1,672 @@
+/* ===== PANORAMA VIEW STYLES ===== */
+.panoramaContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.panoramaCard {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+}
+
+.panoramaTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.panoramaGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .panoramaGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .panoramaGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .panoramaGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.dayCard {
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease-in-out;
+}
+
+.dayCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dayHeader {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.dayName {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  text-transform: capitalize;
+}
+
+.dayDate {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.shiftsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shiftCard {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.shiftCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shiftCardClosed {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  cursor: default;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.shiftHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.shiftInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.shiftIcon {
+  font-size: 1rem;
+}
+
+.shiftName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.shiftReservations {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.occupancyBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.occupancyProgress {
+  flex: 1;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  height: 0.5rem;
+}
+
+.occupancyFill {
+  height: 0.5rem;
+  border-radius: 9999px;
+  transition: all 0.3s ease-in-out;
+}
+
+.occupancyBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.occupancyPersons {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+/* Occupancy colors */
+.occupancyLow { background-color: #d1d5db; }
+.occupancyModerate { background-color: #3b82f6; }
+.occupancyHigh { background-color: #eab308; }
+.occupancyVeryHigh { background-color: #f97316; }
+.occupancyFull { background-color: #ef4444; }
+
+.occupancyTextLight { color: #374151; }
+.occupancyTextWhite { color: white; }
+
+.dayTotal {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dayTotalContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dayTotalLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.dayTotalValue {
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #111827;
+}
+
+.legend {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+}
+
+.legendTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.legendGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.75rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legendColor {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 0.125rem;
+}
+
+/* ===== TURNO PREVIEW MODAL STYLES ===== */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modalContainer {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 95vw;
+  max-height: 95vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: scaleIn 0.2s ease-out;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalHeader {
+  background: linear-gradient(135deg, #0c4900 0%, #16a34a 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: none;
+}
+
+.modalHeaderContent h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modalHeaderContent p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0.25rem 0 0;
+  font-weight: 500;
+}
+
+.modalHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modalGoToDailyButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0c4900;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalGoToDailyButton:hover {
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modalCloseButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.2s ease;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.modalCloseButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.modalContent {
+  padding: 0;
+  max-height: calc(95vh - 100px);
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalGrid {
+  display: grid;
+  grid-template-columns: 55% 45%;
+  gap: 0;
+  height: calc(95vh - 180px);
+  min-height: 600px;
+  width: 100%;
+}
+
+.modalSection {
+  padding: 1.25rem;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+}
+
+.modalSection:first-child {
+  border-right: 1px solid #e5e7eb;
+}
+
+.modalSectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.modalMapContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-height: 400px;
+  width: 100%;
+}
+
+.modalMapSvg {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 350px;
+  object-fit: contain;
+  display: block;
+}
+
+.modalReservationsList {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: calc(95vh - 350px);
+  width: 100%;
+  min-width: 0;
+}
+
+.modalReservationsList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modalReservationsList::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.modalReservationsList::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.modalReservationsList::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.modalEmptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  text-align: center;
+  padding: 2rem;
+}
+
+.modalEmptyStateIcon {
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+.modalReservationCard {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.modalReservationCard:hover {
+  border-color: #0c4900;
+  box-shadow: 0 4px 12px rgba(12, 73, 0, 0.1);
+}
+
+.modalReservationHeader {
+  width: 100%;
+}
+
+.modalReservationContent {
+  width: 100%;
+}
+
+.modalReservationBadges {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.modalTimeBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background: #0c4900;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 16px;
+}
+
+.modalTableBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 16px;
+}
+
+.modalReservationName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.modalReservationDetails {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modalReservationDetail {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.modalReservationComments {
+  font-size: 0.875rem;
+  color: #374151;
+  font-style: italic;
+  background: #f8fafc;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border-left: 3px solid #0c4900;
+}
+
+.modalFooter {
+  background: #f8fafc;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modalStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+.modalStatCard {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.modalStatCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.modalStatCardBlue {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.modalStatCardGreen {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.modalStatCardYellow {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.modalStatCardOrange {
+  border-color: #f97316;
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+}
+
+.modalStatCardPurple {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+}
+
+.modalStatNumber {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.125rem;
+}
+
+.modalStatNumberBlue { color: #1d4ed8; }
+.modalStatNumberGreen { color: #059669; }
+.modalStatNumberYellow { color: #d97706; }
+.modalStatNumberOrange { color: #ea580c; }
+.modalStatNumberPurple { color: #7c3aed; }
+
+.modalStatLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalStatLabelBlue { color: #1e40af; }
+.modalStatLabelGreen { color: #047857; }
+.modalStatLabelYellow { color: #b45309; }
+.modalStatLabelOrange { color: #c2410c; }
+.modalStatLabelPurple { color: #6d28d9; }
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .modalGrid {
+    grid-template-columns: 1fr;
+    height: calc(95vh - 180px);
+    min-height: 550px;
+  }
+  
+  .modalSection:first-child {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    min-height: 300px;
+  }
+  
+  .modalMapContainer {
+    min-height: 250px;
+  }
+  
+  .modalMapSvg {
+    min-height: 200px;
+  }
+  
+  .modalStatsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .modalContainer {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .modalHeader {
+    padding: 0.75rem 1rem;
+  }
+  
+  .modalSection {
+    padding: 0.75rem;
+  }
+  
+  .modalStatsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .modalGrid {
+    height: calc(100vh - 140px);
+  }
+  
+  .modalContent {
+    max-height: calc(100vh - 80px);
+  }
+  
+  .panoramaGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+} 

@@ -6,7 +6,7 @@ import { formatPhoneForWhatsApp } from '../utils';
 import CreateReservationModal from './modals/CreateReservationModal';
 import EditReservationModal from './modals/EditReservationModal';
 import { UNIFIED_TABLES_LAYOUT } from '../utils/tablesLayout';
-import InteractiveMapController from './InteractiveMapController';
+import InteractiveMapController from '../shared/components/InteractiveMap/InteractiveMapController';
 
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
@@ -2973,14 +2973,13 @@ const TodayView = ({ reservations, onSetBlacklist, onUpdateReservation, onDelete
   );
 };
 
-export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClientNotes, onUpdateReservation, onDeleteReservation, onConfirmWaitingReservation, onDeleteWaitingReservation, onMarkAsNotified, onContactWaitingClient, onRejectWaitingReservation, getAvailableSlotsForEdit, getAvailableSlots, isValidDate, formatDate, HORARIOS, onSaveBlockedTables, onLoadBlockedTables }) => {
+export const AdminView = ({ data, auth, onLogout, onSetBlacklist, onUpdateClientNotes, onUpdateReservation, onDeleteReservation, onConfirmWaitingReservation, onDeleteWaitingReservation, onMarkAsNotified, onContactWaitingClient, onRejectWaitingReservation, getAvailableSlotsForEdit, getAvailableSlots, isValidDate, formatDate, HORARIOS, onSaveBlockedTables, onLoadBlockedTables, editingReservation, setEditingReservation }) => {
   const [adminView, setAdminView] = useState('daily');
   const [notifications, setNotifications] = useState([]);
   const [confirmation, setConfirmation] = useState(null);
   const [selectedDateFromPanorama, setSelectedDateFromPanorama] = useState(null);
   const [selectedTurnoFromPanorama, setSelectedTurnoFromPanorama] = useState(null);
   const [showCreateReservationModal, setShowCreateReservationModal] = useState(false);
-  const [editingReservation, setEditingReservation] = useState(null);
 
   // Función para mostrar notificaciones
   const showNotification = useCallback((type, message) => {

@@ -8,7 +8,8 @@ import ClientLayout from './ClientLayout';
 import styles from './ClientView.module.css';
 import buttonStyles from '../styles/shared/Buttons.module.css';
 import ReservationDetails from './ReservationDetails';
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
+import { PhoneInput } from '../shared/components/ui/Input';
 
 // Registrar el locale español
 registerLocale('es', es);
@@ -530,7 +531,6 @@ export const ClientView = ({
                     cliente: { 
                       nombre: '', 
                       telefono: '', 
-                      codigoPais: '54',
                       comentarios: '' 
                     }
                   });
@@ -779,7 +779,6 @@ export const ClientView = ({
                     cliente: { 
                       nombre: '', 
                       telefono: '', 
-                      codigoPais: '54',
                       comentarios: '' 
                     }
                   });
@@ -1043,41 +1042,21 @@ export const ClientView = ({
                   </button>
                 </label>
                 
-                <div className="flex gap-2">
-                  <select
-                    value={reservaData.cliente.codigoPais || '54'}
-                    onChange={(e) => {
-                      setReservaData({
-                        ...reservaData,
-                        cliente: {...reservaData.cliente, codigoPais: e.target.value}
-                      });
-                    }}
-                    className={styles.selectCountry}
-                  >
-                    <option value="54">+54</option>
-                    <option value="598">+598</option>
-                    <option value="55">+55</option>
-                    <option value="1">+1</option>
-                  </select>
-                  <input
-                    type="tel"
-                    value={reservaData.cliente.telefono || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setReservaData({
-                        ...reservaData,
-                        cliente: {...reservaData.cliente, telefono: value}
-                      });
-                    }}
-                    className={`${styles.input} ${styles.phoneInputField} ${
-                      reservaData.cliente.telefono ? 
-                        (isValidPhoneNumber(`+${reservaData.cliente.codigoPais || '54'}${reservaData.cliente.telefono}`) ? styles.valid : styles.invalid)
-                        : ''
-                    }`}
-                    placeholder="Ingresa tu número de WhatsApp"
-                    style={{ flex: 1 }}
-                  />
-                </div>
+                <PhoneInput
+                  value={reservaData.cliente.telefono}
+                  onChange={(value) => setReservaData({
+                    ...reservaData,
+                    cliente: {...reservaData.cliente, telefono: value || ''}
+                  })}
+                  className={`${styles.input} ${styles.phoneInputField}`}
+                  placeholder="Ingresa tu número de WhatsApp"
+                  required
+                  isValid={
+                    reservaData.cliente.telefono ? 
+                      (isValidPhoneNumber(reservaData.cliente.telefono) ? true : false)
+                      : null
+                  }
+                />
 
                 {/* Ayuda contextual */}
                 {showPhoneHelp && (
@@ -1092,7 +1071,7 @@ export const ClientView = ({
                 )}
 
                 {/* Indicador de número válido */}
-                {reservaData.cliente.telefono && isValidPhoneNumber(`+${reservaData.cliente.codigoPais || '54'}${reservaData.cliente.telefono}`) && (
+                {reservaData.cliente.telefono && isValidPhoneNumber(reservaData.cliente.telefono) && (
                   <p className="mt-1 text-sm text-green-400 flex items-center">
                     <Check size={14} className="mr-1" />
                     Número válido para WhatsApp
@@ -1118,7 +1097,7 @@ export const ClientView = ({
                 disabled={
                   !reservaData.cliente.nombre || 
                   !reservaData.cliente.telefono || 
-                  !isValidPhoneNumber(`+${reservaData.cliente.codigoPais || '54'}${reservaData.cliente.telefono || ''}`) ||
+                  !isValidPhoneNumber(reservaData.cliente.telefono || '') ||
                   reservaData.cliente.nombre.length < 2
                 }
                 className={styles.mainButton}
@@ -1231,7 +1210,7 @@ export const ClientView = ({
           <div className="bg-green-600 bg-opacity-20 rounded-xl p-4">
             <h3 className="text-white font-medium mb-2">📱 Te avisamos por WhatsApp</h3>
             <p className="text-white text-sm opacity-90">
-              Si se libera un cupo para tu fecha y turno, te enviaremos un mensaje de WhatsApp al número {reservaData.cliente.codigoPais} {reservaData.cliente.telefono} para que confirmes tu reserva.
+              Si se libera un cupo para tu fecha y turno, te enviaremos un mensaje de WhatsApp al número {reservaData.cliente.telefono} para que confirmes tu reserva.
             </p>
           </div>
 
@@ -1255,7 +1234,7 @@ export const ClientView = ({
                   personas: 2,
                   turno: '',
                   horario: '',
-                  cliente: { nombre: '', telefono: '', comentarios: '', codigoPais: '54' }
+                  cliente: { nombre: '', telefono: '', comentarios: '' }
                 });
                 setShowWaitingListModal(false);
               }} 

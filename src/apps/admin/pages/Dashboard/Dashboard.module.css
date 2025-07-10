@@ -1,0 +1,1278 @@
+/* Dashboard Container - Vista HOY */
+.todayContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f8fafc;
+  font-family: 'Codec Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header */
+.todayHeader {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.todayHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.todayNavigation {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.todayDateControls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navButton {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.navButton:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+}
+
+.dateSelector {
+  position: relative;
+}
+
+.dateSelectorButton {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+  height: 44px;
+  justify-content: flex-start;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dateSelectorButton:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dateSelectorContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
+.dateSelectorDay {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.dateSelectorDate {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.2;
+}
+
+.datePickerDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  margin-top: 0.25rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Controles del Header */
+.headerControlsGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Estilo base unificado para todos los botones del header */
+.createReservationButton,
+.editCuposButtonActive,
+.editCuposButtonInactive,
+.clearButton,
+.autoAssignButton {
+  padding: 0.875rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid transparent; /* Base transparente, se sobrescribe según necesidad */
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  white-space: nowrap;
+}
+
+/* Botón de crear reserva - fondo blanco, borde verde */
+.createReservationButton {
+  background-color: white;
+  color: #10b981;
+  border: 1px solid #10b981;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+}
+
+.createReservationButton:hover {
+  background-color: #f0fdf4;
+  color: #059669;
+  border-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+.editCuposButtonActive {
+  background-color: #fbbf24;
+  color: white;
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+}
+
+.editCuposButtonActive:hover {
+  background-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(251, 191, 36, 0.4);
+}
+
+.editCuposButtonInactive {
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.editCuposButtonInactive:hover {
+  background-color: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+
+/* Botón de limpiar - rojo de advertencia */
+.clearButton {
+  border: 1px solid #dc2626;
+  background-color: white;
+  color: #dc2626;
+}
+
+.clearButton:hover:not(:disabled) {
+  background-color: #dc2626;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+}
+
+.clearButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Botón de asignación automática - fondo blanco, borde púrpura */
+.autoAssignButton {
+  background-color: white;
+  color: #8b5cf6;
+  border: 1px solid #8b5cf6;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.1);
+}
+
+.autoAssignButton:hover {
+  background-color: #faf5ff;
+  color: #7c3aed;
+  border-color: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.2);
+}
+
+.todayControls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Estilos del waiting indicator eliminados - ya no se usa */
+
+.shiftSelector {
+  display: flex;
+  gap: 0.5rem;
+  height: 44px;
+}
+
+.shiftButton {
+  padding: 0.875rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 0.875rem;
+  min-width: 110px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.shiftButtonActive {
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.shiftButtonMediodia {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.shiftButtonMediodia:hover {
+  background-color: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.shiftButtonNoche {
+  background-color: #1f2937;
+  color: white;
+}
+
+.shiftButtonNoche:hover {
+  background-color: #374151;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(31, 41, 55, 0.4);
+}
+
+.shiftButtonInactive {
+  background: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.shiftButtonInactive:hover {
+  background-color: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.controlButtonDisabled {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+}
+
+.printButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #fbbf24;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  height: auto;
+  box-shadow: 0 1px 3px rgba(251, 191, 36, 0.3);
+  white-space: nowrap;
+}
+
+.printButton:hover {
+  background-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.4);
+}
+
+/* Contenido Principal */
+.todayMainContent {
+  display: flex;
+  flex: 1;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  overflow: visible;
+  align-items: flex-start;
+}
+
+/* Mapa de Mesas */
+.mapSection {
+  flex: 1;
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  min-height: auto;
+  height: fit-content;
+}
+
+/* Alerta de cambios pendientes */
+.changesAlert {
+  background-color: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.changesAlertContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.changesAlertText {
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+.changesAlertButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.alertButton {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.alertButtonCancel {
+  background-color: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.alertButtonCancel:hover {
+  background-color: #f9fafb;
+}
+
+.alertButtonSave {
+  background-color: #10b981;
+  color: white;
+}
+
+.alertButtonSave:hover {
+  background-color: #059669;
+}
+
+/* Lista de Reservas */
+.reservationsSection {
+  flex: 0 0 400px;
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sectionHeader {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sectionHeader h2,
+.sectionHeader h3 {
+  margin: 0;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.sectionHeader h2 {
+  font-size: 1.25rem;
+}
+
+.sectionHeader h3 {
+  font-size: 1.125rem;
+}
+
+.reservationsList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reservationCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reservationCard:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.reservationCardSelected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+/* Primer renglón - estructura horizontal */
+.reservationFirstRow {
+  display: flex;
+  align-items: flex-start; /* Cambio: align-items flex-start para que se alineen arriba */
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.reservationNameContainer {
+  flex: 1;
+  min-width: 0; /* Permite que el texto se trunque si es necesario */
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem; /* Reducido para que esté más junto */
+}
+
+.reservationName {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1.1rem; /* TAMAÑO GRANDE - Aumentado para mejor visibilidad */
+  line-height: 1.2;
+}
+
+.noTableAssigned {
+  font-size: 0.75rem; /* TAMAÑO PEQUEÑO - Mantenido */
+  color: #dc2626;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1;
+}
+
+.reservationPeople,
+.reservationTime {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #6b7280;
+  font-size: 0.9rem; /* TAMAÑO MEDIANO - Aumentado para mejor visibilidad */
+  font-weight: 500;
+  white-space: nowrap;
+  align-self: flex-start; /* Asegurar que se alineen arriba */
+}
+
+/* Ocultar mesa inline en vista normal - solo se muestra en impresión */
+.reservationTable {
+  display: none;
+}
+
+/* Segundo renglón - botones */
+.reservationSecondRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.phoneButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.9rem; /* TAMAÑO MEDIANO - Unificado */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-width: 0;
+}
+
+.phoneButton:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.phoneButton span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tableButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.9rem; /* TAMAÑO MEDIANO - Unificado */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: fit-content;
+}
+
+/* Estilos del botón de mesa según estado */
+.tableButtonUnassigned {
+  background-color: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+.tableButtonUnassigned:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+}
+
+.tableButtonAssigned {
+  background-color: #059669;
+  color: white;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.3);
+}
+
+.tableButtonAssigned:hover {
+  background-color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.4);
+}
+
+.tableButtonPending {
+  background-color: #f59e0b;
+  color: white;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3);
+}
+
+.tableButtonPending:hover {
+  background-color: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.4);
+}
+
+.pendingIndicator {
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 0.25rem;
+}
+
+.reservationComments {
+  background-color: #f9fafb;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.9rem; /* TAMAÑO MEDIANO - Unificado */
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+.reservationActions {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.assignTableButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+.assignTableButton:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+}
+
+.assignTableButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.3);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Lista de Espera */
+.waitingListSection {
+  margin-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+}
+
+.waitingList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.waitingCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.waitingInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.waitingName {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.waitingDetails {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.waitingPhone {
+  font-size: 0.875rem;
+}
+
+.waitingPhone a {
+  color: #10b981;
+  text-decoration: none;
+}
+
+.waitingPhone a:hover {
+  text-decoration: underline;
+}
+
+.waitingActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.actionButtonPrimary {
+  background-color: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+.actionButtonPrimary:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+}
+
+.actionButtonSuccess {
+  background-color: #10b981;
+  color: white;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+}
+
+.actionButtonSuccess:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.4);
+}
+
+.actionButtonDanger {
+  background-color: #ef4444;
+  color: white;
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+}
+
+.actionButtonDanger:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+}
+
+/* Status Badges */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-contacted {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-confirmed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-rejected {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Modales */
+.confirmationOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.confirmationModal {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  max-width: 400px;
+  width: 100%;
+  margin: 1rem;
+  overflow: hidden;
+}
+
+.confirmationHeader {
+  padding: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.confirmationIcon {
+  flex-shrink: 0;
+}
+
+.confirmationContent {
+  flex: 1;
+}
+
+.confirmationTitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.confirmationMessage {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.confirmationActions {
+  padding: 1rem 1.5rem;
+  background-color: #f9fafb;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.confirmationButton,
+.confirmationButtonCancel,
+.confirmationButtonConfirm {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirmationButtonCancel {
+  background-color: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.confirmationButtonCancel:hover {
+  background-color: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.confirmationButtonConfirm {
+  background-color: #ef4444;
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+.confirmationButtonConfirm:hover {
+  background-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .todayMainContent {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .reservationsSection {
+    flex: none;
+    max-height: 400px;
+  }
+  
+  .mapSection {
+    min-height: auto;
+    padding: 0.75rem;
+    height: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .todayHeaderContent {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .todayNavigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .headerControlsGroup {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .headerControlsGroup .createReservationButton,
+  .headerControlsGroup .editCuposButtonActive,
+  .headerControlsGroup .editCuposButtonInactive,
+  .headerControlsGroup .clearButton,
+  .headerControlsGroup .autoAssignButton {
+    min-width: 130px;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .todayControls {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .dateSelectorButton {
+    min-width: 180px;
+    padding: 0.625rem 0.875rem;
+  }
+  
+  .dateSelectorDay {
+    font-size: 0.9rem;
+  }
+  
+  .dateSelectorDate {
+    font-size: 0.7rem;
+  }
+  
+  .navButton {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .shiftSelector {
+    height: 40px;
+    gap: 0.375rem;
+  }
+  
+  .shiftButton {
+    min-width: 90px;
+    padding: 0.75rem 1rem;
+  }
+  
+
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .headerControlsGroup {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .headerControlsGroup .createReservationButton,
+  .headerControlsGroup .editCuposButtonActive,
+  .headerControlsGroup .editCuposButtonInactive,
+  .headerControlsGroup .clearButton,
+  .headerControlsGroup .autoAssignButton {
+    min-width: 100%;
+    font-size: 0.875rem;
+  }
+  
+  .todayControls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+    .shiftSelector {
+    align-self: stretch;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: auto;
+  }
+
+  .dateSelectorButton {
+    min-width: 100%;
+    height: 44px;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .dateSelectorDay {
+    font-size: 0.875rem;
+  }
+
+  .dateSelectorDate {
+    font-size: 0.65rem;
+  }
+
+  .navButton {
+    width: 44px;
+    height: 44px;
+  }
+
+  .shiftButton {
+    min-width: 100%;
+    height: 44px;
+    padding: 0.875rem 1rem;
+  }
+
+  /* Estilos responsivos para las nuevas tarjetas de reserva */
+  .reservationFirstRow {
+    flex-direction: row; /* Mantener horizontal incluso en móvil */
+    align-items: flex-start;
+    gap: 0.75rem; /* Reducir gap para móvil */
+    margin-bottom: 0.5rem;
+  }
+
+  .reservationNameContainer {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .reservationName {
+    font-size: 1rem; /* GRANDE móvil - Proporcionalmente menor */
+  }
+
+  .noTableAssigned {
+    font-size: 0.7rem; /* PEQUEÑO móvil - Proporcionalmente menor */
+  }
+
+  .reservationPeople,
+  .reservationTime {
+    font-size: 0.85rem; /* MEDIANO móvil - Proporcionalmente menor */
+  }
+
+  .reservationSecondRow {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .phoneButton,
+  .tableButton {
+    font-size: 0.85rem; /* MEDIANO móvil - Consistente */
+    padding: 0.5rem;
+    justify-content: center;
+  }
+
+  .tableButton {
+    min-width: auto;
+  }
+
+  .reservationComments {
+    font-size: 0.85rem; /* MEDIANO móvil - Consistente */
+  }
+}
+
+/* Estados de impresión */
+@media print {
+  /* Configuración de página más compacta */
+  @page {
+    margin: 0.3in;
+    size: A4;
+  }
+  
+  /* Ocultar elementos innecesarios */
+  .todayHeader,
+  .printButton,
+  .headerControlsGroup,
+  .changesAlert,
+  .waitingListSection {
+    display: none !important;
+  }
+  
+  .todayContainer {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    font-size: 11px;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  /* Header simple para impresión - más compacto */
+  .printHeader {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.2rem;
+  }
+  
+  .printHeader h1 {
+    font-size: 32px;
+    margin: 0 0 0.2rem 0;
+    font-weight: bold;
+    color: #000;
+  }
+  
+  .printHeader h2 {
+    font-size: 24px;
+    margin: 0;
+    font-weight: normal;
+    color: #000;
+  }
+  
+  /* Layout lado a lado optimizado */
+  .todayMainContent {
+    display: flex;
+    flex-direction: row !important;
+    padding: 0;
+    gap: 0.5rem;
+    height: calc(100vh - 60px);
+    max-height: calc(100vh - 60px);
+    overflow: hidden;
+  }
+  
+  /* Mapa a la izquierda - más compacto */
+  .mapSection {
+    flex: 0 0 65%;
+    max-width: 65%;
+    box-shadow: none;
+    border: 1px solid #ddd;
+    padding: 0.3rem;
+    height: fit-content;
+    max-height: 100%;
+    overflow: hidden;
+  }
+  
+  /* Lista de reservas a la derecha - más compacta */
+  .reservationsSection {
+    flex: 0 0 33%;
+    max-width: 33%;
+    box-shadow: none;
+    border: 1px solid #ddd;
+    padding: 0;
+    height: fit-content;
+    max-height: 100%;
+    overflow: hidden;
+  }
+  
+  .sectionHeader {
+    background-color: #f5f5f5;
+    padding: 0.2rem 0.4rem;
+    border-bottom: 1px solid #ddd;
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+    color: #000;
+  }
+  
+  .sectionHeader h2 {
+    margin: 0;
+    font-size: 28px;
+    color: #000;
+  }
+  
+  /* Lista simplificada muy compacta */
+  .reservationsList {
+    gap: 0;
+    max-height: calc(100vh - 120px);
+    overflow: hidden;
+  }
+  
+  .reservationCard {
+    border: none;
+    border-bottom: 1px solid #eee;
+    padding: 0.2rem 0.4rem;
+    margin-bottom: 0;
+    box-shadow: none;
+    background: none;
+    display: block;
+    page-break-inside: avoid;
+  }
+  
+  .reservationCard:hover {
+    background: none !important;
+    border-color: #eee !important;
+  }
+  
+  /* Información esencial en línea */
+  .reservationFirstRow {
+    display: block;
+    margin-bottom: 0;
+    line-height: 1.2;
+  }
+  
+  .reservationNameContainer {
+    display: inline-block;
+    width: 100%;
+    margin-bottom: 0.1rem;
+  }
+  
+  .reservationName {
+    font-weight: bold;
+    font-size: 26px;
+    display: inline-block;
+    color: #000;
+  }
+  
+  .noTableAssigned {
+    color: #999;
+    font-size: 22px;
+    font-style: italic;
+    margin-left: 0.3rem;
+  }
+  
+  .reservationPeople,
+  .reservationTime,
+  .reservationTable {
+    display: inline;
+    font-size: 22px;
+    color: #666;
+    margin-right: 0.4rem;
+  }
+  
+  .reservationTable {
+    font-style: italic;
+  }
+  
+  /* Ocultar completamente teléfonos y botones */
+  .reservationSecondRow,
+  .phoneButton,
+  .tableButton {
+    display: none !important;
+  }
+  
+  .reservationComments {
+    background-color: #f9f9f9;
+    font-size: 20px;
+    margin-top: 0.1rem;
+    padding: 0.1rem 0.2rem;
+    border-radius: 2px;
+  }
+  
+  /* Ocultar elementos interactivos */
+  .actionButton,
+  .assignTableButton,
+  .changesAlert {
+    display: none !important;
+  }
+} 

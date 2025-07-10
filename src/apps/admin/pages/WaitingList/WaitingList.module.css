@@ -1,0 +1,658 @@
+/* WaitingList Page - Estilo profesional neutro igual a Clients */
+.waitingContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Codec Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header con estadísticas */
+.waitingHeader {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.statCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background: #f1f5f9;
+}
+
+.statCard.active {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.statNumber {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #374151;
+  line-height: 1;
+}
+
+.statBlue { color: #3b82f6; }
+.statOrange { color: #f59e0b; }
+.statRed { color: #ef4444; }
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+/* Filtros y búsqueda */
+.filtersContainer {
+  background: white;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.searchContainer {
+  flex: 2;
+  min-width: 200px;
+  padding-right: 1rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.filtersGrid {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 1rem;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.filterSelect {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+  background: white;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  width: 140px;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Tabla de lista de espera */
+.tableContainer {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.waitingTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHeader {
+  background: #f9fafb;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.headerCell {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tableBody {
+  background: white;
+}
+
+.tableRow {
+  border-bottom: 1px solid #f3f4f6;
+  transition: all 0.2s ease;
+}
+
+.tableRow:hover {
+  background: #f9fafb;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableCell {
+  padding: 1rem;
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+/* Información del cliente */
+.clientInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.clientName {
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.2;
+}
+
+.waitingId {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Enlace de teléfono */
+.phoneLink {
+  color: #059669;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.phoneLink:hover {
+  color: #047857;
+  text-decoration: underline;
+}
+
+/* Información de fecha y turno */
+.dateInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.date {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.turnoBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  width: fit-content;
+}
+
+.turnoMediodia {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.turnoNoche {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Número de personas */
+.personCount {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+/* Estadísticas de historial */
+.historyStats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.totalReservations {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.activeReservations {
+  color: #3b82f6;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+/* Badges de estado */
+.statusPending,
+.statusContacted,
+.statusAwaiting,
+.statusExpired {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.statusPending {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.statusContacted {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-color: #93c5fd;
+}
+
+.statusAwaiting {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.statusExpired {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+/* Notas */
+.notesDisplay {
+  max-width: 200px;
+}
+
+.notesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.waitingNote {
+  font-size: 0.75rem;
+  color: #374151;
+  padding: 0.25rem 0.5rem;
+  background-color: #eff6ff;
+  border-radius: 4px;
+  line-height: 1.3;
+}
+
+.clientNote {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+.noNotes {
+  color: #d1d5db;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* Acciones */
+.actionsContainer {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.confirmButton,
+.rejectButton,
+.contactButton,
+.contactedButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.confirmButton {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.confirmButton:hover {
+  background-color: #bfdbfe;
+}
+
+.rejectButton {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.rejectButton:hover {
+  background-color: #fecaca;
+}
+
+.contactButton {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.contactButton:hover {
+  background-color: #a7f3d0;
+}
+
+.contactedButton {
+  background-color: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.contactedButton:hover {
+  background-color: #d1fae5;
+}
+
+/* Estado vacío */
+.emptyState {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 28rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modalTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1f2937;
+}
+
+.modalInfo {
+  color: #6b7280;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.modalFormGroup {
+  margin-bottom: 1rem;
+}
+
+.modalLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.modalSelect {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.modalSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.modalActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.modalButton {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalConfirm {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.modalConfirm:hover {
+  background-color: #2563eb;
+}
+
+.modalCancel {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.modalCancel:hover {
+  background-color: #e5e7eb;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .waitingContainer {
+    gap: 0.75rem;
+  }
+
+  .waitingHeader,
+  .filtersContainer,
+  .tableContainer {
+    border-radius: 8px;
+  }
+
+  .waitingHeader {
+    padding: 0.75rem;
+  }
+
+  .filtersContainer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .searchContainer {
+    padding-right: 0;
+  }
+
+  .headerContent {
+    gap: 0.75rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filtersGrid {
+    padding-left: 0;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filterSelect {
+    width: 100%;
+  }
+
+  .tableContainer {
+    overflow-x: auto;
+  }
+
+  .waitingTable {
+    min-width: 800px;
+  }
+
+  .headerCell,
+  .tableCell {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .actionsContainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .confirmButton,
+  .rejectButton,
+  .contactButton,
+  .contactedButton {
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  .modal {
+    padding: 0.5rem;
+  }
+
+  .modalContent {
+    padding: 1rem;
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .statCard {
+    padding: 0.75rem;
+  }
+
+  .statNumber {
+    font-size: 1.5rem;
+  }
+
+  .headerCell {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .tableCell {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .notesDisplay {
+    max-width: 120px;
+  }
+
+  .confirmButton,
+  .rejectButton,
+  .contactButton,
+  .contactedButton {
+    font-size: 0.625rem;
+    padding: 0.375rem 0.5rem;
+  }
+} 

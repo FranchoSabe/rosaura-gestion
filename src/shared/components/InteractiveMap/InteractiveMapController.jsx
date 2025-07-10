@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { calculateWalkInQuotas } from '../utils/mesaLogic';
-import { UNIFIED_TABLES_LAYOUT } from '../utils/tablesLayout';
+import { calculateWalkInQuotas } from '../../../utils/mesaLogic';
+import { UNIFIED_TABLES_LAYOUT } from '../../../utils/tablesLayout';
 import styles from './InteractiveMapController.module.css';
 import { X, Edit2, MessageCircle, Trash2, Phone, Clock, Users, MapPin } from 'lucide-react';
 
@@ -258,23 +258,24 @@ const InteractiveMapController = ({
     <div className={styles.interactiveMapController}>
       <div className={styles.mapContainer}>
         <svg
-          viewBox="0 0 230 450"
+          viewBox="0 0 280 520"
           className={styles.mapSvg}
           xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMidYMid meet"
         >
-          <rect x="0" y="0" width="230" height="450" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
+          <rect x="0" y="0" width="280" height="520" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
           
           {UNIFIED_TABLES_LAYOUT.map(renderTable)}
           
           {/* Info compacta solo cuando sea necesaria */}
           {mode === 'cupos' && (
-            <text x="115" y="15" textAnchor="middle" fontSize="10" fill="#2563eb" fontWeight="500">
+            <text x="140" y="15" textAnchor="middle" fontSize="10" fill="#2563eb" fontWeight="500">
               Walk-in: {currentWalkInQuotas}p | Bloqueadas: {blockedTables.size}
             </text>
           )}
           
           {mode === 'assignment' && selectedReservation && (
-            <text x="115" y="15" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="500">
+            <text x="140" y="15" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="500">
               Asignando: {selectedReservation.cliente.nombre} ({selectedReservation.personas}p)
             </text>
           )}
@@ -283,7 +284,7 @@ const InteractiveMapController = ({
           
           {/* Leyenda simplificada cuando no hay modo especial */}
           {mode === 'view' && (
-            <text x="115" y="435" textAnchor="middle" fontSize="8" fill="#6b7280">
+            <text x="140" y="505" textAnchor="middle" fontSize="8" fill="#6b7280">
               Verde: Libre | Azul: Reservada | Amarillo: Walk-in
             </text>
           )}

@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Calendar, Clock, Users, MessageSquare } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, Save, Calendar, Clock, Users, MessageSquare, AlertCircle } from 'lucide-react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 import "../../datepicker-custom.css";
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
+import { PhoneInput } from '../../shared/components/ui/Input';
 import { sanitizeData } from '../../utils/validation';
 import styles from './CreateReservationModal.module.css';
 
 // Registrar locale español para el DatePicker
 registerLocale('es', es);
 
-const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDate, HORARIOS, showNotification }) => {
+const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDate, HORARIOS, showNotification, isAdmin = false }) => {
+  const [showPhoneHelp, setShowPhoneHelp] = useState(false);
   const [newReservation, setNewReservation] = useState({
     fecha: new Date(),
     turno: 'mediodia',
@@ -19,7 +22,7 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
     personas: 2,
     cliente: {
       nombre: '',
-      telefono: '',
+      telefono: '', // Ahora maneja el número completo con código de país
       comentarios: ''
     }
   });
@@ -56,221 +59,288 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
 
     // Validaciones
     if (!newReservation.cliente.nombre.trim()) {
-      showNotification('error', 'El nombre es obligatorio');
+      showNotification?.('error', 'El nombre es obligatorio');
       setIsSaving(false);
       return;
     }
 
     if (!newReservation.cliente.telefono.trim()) {
-      showNotification('error', 'El teléfono es obligatorio');
+      showNotification?.('error', 'El teléfono es obligatorio');
       setIsSaving(false);
       return;
     }
 
-    if (!isValidPhoneNumber(newReservation.cliente.telefono, 'AR')) {
-      showNotification('error', 'Formato de teléfono inválido');
-      setIsSaving(false);
-      return;
+    // Validación de teléfono más permisiva para admins
+    if (isAdmin) {
+      // Para admins: solo verificar que tenga al menos algunos números
+      const hasNumbers = /\d{3,}/.test(newReservation.cliente.telefono);
+      if (!hasNumbers) {
+        showNotification?.('warning', 'El teléfono debe contener al menos algunos números');
+        // Pero no bloquear la creación, solo advertir
+      }
+    } else {
+      // Para clientes: validación estricta usando el número completo
+      if (!isValidPhoneNumber(newReservation.cliente.telefono)) {
+        showNotification?.('error', 'Formato de teléfono inválido');
+        setIsSaving(false);
+        return;
+      }
     }
 
-    // Verificar disponibilidad del horario seleccionado
-    const slotsDisponibles = await getAvailableSlots(
-      newReservation.fecha.toISOString().split('T')[0],
-      newReservation.turno
-    );
-    
-    const horarioDisponible = slotsDisponibles.find(slot => 
-      slot.horario === newReservation.horario && 
-      slot.cuposDisponibles >= newReservation.personas
-    );
+    // Verificar disponibilidad del horario seleccionado (saltear para admin)
+    if (!isAdmin) {
+      const slotsDisponibles = await getAvailableSlots(
+        newReservation.fecha.toISOString().split('T')[0],
+        newReservation.turno
+      );
+      
+      const horarioDisponible = slotsDisponibles.find(slot => 
+        slot.horario === newReservation.horario && 
+        slot.cuposDisponibles >= newReservation.personas
+      );
 
-    if (!horarioDisponible) {
-      showNotification('error', 'El horario seleccionado no tiene cupos suficientes');
-      setIsSaving(false);
-      return;
+      if (!horarioDisponible) {
+        showNotification?.('error', 'El horario seleccionado no tiene cupos suficientes');
+        setIsSaving(false);
+        return;
+      }
     }
 
     try {
-      // Sanitizar datos antes de enviar
+      // Preparar datos con el formato correcto de teléfono
+      const phoneNumber = parsePhoneNumber(newReservation.cliente.telefono);
+      
+      // Limpiar objeto cliente para eliminar campos undefined (Firebase no los acepta)
+      const cleanCliente = {};
+      cleanCliente.nombre = newReservation.cliente.nombre.trim();
+      cleanCliente.telefono = phoneNumber ? phoneNumber.number.slice(1) : newReservation.cliente.telefono;
+      
+      // Solo agregar comentarios si existe y no está vacío
+      if (newReservation.cliente.comentarios && newReservation.cliente.comentarios.trim()) {
+        cleanCliente.comentarios = newReservation.cliente.comentarios.trim();
+      }
+      
       const reservationData = {
         ...newReservation,
         fecha: newReservation.fecha.toISOString().split('T')[0],
-        cliente: {
-          nombre: sanitizeData(newReservation.cliente.nombre),
-          telefono: sanitizeData(newReservation.cliente.telefono),
-          comentarios: sanitizeData(newReservation.cliente.comentarios || '')
-        }
+        cliente: cleanCliente
       };
 
-      await onSave(reservationData);
-      showNotification('success', 'Reserva creada exitosamente');
+      // Sanitizar el objeto completo
+      const sanitizedData = sanitizeData(reservationData);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Creating reservation data:', sanitizedData);
+      }
+
+      await onSave(sanitizedData);
+      showNotification?.('success', 'Reserva creada exitosamente');
       onClose();
     } catch (error) {
-      showNotification('error', 'Error al crear la reserva');
-      console.error('Error:', error);
+      showNotification?.('error', 'Error al crear la reserva');
+      console.error('Error creating reservation:', error);
     } finally {
       setIsSaving(false);
     }
   };
 
-  return (
-    <div className={styles.overlay}>
+  return createPortal(
+    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={styles.modal}>
         <div className={styles.header}>
           <h2 className={styles.title}>
-            <Calendar size={24} />
-            Nueva Reserva
+            <Calendar size={20} />
+            Nueva Reserva {isAdmin && <span style={{color: '#f59e0b'}}>(Modo Admin)</span>}
           </h2>
           <button onClick={onClose} className={styles.closeButton}>
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Fecha */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>
-              <Calendar size={16} />
-              Fecha
-            </label>
-            <DatePicker
-              selected={newReservation.fecha}
-              onChange={(date) => setNewReservation({ ...newReservation, fecha: date })}
-              dateFormat="dd/MM/yyyy"
-              locale="es"
-              minDate={new Date()}
-              maxDate={(() => {
-                const maxDate = new Date();
-                maxDate.setMonth(maxDate.getMonth() + 1);
-                return maxDate;
-              })()}
-              filterDate={isValidDate}
-              className={styles.input}
-              placeholderText="Seleccionar fecha"
-            />
-          </div>
+          {/* Indicador de modo admin */}
+          {isAdmin && (
+            <div className={styles.adminNotice}>
+              <strong>Modo Administrador:</strong> Puedes crear reservas sin restricciones de fecha o cupos.
+            </div>
+          )}
 
-          {/* Turno */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>
-              <Clock size={16} />
-              Turno
-            </label>
-            <select
-              value={newReservation.turno}
-              onChange={(e) => {
-                const newTurno = e.target.value;
-                setNewReservation({
-                  ...newReservation,
-                  turno: newTurno,
-                  horario: HORARIOS[newTurno][0]
-                });
-              }}
-              className={styles.select}
-            >
-              <option value="mediodia">Mediodía</option>
-              <option 
-                value="noche"
-                disabled={newReservation.fecha && newReservation.fecha.getDay() === 0}
+          {/* Fecha y Turno */}
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                <Calendar size={16} />
+                Fecha
+              </label>
+              <DatePicker
+                selected={newReservation.fecha}
+                onChange={(date) => setNewReservation({ ...newReservation, fecha: date })}
+                dateFormat="dd/MM/yyyy"
+                locale="es"
+                minDate={isAdmin ? null : new Date()}
+                maxDate={isAdmin ? null : (() => {
+                  const maxDate = new Date();
+                  maxDate.setMonth(maxDate.getMonth() + 1);
+                  return maxDate;
+                })()}
+                filterDate={isAdmin ? undefined : isValidDate}
+                className={styles.input}
+                placeholderText="Seleccionar fecha"
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                <Clock size={16} />
+                Turno
+              </label>
+              <select
+                value={newReservation.turno}
+                onChange={(e) => {
+                  const newTurno = e.target.value;
+                  setNewReservation({
+                    ...newReservation,
+                    turno: newTurno,
+                    horario: HORARIOS[newTurno][0]
+                  });
+                }}
+                className={styles.select}
               >
-                Noche {newReservation.fecha && newReservation.fecha.getDay() === 0 ? '(Cerrado domingos)' : ''}
-              </option>
-            </select>
+                <option value="mediodia">🌞 Mediodía</option>
+                <option 
+                  value="noche"
+                  disabled={!isAdmin && newReservation.fecha && newReservation.fecha.getDay() === 0}
+                >
+                  🌙 Noche {!isAdmin && newReservation.fecha && newReservation.fecha.getDay() === 0 ? '(Cerrado domingos)' : ''}
+                </option>
+              </select>
+            </div>
           </div>
 
-          {/* Horario */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>
-              <Clock size={16} />
-              Horario
-            </label>
-            <select
-              value={newReservation.horario}
-              onChange={(e) => setNewReservation({ ...newReservation, horario: e.target.value })}
-              className={styles.select}
-            >
-              {HORARIOS[newReservation.turno].map(horario => {
-                const slot = availableSlots.find(s => s.horario === horario);
-                const cuposDisponibles = slot ? slot.cuposDisponibles : 0;
-                const suficienteCupo = cuposDisponibles >= newReservation.personas;
-                
-                return (
-                  <option 
-                    key={horario} 
-                    value={horario}
-                    disabled={!suficienteCupo}
+          {/* Horario y Personas */}
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                <Clock size={16} />
+                Horario
+              </label>
+              <select
+                value={newReservation.horario}
+                onChange={(e) => setNewReservation({ ...newReservation, horario: e.target.value })}
+                className={styles.select}
+              >
+                {HORARIOS[newReservation.turno].map(horario => {
+                  const slot = availableSlots.find(s => s.horario === horario);
+                  const cuposDisponibles = slot ? slot.cuposDisponibles : 0;
+                  const suficienteCupo = cuposDisponibles >= newReservation.personas;
+                  
+                  return (
+                    <option 
+                      key={horario} 
+                      value={horario}
+                      disabled={!isAdmin && !suficienteCupo}
+                    >
+                      {horario} {isAdmin 
+                        ? `(Admin: sin restricciones)` 
+                        : !suficienteCupo 
+                          ? `(${cuposDisponibles} cupos)` 
+                          : `(${cuposDisponibles} disponibles)`
+                      }
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                <Users size={16} />
+                Personas
+              </label>
+              <select
+                value={newReservation.personas}
+                onChange={(e) => setNewReservation({ ...newReservation, personas: parseInt(e.target.value) })}
+                className={styles.select}
+              >
+                {[...Array(isAdmin ? 12 : 6)].map((_, i) => {
+                  const personas = i + 1;
+                  const slot = availableSlots.find(s => s.horario === newReservation.horario);
+                  const cuposDisponibles = slot ? slot.cuposDisponibles : 0;
+                  const disponible = cuposDisponibles >= personas;
+                  
+                  return (
+                    <option 
+                      key={personas} 
+                      value={personas}
+                      disabled={!isAdmin && !disponible}
+                    >
+                      {personas} persona{personas > 1 ? 's' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+
+          {/* Nombre y Teléfono */}
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Nombre completo *
+              </label>
+              <input
+                type="text"
+                value={newReservation.cliente.nombre}
+                onChange={(e) => setNewReservation({
+                  ...newReservation,
+                  cliente: { ...newReservation.cliente, nombre: e.target.value }
+                })}
+                className={styles.input}
+                placeholder="Ingresá el nombre completo"
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Teléfono *
+                <div className={styles.phoneHelp}>
+                  <button 
+                    type="button"
+                    onClick={() => setShowPhoneHelp(!showPhoneHelp)}
+                    className={styles.phoneHelpButton}
+                    title="Ayuda con formato de teléfono"
                   >
-                    {horario} {!suficienteCupo ? `(${cuposDisponibles} cupos)` : `(${cuposDisponibles} disponibles)`}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* Personas */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>
-              <Users size={16} />
-              Personas
-            </label>
-            <select
-              value={newReservation.personas}
-              onChange={(e) => setNewReservation({ ...newReservation, personas: parseInt(e.target.value) })}
-              className={styles.select}
-            >
-              {[...Array(6)].map((_, i) => {
-                const personas = i + 1;
-                const slot = availableSlots.find(s => s.horario === newReservation.horario);
-                const cuposDisponibles = slot ? slot.cuposDisponibles : 0;
-                const disponible = cuposDisponibles >= personas;
-                
-                return (
-                  <option 
-                    key={personas} 
-                    value={personas}
-                    disabled={!disponible}
-                  >
-                    {personas} persona{personas > 1 ? 's' : ''}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-
-          {/* Nombre */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>
-              Nombre completo *
-            </label>
-            <input
-              type="text"
-              value={newReservation.cliente.nombre}
-              onChange={(e) => setNewReservation({
-                ...newReservation,
-                cliente: { ...newReservation.cliente, nombre: e.target.value }
-              })}
-              className={styles.input}
-              placeholder="Ingresá el nombre completo"
-              required
-            />
-          </div>
-
-          {/* Teléfono */}
-          <div className={styles.formGroup}>
-            <label className={styles.label}>
-              Teléfono *
-            </label>
-            <input
-              type="tel"
-              value={newReservation.cliente.telefono}
-              onChange={(e) => setNewReservation({
-                ...newReservation,
-                cliente: { ...newReservation.cliente, telefono: e.target.value }
-              })}
-              className={styles.input}
-              placeholder="+54 9 11 1234-5678"
-              required
-            />
+                    <AlertCircle size={14} />
+                  </button>
+                  {showPhoneHelp && (
+                    <div className={styles.phoneHelpTooltip}>
+                      Selecciona tu país y número móvil
+                    </div>
+                  )}
+                </div>
+              </label>
+              <PhoneInput
+                value={newReservation.cliente.telefono}
+                onChange={(value) => setNewReservation({
+                  ...newReservation,
+                  cliente: { ...newReservation.cliente, telefono: value || '' }
+                })}
+                className={`${styles.input} ${styles.phoneInput}`}
+                placeholder="Ingresa el número"
+                required
+                isValid={
+                  newReservation.cliente.telefono ? 
+                    (isAdmin ? 
+                      // Para admins: solo verificar que tenga números
+                      (/\d{3,}/.test(newReservation.cliente.telefono) ? true : false) :
+                      // Para clientes: validación estricta
+                      (isValidPhoneNumber(newReservation.cliente.telefono) ? true : false)
+                    )
+                    : null
+                }
+              />
+            </div>
           </div>
 
           {/* Comentarios */}
@@ -287,32 +357,41 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
               })}
               className={styles.textarea}
               placeholder="Alergias, preferencias, ocasión especial..."
-              rows={3}
             />
           </div>
 
           {/* Botones */}
-          <div className={styles.actions}>
+          <div className={styles.buttonGroup}>
             <button
               type="button"
               onClick={onClose}
-              className={styles.cancelButton}
+              className={`${styles.button} ${styles.buttonSecondary}`}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className={styles.saveButton}
+              className={`${styles.button} ${styles.buttonPrimary} ${isSaving ? styles.buttonDisabled : ''}`}
               disabled={isSaving}
             >
-              <Save size={16} />
-              {isSaving ? 'Guardando…' : 'Crear Reserva'}
+              {isSaving ? (
+                <>
+                  <div className={styles.loadingSpinner} />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  Crear Reserva
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
-export default CreateReservationModal; 
+export default CreateReservationModal;

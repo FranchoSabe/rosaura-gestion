@@ -1,11 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
+import { PhoneInput } from '../../shared/components/ui/Input';
 import { sanitizeData } from '../../utils/validation';
+import styles from './EditReservationModal.module.css';
 
 const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsForEdit, isValidDate, HORARIOS, showNotification, isAdmin = true }) => {
+  // Función para formatear el teléfono existente a formato E.164
+  const formatExistingPhone = (phone) => {
+    if (!phone) return '';
+    
+    const phoneStr = phone.toString();
+    
+    // Si ya tiene el +, devolverlo tal como está
+    if (phoneStr.startsWith('+')) {
+      return phoneStr;
+    }
+    
+    // Si no tiene +, agregarlo (asumiendo que ya tiene código de país)
+    return `+${phoneStr}`;
+  };
+
+  const formattedPhone = formatExistingPhone(reservation.cliente?.telefono);
+  
   const [editedReservation, setEditedReservation] = useState({
     cliente: { 
       ...reservation.cliente,
+      telefono: formattedPhone, // Usar el número completo en formato E.164
       comentarios: reservation.cliente.comentarios || ''
     },
     fecha: reservation.fecha,
@@ -44,7 +64,7 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
     }
 
     // Validar teléfono con react-phone-number-input
-    if (!isValidPhoneNumber(`+${editedReservation.cliente.codigoPais || '54'}${editedReservation.cliente.telefono}`)) {
+    if (!isValidPhoneNumber(editedReservation.cliente.telefono)) {
       showNotification('error', 'Por favor, ingresa un número de teléfono válido.');
       return;
     }
@@ -70,47 +90,63 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
     }
 
     try {
-      // Preparar y sanitizar los datos para guardar
-      const dataToSave = sanitizeData({
-        ...editedReservation,
-        cliente: {
-          ...editedReservation.cliente,
-          codigoPais: editedReservation.cliente.codigoPais || '54'
+      // Preparar los datos con el formato correcto de teléfono
+      const phoneNumber = parsePhoneNumber(editedReservation.cliente.telefono);
+      
+      // Limpiar objeto cliente para eliminar campos undefined (Firebase no los acepta)
+      const cleanCliente = {};
+      Object.keys(editedReservation.cliente).forEach(key => {
+        const value = editedReservation.cliente[key];
+        if (value !== undefined && value !== null) {
+          cleanCliente[key] = value;
         }
       });
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Saving reservation data:', dataToSave);
+      // Formatear teléfono
+      if (phoneNumber) {
+        cleanCliente.telefono = phoneNumber.number.slice(1);
       }
-      await onSave(dataToSave);
+      
+      const dataToSave = {
+        ...editedReservation,
+        cliente: cleanCliente
+      };
+      
+      // Sanitizar después de formatear
+      const sanitizedData = sanitizeData(dataToSave);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Saving reservation data:', sanitizedData);
+      }
+      
+      await onSave(sanitizedData);
+      showNotification?.('success', 'Reserva actualizada correctamente');
       onClose();
     } catch (error) {
       console.error('Error al guardar:', error);
-      showNotification('error', 'Error al actualizar la reserva.');
+      showNotification?.('error', 'Error al actualizar la reserva');
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Editar Reserva</h3>
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <h3 className={styles.modalTitle}>Editar Reserva</h3>
         {isAdmin && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <p className="text-sm text-blue-800">
-                <strong>Modo Administrador:</strong> Puedes modificar cualquier horario sin restricciones de cupo.
-              </p>
-            </div>
+          <div className={styles.adminNotice}>
+            <svg className={styles.adminNoticeIcon} fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <p className={styles.adminNoticeText}>
+              <strong>Modo Administrador:</strong> Puedes modificar cualquier horario sin restricciones de cupo.
+            </p>
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Nombre</label>
               <input
                 type="text"
                 value={editedReservation.cliente.nombre}
@@ -118,49 +154,34 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
                   ...editedReservation,
                   cliente: { ...editedReservation.cliente, nombre: e.target.value }
                 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={styles.input}
                 required
               />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-              <div className="flex gap-2">
-                <select
-                  value={editedReservation.cliente.codigoPais || '54'}
-                  onChange={(e) => setEditedReservation({
-                    ...editedReservation,
-                    cliente: { ...editedReservation.cliente, codigoPais: e.target.value }
-                  })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                  style={{ minWidth: '120px' }}
-                >
-                  <option value="54">+54</option>
-                  <option value="598">+598</option>
-                  <option value="55">+55</option>
-                  <option value="1">+1</option>
-                </select>
-                <input
-                  type="tel"
-                  value={editedReservation.cliente.telefono || ''}
-                  onChange={(e) => setEditedReservation({
-                    ...editedReservation,
-                    cliente: { ...editedReservation.cliente, telefono: e.target.value }
-                  })}
-                  className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    editedReservation.cliente.telefono ? 
-                      (isValidPhoneNumber(`+${editedReservation.cliente.codigoPais || '54'}${editedReservation.cliente.telefono}`) ? 'border-green-500' : 'border-red-500') 
-                      : 'border-gray-300'
-                  }`}
-                  placeholder="Ingresa el número"
-                />
-              </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Teléfono</label>
+              <PhoneInput
+                value={editedReservation.cliente.telefono}
+                onChange={(value) => setEditedReservation({
+                  ...editedReservation,
+                  cliente: { ...editedReservation.cliente, telefono: value || '' }
+                })}
+                className={`${styles.input} ${styles.phoneInput}`}
+                placeholder="Ingresa el número"
+                required
+                isValid={
+                  editedReservation.cliente.telefono ? 
+                    (isValidPhoneNumber(editedReservation.cliente.telefono) ? true : false) 
+                    : null
+                }
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+          <div className={styles.formGridThree}>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Fecha</label>
               <input
                 type="date"
                 value={normalizeFecha(editedReservation.fecha)}
@@ -168,13 +189,13 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
                   ...editedReservation,
                   fecha: e.target.value
                 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={styles.input}
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Turno</label>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Turno</label>
               <select
                 value={editedReservation.turno}
                 onChange={(e) => setEditedReservation({
@@ -182,7 +203,7 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
                   turno: e.target.value,
                   horario: ''
                 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={styles.select}
                 required
               >
                 <option value="">Seleccionar turno</option>
@@ -191,15 +212,15 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Horario</label>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Horario</label>
               <select
                 value={editedReservation.horario}
                 onChange={(e) => setEditedReservation({
                   ...editedReservation,
                   horario: e.target.value
                 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={styles.select}
                 required
                 disabled={!editedReservation.turno}
               >
@@ -211,15 +232,15 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Personas</label>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Personas</label>
             <select
               value={editedReservation.personas}
               onChange={(e) => setEditedReservation({
                 ...editedReservation,
                 personas: parseInt(e.target.value)
               })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className={styles.select}
               required
             >
               <option value="">Seleccionar cantidad</option>
@@ -229,31 +250,30 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Comentarios</label>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Comentarios</label>
             <textarea
               value={editedReservation.cliente.comentarios || ''}
               onChange={(e) => setEditedReservation({
                 ...editedReservation,
                 cliente: { ...editedReservation.cliente, comentarios: e.target.value }
               })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              rows="3"
+              className={styles.textarea}
               placeholder="Comentarios adicionales (opcional)"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className={styles.buttonGroup}>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className={`${styles.button} ${styles.buttonSecondary}`}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className={`${styles.button} ${styles.buttonPrimary}`}
             >
               Guardar Cambios
             </button>

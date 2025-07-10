@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AdminView } from './components/AdminView';
 import { ClientView } from './components/ClientView';
 import { LoginView } from './components/LoginView';
 import AppRouter from './router/AppRouter';
+import { NotificationContainer, ConfirmationModal } from './shared/components/ui';
 import { 
   addReservation, 
   addClient, 
@@ -24,6 +25,7 @@ import {
 } from './firebase';
 import { assignTableToNewReservation, DEFAULT_BLOCKED_TABLES, TABLES_LAYOUT } from './utils/mesaLogic';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { parsePhoneNumber } from 'react-phone-number-input';
 import { db } from './firebase';
 
 // --- CONFIGURACIÓN Y DATOS ---
@@ -43,13 +45,18 @@ function App() {
     personas: 0,
     turno: '',
     horario: '',
-    cliente: { nombre: '', telefono: '', comentarios: '', codigoPais: '54' }
+    cliente: { nombre: '', telefono: '', comentarios: '' } // Removido codigoPais
   });
   const [availableSlots, setAvailableSlots] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [showWaitingListModal, setShowWaitingListModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Estados para notificaciones y confirmaciones (migrados desde AdminView)
+  const [notifications, setNotifications] = useState([]);
+  const [confirmation, setConfirmation] = useState(null);
+  const [editingReservation, setEditingReservation] = useState(null);
 
   // Suscribirse a cambios en tiempo real
   useEffect(() => {
@@ -72,6 +79,38 @@ function App() {
       unsubscribeWaitingList();
     };
   }, []);
+
+  // Función para mostrar notificaciones (migrada desde AdminView)
+  const showNotification = useCallback((type, message) => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, type, message }]);
+    
+    // Auto-remove después de 4 segundos
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 4000);
+  }, []);
+
+  const closeNotification = useCallback((id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
+  // Función para mostrar confirmaciones (migrada desde AdminView)
+  const showConfirmationDialog = useCallback((config) => {
+    return new Promise((resolve) => {
+      setConfirmation({
+        ...config,
+        resolve
+      });
+    });
+  }, []);
+
+  const handleConfirmation = useCallback((result) => {
+    if (confirmation?.resolve) {
+      confirmation.resolve(result);
+    }
+    setConfirmation(null);
+  }, [confirmation]);
 
   const getAvailableSlotsDynamic = async (fecha, turno) => {
     const fechaObj = new Date(fecha + "T00:00:00");
@@ -401,13 +440,18 @@ function App() {
       // Si viene marcado como willGoToWaitingList O no hay slots disponibles
       if (reservaData.willGoToWaitingList || slotsDisponibles.length === 0) {
         // No hay cupo - agregar a lista de espera
+        const phoneNumber = parsePhoneNumber(reservaData.cliente.telefono);
         const newClient = {
           nombre: reservaData.cliente.nombre,
-          telefono: `${reservaData.cliente.codigoPais}${reservaData.cliente.telefono}`,
-          comentarios: reservaData.cliente.comentarios || '',
+          telefono: phoneNumber ? phoneNumber.number.slice(1) : reservaData.cliente.telefono, // Remover + inicial
           ultimaReserva: fechaString,
           listaNegra: false
         };
+        
+        // Agregar comentarios solo si no está vacío/undefined
+        if (reservaData.cliente.comentarios && reservaData.cliente.comentarios.trim() !== '') {
+          newClient.comentarios = reservaData.cliente.comentarios;
+        }
 
         console.log('Sin cupo disponible - agregando a lista de espera');
 
@@ -440,13 +484,18 @@ function App() {
       }
         
       // Hay cupo disponible - proceder normalmente
+      const phoneNumber = parsePhoneNumber(reservaData.cliente.telefono);
       const newClient = {
         nombre: reservaData.cliente.nombre,
-        telefono: `${reservaData.cliente.codigoPais}${reservaData.cliente.telefono}`,
-        comentarios: reservaData.cliente.comentarios || '',
+        telefono: phoneNumber ? phoneNumber.number.slice(1) : reservaData.cliente.telefono, // Remover + inicial
         ultimaReserva: fechaString,
         listaNegra: false
       };
+      
+      // Agregar comentarios solo si no está vacío/undefined
+      if (reservaData.cliente.comentarios && reservaData.cliente.comentarios.trim() !== '') {
+        newClient.comentarios = reservaData.cliente.comentarios;
+      }
 
       console.log('Creando nuevo cliente:', newClient);
 
@@ -565,11 +614,20 @@ function App() {
         throw new Error('El horario seleccionado no está disponible. Por favor, elige otro horario.');
       }
 
+      // Limpiar objeto cliente para eliminar campos undefined (Firebase no los acepta)
+      const cleanCliente = {};
+      Object.keys(fullData.cliente).forEach(key => {
+        const value = fullData.cliente[key];
+        if (value !== undefined && value !== null && value !== '') {
+          cleanCliente[key] = value;
+        }
+      });
+      
       const reservationUpdate = {
         ...fullData,
         fecha: fechaString,
         cliente: {
-          ...fullData.cliente,
+          ...cleanCliente,
           ultimaReserva: fechaString
         },
       };
@@ -636,9 +694,21 @@ function App() {
 
       const mesaAsignada = assignTableToNewReservation(tempReservationData, reservasDelTurno, blockedTables);
 
+      // Limpiar objeto cliente de la waiting list
+      const cleanClienteWaiting = {};
+      if (waitingData.cliente) {
+        Object.keys(waitingData.cliente).forEach(key => {
+          const value = waitingData.cliente[key];
+          if (value !== undefined && value !== null && value !== '') {
+            cleanClienteWaiting[key] = value;
+          }
+        });
+      }
+
       // Confirmar la reserva desde lista de espera con mesa asignada
       const { id, reservationId } = await confirmWaitingReservation(waitingReservationId, {
         ...waitingData,
+        cliente: cleanClienteWaiting,
         horario: selectedHorario, // Usar el horario seleccionado por el admin
         mesaAsignada: mesaAsignada // Agregar mesa asignada
       });
@@ -722,9 +792,12 @@ function App() {
 
 
 
+
+
   // Usar el nuevo sistema de routing modular
   return (
-    <AppRouter
+    <>
+      <AppRouter
       // Props para auth state
       authState={authState}
       
@@ -748,6 +821,10 @@ function App() {
       isValidDate={isValidDate}
       formatDate={formatDate}
       HORARIOS={HORARIOS}
+      showNotification={showNotification}
+      showConfirmationDialog={showConfirmationDialog}
+      editingReservation={editingReservation}
+      setEditingReservation={setEditingReservation}
       
       // Props para client
       LOGO_URL={LOGO_URL}
@@ -772,7 +849,19 @@ function App() {
       waitingList={data.waitingList || []}
       allReservations={data.reservas || []}
       handleLogin={handleLogin}
-    />
+      />
+      
+      {/* Componentes de UI globales */}
+      <NotificationContainer 
+        notifications={notifications} 
+        onClose={closeNotification} 
+      />
+      <ConfirmationModal 
+        confirmation={confirmation}
+        onConfirm={() => handleConfirmation(true)}
+        onCancel={() => handleConfirmation(false)}
+      />
+    </>
   );
 }
 

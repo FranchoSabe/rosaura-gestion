@@ -1,0 +1,282 @@
+/* AdminLayout - Header unificado profesional */
+.adminLayout {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  font-family: 'Codec Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header unificado profesional */
+.header {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.headerContent {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  gap: 2rem;
+}
+
+/* Logo section - izquierda */
+.logoSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* Navegación central - pestañas */
+.navigationSection {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.tabsList {
+  display: flex;
+  gap: 0.5rem;
+  background: #f9fafb;
+  padding: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.tab {
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabActive {
+  composes: tab;
+  background: white;
+  color: #1f2937;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.tabInactive {
+  composes: tab;
+  color: #6b7280;
+  background: transparent;
+}
+
+.tabInactive:hover {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+/* Controles usuario - derecha */
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.userName {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+  background: #f3f4f6;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  min-width: 120px;
+  text-align: center;
+}
+
+/* Botones estilo sistema de notificaciones profesional */
+.createReservationButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #3b82f6;
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  border: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.createReservationButton:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.logoutButton {
+  background: #dc2626;
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.logoutButton:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+}
+
+/* Contenido principal */
+.content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* Responsive - tablet */
+@media (max-width: 1024px) {
+  .headerContent {
+    gap: 1rem;
+  }
+  
+  .tabsList {
+    gap: 0.25rem;
+  }
+  
+  .tab {
+    padding: 0.5rem 0.75rem;
+    min-width: 100px;
+    font-size: 0.8rem;
+  }
+  
+  .createReservationButton,
+  .logoutButton,
+  .userName {
+    min-width: 100px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Responsive - móvil */
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .logoSection {
+    justify-content: center;
+  }
+  
+  .navigationSection {
+    width: 100%;
+  }
+  
+  .tabsList {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .tab {
+    min-width: auto;
+    flex: 1;
+  }
+  
+  .userSection {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .content {
+    padding: 1rem;
+  }
+}
+
+/* Responsive - móvil pequeño */
+@media (max-width: 480px) {
+  .tabsList {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .tab {
+    width: 100%;
+  }
+  
+  .userSection {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .createReservationButton,
+  .logoutButton,
+  .userName {
+    width: 100%;
+  }
+}
+
+/* Ocultar completamente el header en impresión */
+@media print {
+  .header {
+    display: none !important;
+  }
+  
+  .content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+} 

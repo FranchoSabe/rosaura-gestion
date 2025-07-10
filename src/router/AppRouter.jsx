@@ -29,7 +29,15 @@ const AppRouter = (props) => {
     getAvailableSlots: props.getAvailableSlots,
     isValidDate: props.isValidDate,
     formatDate: props.formatDate,
-    HORARIOS: props.HORARIOS
+    HORARIOS: props.HORARIOS,
+    
+    // Props de UI faltantes
+    showNotification: props.showNotification,
+    showConfirmation: props.showConfirmationDialog,
+    
+    // Props de estado faltantes
+    editingReservation: props.editingReservation,
+    setEditingReservation: props.setEditingReservation
   };
 
   const clientProps = {

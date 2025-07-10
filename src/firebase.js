@@ -105,6 +105,52 @@ export const updateClientNotes = async (clientId, notes) => {
   }
 };
 
+export const updateClient = async (clientData) => {
+  try {
+    console.log('Actualizando cliente:', clientData);
+    
+    const { consolidatedIds, ...dataToUpdate } = clientData;
+    const updateData = {
+      ...dataToUpdate,
+      updatedAt: new Date()
+    };
+    
+    // Si hay múltiples IDs consolidados, actualizar todos
+    if (consolidatedIds && consolidatedIds.length > 0) {
+      const updatePromises = consolidatedIds.map(clientId => {
+        const clientRef = doc(db, "clientes", clientId);
+        return updateDoc(clientRef, updateData);
+      });
+      
+      await Promise.all(updatePromises);
+      console.log(`Cliente actualizado en ${consolidatedIds.length} registros`);
+    } else {
+      // Si no hay consolidatedIds, actualizar solo el registro principal
+      throw new Error('No se encontraron IDs de cliente para actualizar');
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error al actualizar cliente:", error);
+    throw error;
+  }
+};
+
+export const deleteClient = async (clientId) => {
+  try {
+    console.log('Eliminando cliente:', clientId);
+    
+    const clientRef = doc(db, "clientes", clientId);
+    await deleteDoc(clientRef);
+
+    console.log('Cliente eliminado con éxito');
+    return true;
+  } catch (error) {
+    console.error("Error al eliminar cliente:", error);
+    throw error;
+  }
+};
+
 export const getReservations = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, "reservas"));
