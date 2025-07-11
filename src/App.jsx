@@ -25,6 +25,7 @@ import {
 import { assignTableToNewReservation, DEFAULT_BLOCKED_TABLES, TABLES_LAYOUT } from './utils/mesaLogic';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { parsePhoneNumber } from 'react-phone-number-input';
+import { formatDateToString } from './utils';
 import { db } from './firebase';
 
 // --- CONFIGURACIÓN Y DATOS ---
@@ -387,9 +388,7 @@ function App() {
 
   const handleDateAndTurnoSubmit = async () => {
     // Convertir fecha a string si es necesario
-    const fechaString = reservaData.fecha instanceof Date 
-      ? reservaData.fecha.toISOString().split('T')[0] 
-      : reservaData.fecha;
+    const fechaString = formatDateToString(reservaData.fecha);
       
     if (!isValidDate(fechaString)) {
       alert('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');
@@ -429,9 +428,7 @@ function App() {
     setIsSubmitting(true);
     try {
       // Convertir fecha a string si es necesario
-      const fechaString = reservaData.fecha instanceof Date 
-        ? reservaData.fecha.toISOString().split('T')[0] 
-        : reservaData.fecha;
+      const fechaString = formatDateToString(reservaData.fecha);
       
       // Verificar si hay cupo disponible ANTES de crear el cliente
       const slotsDisponibles = await getAvailableSlotsDynamic(fechaString, reservaData.turno);
@@ -596,7 +593,7 @@ function App() {
         fullData = { ...original, mesaAsignada: updatedData.mesaAsignada };
       }
 
-      const fechaString = fullData.fecha instanceof Date ? fullData.fecha.toISOString().split('T')[0] : fullData.fecha;
+      const fechaString = formatDateToString(fullData.fecha);
 
       if (!isValidDate(fechaString, fullData.turno, adminOverride)) {
         throw new Error('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');

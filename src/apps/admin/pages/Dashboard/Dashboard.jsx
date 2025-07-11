@@ -13,6 +13,7 @@ import { UNIFIED_TABLES_LAYOUT } from '../../../../utils/tablesLayout';
 import { TABLES_LAYOUT, calculateAutoAssignments, setsAreEqual, detectWalkInQuotaChanges, calculateWalkInQuotas } from '../../../../utils/mesaLogic';
 import { saveTableAssignments, saveBlockedTables, loadBlockedTables, reassignTableManually, validateTableAssignment, checkTableReassignmentNeeded } from '../../../../utils/mesaLogic';
 import { isValidPhoneNumber } from 'react-phone-number-input';
+import { formatDateToString } from '../../../../utils';
 
 import styles from './Dashboard.module.css';
 import mapStyles from '../../../../shared/components/InteractiveMap/InteractiveMapController.module.css';
@@ -149,7 +150,7 @@ const Dashboard = ({
   onDateTurnoSet
 }) => {
   // Estados locales - copiados exactamente de TodayView
-  const [selectedDate, setSelectedDate] = useState(initialDate || new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(initialDate || formatDateToString(new Date()));
   const [selectedTurno, setSelectedTurno] = useState(initialTurno || 'mediodia');
   const [assignmentMode, setAssignmentMode] = useState(false);
   const [tableAssignments, setTableAssignments] = useState({});
@@ -256,7 +257,7 @@ const Dashboard = ({
     
     do {
       currentDate.setDate(currentDate.getDate() - 1);
-      previousDate = currentDate.toISOString().split('T')[0];
+      previousDate = formatDateToString(currentDate);
     } while (new Date(previousDate).getDay() === 1); // Saltar lunes
     
     setSelectedDate(previousDate);
@@ -268,7 +269,7 @@ const Dashboard = ({
     
     do {
       currentDate.setDate(currentDate.getDate() + 1);
-      nextDate = currentDate.toISOString().split('T')[0];
+      nextDate = formatDateToString(currentDate);
     } while (new Date(nextDate).getDay() === 1); // Saltar lunes
     
     setSelectedDate(nextDate);
@@ -276,7 +277,7 @@ const Dashboard = ({
 
   const handleDateSelect = useCallback((date) => {
     if (date) {
-      const selectedDateStr = date.toISOString().split('T')[0];
+      const selectedDateStr = formatDateToString(date);
       setSelectedDate(selectedDateStr);
       setShowDatePicker(false);
     }

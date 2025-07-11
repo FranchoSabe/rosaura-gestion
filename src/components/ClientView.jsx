@@ -10,6 +10,7 @@ import buttonStyles from '../styles/shared/Buttons.module.css';
 import ReservationDetails from './ReservationDetails';
 import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { PhoneInput } from '../shared/components/ui/Input';
+import { formatDateToString } from '../utils';
 
 // Registrar el locale español
 registerLocale('es', es);
@@ -215,7 +216,7 @@ export const ClientView = ({
       if (!isMonday) {
         days.push({
           date: date,
-          dateString: date.toISOString().split('T')[0],
+          dateString: formatDateToString(date),
           label: getDayLabel(date, i),
           isToday: i === 0,
           isTomorrow: i === 1
@@ -246,7 +247,7 @@ export const ClientView = ({
 
   // Función para verificar la disponibilidad de un día específico para un turno
   const getDayAvailability = (date, turno = null, personas = null) => {
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = formatDateToString(date);
     const fechaObj = new Date(dateString + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
     

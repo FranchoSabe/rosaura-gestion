@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { Calendar, Users, Phone, Clock, X } from 'lucide-react';
 import { UNIFIED_TABLES_LAYOUT } from '../../../../utils/tablesLayout';
 import { calculateAutoAssignments } from '../../../../utils/mesaLogic';
+import { formatDateToString } from '../../../../utils';
 import styles from './Panorama.module.css';
 
 // TurnoPreviewModal - Modal para preview de turno específico
@@ -278,7 +279,7 @@ const Panorama = ({ reservations, formatDate, onGoToDailyView }) => {
 
   // Calcular estadísticas por día
   const getDayStats = useCallback((date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = formatDateToString(date);
     const dayReservations = reservations.filter(r => r.fecha === dateStr);
     
     const mediodiaReservations = dayReservations.filter(r => r.turno === 'mediodia');
@@ -485,7 +486,7 @@ const Panorama = ({ reservations, formatDate, onGoToDailyView }) => {
           preview={selectedTurnoPreview}
           onClose={() => setSelectedTurnoPreview(null)}
           onGoToDailyView={handleGoToDailyView}
-          currentDate={new Date().toISOString().split('T')[0]}
+          currentDate={formatDateToString(new Date())}
           currentTurno="mediodia"
           tableAssignments={{}}
         />

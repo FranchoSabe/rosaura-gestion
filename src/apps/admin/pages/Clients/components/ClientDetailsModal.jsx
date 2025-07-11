@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Calendar, Clock, Users, Phone, MessageSquare, AlertTriangle, Trash2, MapPin, Edit2, ChevronDown, ChevronUp, User } from 'lucide-react';
+import { formatDateToString } from '../../../../../utils';
 import EditClientModal from './EditClientModal';
 import EditReservationModal from '../../../../../shared/components/modals/EditReservationModal';
 import styles from './ClientDetailsModal.module.css';
@@ -45,7 +46,7 @@ const ClientDetailsModal = ({
 
   // Separar reservas pasadas y futuras
   const { pastReservations, futureReservations } = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateToString(new Date());
     
     const past = clientReservations
       .filter(r => r.fecha < today)

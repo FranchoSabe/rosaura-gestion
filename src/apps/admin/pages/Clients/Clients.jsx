@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Edit2, AlertTriangle } from 'lucide-react';
+import { formatDateToString } from '../../../utils';
 import styles from './Clients.module.css';
 import ClientDetailsModal from './components/ClientDetailsModal';
 
@@ -112,7 +113,7 @@ const Clients = ({
         return clientPhone === reservationPhone;
       });
       
-      const today = new Date().toISOString().split('T')[0];
+      const today = formatDateToString(new Date());
       const pastReservations = clientReservations.filter(r => r.fecha < today);
       const futureReservations = clientReservations.filter(r => r.fecha >= today);
       

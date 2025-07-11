@@ -8,6 +8,7 @@ import "../../../../datepicker-custom.css";
 import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { PhoneInput } from '../../ui/Input';
 import { sanitizeData } from '../../../../utils/validation';
+import { formatDateToString } from '../../../../utils';
 import styles from './index.module.css';
 
 // Registrar locale español para el DatePicker
@@ -33,7 +34,7 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
   useEffect(() => {
     const updateSlots = async () => {
       const rawSlots = await getAvailableSlots(
-        newReservation.fecha.toISOString().split('T')[0],
+        formatDateToString(newReservation.fecha),
         newReservation.turno
       );
 
@@ -90,7 +91,7 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
     // Verificar disponibilidad del horario seleccionado (saltear para admin)
     if (!isAdmin) {
       const slotsDisponibles = await getAvailableSlots(
-        newReservation.fecha.toISOString().split('T')[0],
+        formatDateToString(newReservation.fecha),
         newReservation.turno
       );
       
@@ -122,7 +123,7 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
       
       const reservationData = {
         ...newReservation,
-        fecha: newReservation.fecha.toISOString().split('T')[0],
+        fecha: formatDateToString(newReservation.fecha),
         cliente: cleanCliente
       };
 

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Check, X, MessageCircle, Clock } from 'lucide-react';
+import { formatDateToString } from '../../../../utils';
 import styles from './WaitingList.module.css';
 
 // Importar utilidades para formatear teléfono
@@ -413,9 +414,9 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
                     <td className={styles.tableCell}>
                       <div className={styles.historyStats}>
                         <span className={styles.totalReservations}>{clientHistory.length}</span>
-                        {clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length > 0 && (
+                        {clientHistory.filter(r => r.fecha >= formatDateToString(new Date())).length > 0 && (
                           <span className={styles.activeReservations}>
-                            • {clientHistory.filter(r => r.fecha >= new Date().toISOString().split('T')[0]).length} activa(s)
+                            • {clientHistory.filter(r => r.fecha >= formatDateToString(new Date())).length} activa(s)
                           </span>
                         )}
                       </div>
