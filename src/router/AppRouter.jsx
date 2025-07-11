@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminRouter from './AdminRouter';
 import ClientRouter from './ClientRouter';
+import ComponentShowcase from '../pages/ComponentShowcase';
 
 /**
  * Router principal de la aplicación
@@ -73,6 +74,9 @@ const AppRouter = (props) => {
       
       {/* Rutas de cliente */}
       <Route path="/client/*" element={<ClientRouter {...clientProps} />} />
+      
+      {/* 🎨 Showcase de componentes UI */}
+      <Route path="/showcase" element={<ComponentShowcase />} />
       
       {/* Ruta por defecto redirige a cliente */}
       <Route path="/" element={<Navigate to="/client" replace />} />

@@ -1,0 +1,208 @@
+/**
+ * 🎴 CARD STYLES - SISTEMA GLASSMORPHISM UNIFICADO
+ * Usando design tokens para efectos modernos y consistentes
+ */
+
+/* Variables CSS usando design tokens */
+:root {
+  --card-glass-bg: rgba(255, 255, 255, 0.08);
+  --card-glass-border: rgba(255, 255, 255, 0.15);
+  --card-glass-hover: rgba(255, 255, 255, 0.12);
+  
+  --card-solid-bg: rgba(255, 255, 255, 0.95);
+  --card-solid-border: rgba(0, 0, 0, 0.1);
+  
+  --card-gradient-bg: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  
+  --card-shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --card-shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.15);
+  --card-shadow-elevated: 0 20px 40px rgba(0, 0, 0, 0.25);
+  
+  --card-backdrop-blur: blur(12px);
+  --card-border-radius: 1rem;
+  --card-border-radius-lg: 1.5rem;
+  
+  --card-transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* BASE CARD STYLES */
+.card {
+  position: relative;
+  border-radius: var(--card-border-radius);
+  transition: var(--card-transition);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* VARIANTES */
+
+/* Glass variant - Efecto glassmorphism principal */
+.card--glass {
+  background: var(--card-glass-bg);
+  backdrop-filter: var(--card-backdrop-blur);
+  -webkit-backdrop-filter: var(--card-backdrop-blur);
+  border: 1px solid var(--card-glass-border);
+  box-shadow: var(--card-shadow-subtle);
+}
+
+/* Solid variant - Fondo sólido para mayor contraste */
+.card--solid {
+  background: var(--card-solid-bg);
+  border: 1px solid var(--card-solid-border);
+  box-shadow: var(--card-shadow-medium);
+}
+
+/* Elevated variant - Sombra más prominente */
+.card--elevated {
+  background: var(--card-glass-bg);
+  backdrop-filter: var(--card-backdrop-blur);
+  -webkit-backdrop-filter: var(--card-backdrop-blur);
+  border: 1px solid var(--card-glass-border);
+  box-shadow: var(--card-shadow-elevated);
+}
+
+/* Outlined variant - Solo bordes */
+.card--outlined {
+  background: transparent;
+  border: 2px solid var(--card-glass-border);
+  box-shadow: none;
+}
+
+/* Gradient variant - Con gradiente sutil */
+.card--gradient {
+  background: var(--card-gradient-bg);
+  backdrop-filter: var(--card-backdrop-blur);
+  -webkit-backdrop-filter: var(--card-backdrop-blur);
+  border: 1px solid var(--card-glass-border);
+  box-shadow: var(--card-shadow-subtle);
+  position: relative;
+}
+
+.card--gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.1) 0%, 
+    rgba(59, 130, 246, 0.05) 50%,
+    rgba(168, 85, 247, 0.05) 100%
+  );
+  z-index: -1;
+}
+
+/* TAMAÑOS */
+.card--sm {
+  border-radius: 0.75rem;
+}
+
+.card--md {
+  border-radius: var(--card-border-radius);
+}
+
+.card--lg {
+  border-radius: var(--card-border-radius-lg);
+}
+
+.card--xl {
+  border-radius: var(--card-border-radius-lg);
+  box-shadow: var(--card-shadow-elevated);
+}
+
+/* PADDINGS */
+.card--padding-none {
+  padding: 0;
+}
+
+.card--padding-sm {
+  padding: 0.75rem;
+}
+
+.card--padding-md {
+  padding: 1.5rem;
+}
+
+.card--padding-lg {
+  padding: 2rem;
+}
+
+/* HOVER EFFECTS */
+.card--hover {
+  cursor: pointer;
+}
+
+.card--hover:hover {
+  transform: translateY(-2px);
+}
+
+.card--glass.card--hover:hover {
+  background: var(--card-glass-hover);
+  box-shadow: var(--card-shadow-medium);
+}
+
+.card--solid.card--hover:hover {
+  box-shadow: var(--card-shadow-elevated);
+}
+
+.card--elevated.card--hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+}
+
+.card--outlined.card--hover:hover {
+  border-color: rgba(34, 197, 94, 0.3);
+  box-shadow: var(--card-shadow-subtle);
+}
+
+.card--gradient.card--hover:hover {
+  background: var(--card-glass-hover);
+}
+
+.card--gradient.card--hover:hover::before {
+  opacity: 0.8;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .card--padding-lg {
+    padding: 1.5rem;
+  }
+  
+  .card--padding-md {
+    padding: 1rem;
+  }
+  
+  .card--xl {
+    border-radius: var(--card-border-radius);
+  }
+}
+
+/* ACCESIBILIDAD */
+.card--hover:focus-visible {
+  outline: 2px solid #22c55e;
+  outline-offset: 2px;
+}
+
+/* DARK MODE SUPPORT (futuro) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --card-glass-bg: rgba(0, 0, 0, 0.3);
+    --card-glass-border: rgba(255, 255, 255, 0.1);
+    --card-glass-hover: rgba(0, 0, 0, 0.4);
+    --card-solid-bg: rgba(0, 0, 0, 0.8);
+    --card-solid-border: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* REDUCED MOTION para usuarios sensibles */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  
+  .card--hover:hover {
+    transform: none;
+  }
+} 

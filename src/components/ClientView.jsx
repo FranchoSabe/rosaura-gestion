@@ -11,6 +11,8 @@ import ReservationDetails from './ReservationDetails';
 import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { PhoneInput } from '../shared/components/ui/Input';
 import { formatDateToString } from '../utils';
+// Importing the new UI components
+import { Button, Card } from '../shared/components/ui';
 
 // Registrar el locale español
 registerLocale('es', es);
@@ -416,7 +418,7 @@ export const ClientView = ({
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className={`${styles.screenContainer} ${styles.flex} ${styles.flexCol} ${styles.minHScreen}`}>
           <div className={styles.flexGrow}>
-            {/* Nueva sección hero profesional */}
+            {/* Sección hero profesional SIN Card - animación original */}
             <div className={styles.heroSection}>
               <p className={styles.heroWelcome}>Bienvenido a</p>
               {LOGO_URL ? (
@@ -432,51 +434,100 @@ export const ClientView = ({
                   <span className="letter">a</span>
                 </h1>
               )}
-              <p className={styles.heroSubtitle}>Reservas online</p>
             </div>
             
-            <div className={`${styles.buttonContainer} ${styles.spaceY4} ${styles.mb4}`}>
-              <button onClick={() => setCurrentScreen('fecha-select')} className={buttonStyles.reserveButton}>
-                <Calendar size={20} />
-                Hacer una reserva
-              </button>
+            {/* Acciones principales con mismo ancho */}
+            <div className={`${styles.buttonContainer} ${styles.actionsCompact}`}>
+              <div className={styles.actionsUniform}>
+                <Button 
+                  variant="primary" 
+                  size="lg" 
+                  onClick={() => setCurrentScreen('fecha-select')} 
+                  className={styles.uniformActionButton}
+                  icon="left"
+                >
+                  <Calendar size={20} />
+                  Hacer una reserva
+                </Button>
+                
+                <Button 
+                  variant="secondary" 
+                  size="lg"
+                  onClick={() => window.open('https://wa.me/5492213995351', '_blank')} 
+                  className={styles.uniformActionButton}
+                  icon="left"
+                >
+                  <MessageCircle size={20} />
+                  WhatsApp
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => setShowSearchForm(true)} 
+                  className={styles.uniformActionButton}
+                  icon="left"
+                >
+                  <FileSearch size={20} />
+                  Gestionar reserva
+                </Button>
+              </div>
+            </div>
+            
+            {/* Horarios como texto directo sobre el fondo */}
+            <div className={styles.horariosDirectos}>
+              <div className={styles.horariosHeader}>
+                <Clock size={18} className={styles.horariosIcon} />
+                <h3 className={styles.horariosTitle}>Horarios de Atención</h3>
+              </div>
+              <div className={styles.horariosGrid}>
+                <div className={styles.horarioItem}>
+                  <span className={styles.turnoLabel}>Mediodía</span>
+                  <span className={styles.horarioDetalle}>Mar-Dom 12 a 15</span>
+                </div>
+                <div className={styles.horarioItem}>
+                  <span className={styles.turnoLabel}>Noche</span>
+                  <span className={styles.horarioDetalle}>Mar-Sáb 20 a 23</span>
+                </div>
+                <div className={styles.horarioItem}>
+                  <span className={styles.cerradoLabel}>Lunes cerrado</span>
+                </div>
+              </div>
               <button 
-                onClick={() => window.open('https://wa.me/5492213995351', '_blank')} 
-                className={buttonStyles.whatsappButton}
+                onClick={() => {/* TODO: Abrir modal de info completa */}}
+                className={styles.masInfoButton}
               >
-                <MessageCircle size={20} />
-                Whatsapp
-              </button>
-              <button 
-                onClick={() => setShowSearchForm(true)} 
-                className={buttonStyles.manageButton}
-              >
-                <FileSearch size={20} />
-                Gestionar reserva
+                Ver más información →
               </button>
             </div>
           </div>
+          
           <div className={`${styles.mtAuto} ${styles.pb4}`}>
-            <button onClick={onAdminClick} className={buttonStyles.adminButton}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onAdminClick} 
+              className={styles.adminButton}
+            >
               Admin
-            </button>
+            </Button>
           </div>
         </div>
 
         {showSearchForm && !foundReservation && (
           <div className={`${styles.modalOverlay} ${styles.fixed} ${styles.inset0} ${styles.bgBlack} ${styles.bgOpacity50} ${styles.flex} ${styles.itemsCenter} ${styles.justifyCenter} ${styles.p4}`}>
-            <div className={`${styles.modalContent} ${styles.bgBlack} ${styles.bgOpacity40} ${styles.backdropBlurSm} ${styles.roundedXl} ${styles.borderWhite} ${styles.borderOpacity20} ${styles.shadow2xl} ${styles.maxWMd} ${styles.wFull}`}>
+            <Card variant="glass" padding="lg" className={`${styles.modalContent} ${styles.maxWMd} ${styles.wFull}`}>
               <SearchReservationForm
                 onSearch={handleSearch}
                 onClose={() => setShowSearchForm(false)}
               />
-            </div>
+            </Card>
           </div>
         )}
 
         {foundReservation && (
           <div className={`${styles.modalOverlay} ${styles.fixed} ${styles.inset0} ${styles.bgBlack} ${styles.bgOpacity50} ${styles.flex} ${styles.itemsCenter} ${styles.justifyCenter} ${styles.p4}`}>
-            <div className={`${styles.modalContent} ${styles.bgBlack} ${styles.bgOpacity40} ${styles.backdropBlurSm} ${styles.roundedXl} ${styles.borderWhite} ${styles.borderOpacity20} ${styles.shadow2xl} ${styles.maxWMd} ${styles.wFull}`}>
+            <Card variant="glass" padding="lg" className={`${styles.modalContent} ${styles.maxWMd} ${styles.wFull}`}>
               <ReservationDetails
                 reservation={foundReservation}
                 onClose={() => {
@@ -488,7 +539,7 @@ export const ClientView = ({
                 onCancel={() => handleCancelReservation(foundReservation)}
                 onContact={() => handleContactReservation(foundReservation)}
               />
-            </div>
+            </Card>
           </div>
         )}
       </ClientLayout>

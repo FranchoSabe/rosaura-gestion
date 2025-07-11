@@ -1,0 +1,288 @@
+/**
+ * 🎨 BUTTON STYLES - SISTEMA UNIFICADO
+ * Usando design tokens para consistencia visual
+ */
+
+/* Variables CSS usando design tokens */
+:root {
+  --color-primary: #22c55e;
+  --color-primary-hover: #16a34a;
+  --color-primary-dark: #15803d;
+  
+  --color-secondary: rgba(0, 0, 0, 0.3);
+  --color-secondary-hover: rgba(0, 0, 0, 0.5);
+  
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-glass-hover: 0 12px 40px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  
+  --backdrop-blur: blur(12px);
+  --border-radius: 1rem;
+  
+  --transition-fast: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* BASE BUTTON */
+.button {
+  /* Layout */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  /* Styling */
+  border: none;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  overflow: hidden;
+  
+  /* Transitions */
+  transition: var(--transition-normal);
+  transform-origin: center;
+  
+  /* User interaction */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  
+  /* Accessibility */
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* TAMAÑOS */
+.sm {
+  height: 2.25rem; /* 36px */
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  min-width: 4rem;
+}
+
+.md {
+  height: 2.75rem; /* 44px */
+  padding: 0 1.5rem;
+  font-size: 1rem;
+  min-width: 5rem;
+}
+
+.lg {
+  height: 3.5rem; /* 56px */
+  padding: 0 2rem;
+  font-size: 1.125rem;
+  min-width: 6rem;
+}
+
+/* VARIANTES */
+
+/* Primary - Verde Rosaura */
+.primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  color: white;
+  box-shadow: var(--shadow-glass);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  &:hover:not(.disabled) {
+    background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-primary-dark) 100%);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glass-hover);
+  }
+  
+  &:active:not(.disabled) {
+    transform: translateY(0) scale(0.98);
+    transition: var(--transition-fast);
+  }
+}
+
+/* Secondary - Glassmorphism */
+.secondary {
+  background: var(--color-secondary);
+  backdrop-filter: var(--backdrop-blur);
+  color: white;
+  box-shadow: var(--shadow-glass);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  &:hover:not(.disabled) {
+    background: var(--color-secondary-hover);
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  &:active:not(.disabled) {
+    transform: translateY(0) scale(0.98);
+    transition: var(--transition-fast);
+  }
+}
+
+/* Ghost - Minimalista */
+.ghost {
+  background: transparent;
+  color: white;
+  border: 1px solid transparent;
+  
+  &:hover:not(.disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  &:active:not(.disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(0.98);
+  }
+}
+
+/* Outline - Bordes definidos */
+.outline {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  
+  &:hover:not(.disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+  }
+  
+  &:active:not(.disabled) {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+/* Danger - Acciones destructivas */
+.danger {
+  background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-hover) 100%);
+  color: white;
+  box-shadow: var(--shadow-glass);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  &:hover:not(.disabled) {
+    background: linear-gradient(135deg, var(--color-danger-hover) 0%, #991b1b 100%);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glass-hover);
+  }
+  
+  &:active:not(.disabled) {
+    transform: translateY(0) scale(0.98);
+    transition: var(--transition-fast);
+  }
+}
+
+/* ESTADOS */
+
+/* Full width */
+.fullWidth {
+  width: 100%;
+}
+
+/* Disabled state */
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none !important;
+}
+
+/* ELEMENTOS INTERNOS */
+
+/* Contenedor de iconos */
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Contenido principal */
+.content {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+/* Spinner de loading */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Efecto glassmorphism (opcional) */
+.glassEffect {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: inherit;
+  opacity: 0;
+  transition: var(--transition-normal);
+  pointer-events: none;
+}
+
+.button:hover .glassEffect {
+  opacity: 1;
+}
+
+/* Efecto ripple/hover */
+.rippleEffect {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.button:hover .rippleEffect {
+  transform: translateX(100%);
+}
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  /* Mejores touch targets en móvil */
+  .sm {
+    height: 2.5rem;
+    padding: 0 1.25rem;
+  }
+  
+  .md {
+    height: 3rem;
+    padding: 0 1.75rem;
+  }
+  
+  .lg {
+    height: 3.75rem;
+    padding: 0 2.25rem;
+  }
+  
+  /* Disable hover effects en móvil */
+  .button:hover {
+    transform: none;
+  }
+  
+  /* Mejor feedback táctil */
+  .button:active:not(.disabled) {
+    transform: scale(0.95);
+    transition: var(--transition-fast);
+  }
+}
+
+/* ACCESSIBILITY */
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .spinner,
+  .glassEffect,
+  .rippleEffect {
+    transition: none;
+    animation: none;
+  }
+} 
