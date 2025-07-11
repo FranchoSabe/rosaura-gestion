@@ -50,11 +50,11 @@ const ClientDetailsModal = ({
     
     const past = clientReservations
       .filter(r => r.fecha < today)
-      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)); // Más recientes primero
+      .sort((a, b) => new Date(b.fecha + "T00:00:00") - new Date(a.fecha + "T00:00:00")); // Más recientes primero
 
     const future = clientReservations
       .filter(r => r.fecha >= today)
-      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // Próximas primero
+      .sort((a, b) => new Date(a.fecha + "T00:00:00") - new Date(b.fecha + "T00:00:00")); // Próximas primero
 
     return { pastReservations: past, futureReservations: future };
   }, [clientReservations]);
@@ -106,7 +106,7 @@ const ClientDetailsModal = ({
         if (!a.ultimaUso && !b.ultimaUso) return 0;
         if (!a.ultimaUso) return 1;
         if (!b.ultimaUso) return -1;
-        return new Date(b.ultimaUso) - new Date(a.ultimaUso);
+        return new Date(b.ultimaUso + "T00:00:00") - new Date(a.ultimaUso + "T00:00:00");
       });
   }, [client, clientReservations]);
 
@@ -165,7 +165,7 @@ const ClientDetailsModal = ({
 
   const formatDate = (dateStr) => {
     try {
-      return new Date(dateStr).toLocaleDateString('es-AR', {
+      return new Date(dateStr + "T00:00:00").toLocaleDateString('es-AR', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

@@ -181,7 +181,8 @@ const Dashboard = ({
 
   // Función para formatear la fecha en dos líneas
   const formatDateTwoLines = (dateString) => {
-    const date = new Date(dateString);
+    // Usar T00:00:00 para evitar problemas de zona horaria
+    const date = new Date(dateString + "T00:00:00");
     const options = {
       weekday: 'long',
       year: 'numeric', 
@@ -252,25 +253,25 @@ const Dashboard = ({
 
   // Funciones de navegación de fechas
   const goToPreviousDay = useCallback(() => {
-    const currentDate = new Date(selectedDate);
+    const currentDate = new Date(selectedDate + "T00:00:00");
     let previousDate;
     
     do {
       currentDate.setDate(currentDate.getDate() - 1);
       previousDate = formatDateToString(currentDate);
-    } while (new Date(previousDate).getDay() === 1); // Saltar lunes
+    } while (new Date(previousDate + "T00:00:00").getDay() === 1); // Saltar lunes
     
     setSelectedDate(previousDate);
   }, [selectedDate]);
 
   const goToNextDay = useCallback(() => {
-    const currentDate = new Date(selectedDate);
+    const currentDate = new Date(selectedDate + "T00:00:00");
     let nextDate;
     
     do {
       currentDate.setDate(currentDate.getDate() + 1);
       nextDate = formatDateToString(currentDate);
-    } while (new Date(nextDate).getDay() === 1); // Saltar lunes
+    } while (new Date(nextDate + "T00:00:00").getDay() === 1); // Saltar lunes
     
     setSelectedDate(nextDate);
   }, [selectedDate]);
@@ -881,7 +882,7 @@ const Dashboard = ({
                 {showDatePicker && (
                   <div className={styles.datePickerDropdown}>
                     <DatePicker
-                      selected={new Date(selectedDate)}
+                      selected={new Date(selectedDate + "T00:00:00")}
                       onChange={handleDateSelect}
                       locale="es"
                       inline
@@ -960,15 +961,15 @@ const Dashboard = ({
               </button>
               <button
                 onClick={() => setSelectedTurno('noche')}
-                disabled={new Date(selectedDate).getDay() === 0}
+                disabled={new Date(selectedDate + "T00:00:00").getDay() === 0}
                 className={`${styles.shiftButton} ${
-                  new Date(selectedDate).getDay() === 0 
+                  new Date(selectedDate + "T00:00:00").getDay() === 0 
                     ? styles.controlButtonDisabled
                     : selectedTurno === 'noche'
                     ? `${styles.shiftButtonActive} ${styles.shiftButtonNoche}`
                     : styles.shiftButtonInactive
                 }`}
-                title={new Date(selectedDate).getDay() === 0 ? 'Los domingos no hay turno noche' : ''}
+                title={new Date(selectedDate + "T00:00:00").getDay() === 0 ? 'Los domingos no hay turno noche' : ''}
               >
                 Noche
               </button>

@@ -47,8 +47,8 @@ const Clients = ({
         const existing = phoneMap.get(normalizedPhone);
         
         // Usar el cliente más reciente (por ultimaReserva o por orden de procesamiento)
-        const clientDate = client.ultimaReserva ? new Date(client.ultimaReserva) : new Date(0);
-        const existingDate = existing.ultimaReserva ? new Date(existing.ultimaReserva) : new Date(0);
+        const clientDate = client.ultimaReserva ? new Date(client.ultimaReserva + "T00:00:00") : new Date(0);
+        const existingDate = existing.ultimaReserva ? new Date(existing.ultimaReserva + "T00:00:00") : new Date(0);
         
         if (clientDate >= existingDate) {
           // Este cliente es más reciente, usar sus datos como principales
@@ -124,7 +124,7 @@ const Clients = ({
         reservasFuturas: futureReservations.length,
         tieneReservasFuturas: futureReservations.length > 0,
         ultimaReservaReal: pastReservations.length > 0 ? 
-          Math.max(...pastReservations.map(r => new Date(r.fecha))) : null
+          Math.max(...pastReservations.map(r => new Date(r.fecha + "T00:00:00"))) : null
       };
     });
   }, [consolidatedClients, reservations]);
@@ -202,7 +202,7 @@ const Clients = ({
   const getLastReservationDate = (client) => {
     const date = client.ultimaReservaReal || client.ultimaReserva;
     if (!date) return 'Sin reservas';
-    return new Date(date).toLocaleDateString('es-AR');
+    return new Date(date + "T00:00:00").toLocaleDateString('es-AR');
   };
 
   const handleEditNotes = (client) => {

@@ -20,11 +20,11 @@ const FutureReservations = ({ reservations, ReservationsTable, onSetBlacklist, o
         startOfNextWeek.setHours(0, 0, 0, 0);
 
         const futureDates = reservations
-            .filter(r => new Date(r.fecha) >= startOfNextWeek)
+            .filter(r => new Date(r.fecha + "T00:00:00") >= startOfNextWeek)
             .map(r => r.fecha);
         
         // Devolver fechas únicas y ordenadas
-        return [...new Set(futureDates)].sort((a, b) => new Date(a) - new Date(b));
+        return [...new Set(futureDates)].sort((a, b) => new Date(a + "T00:00:00") - new Date(b + "T00:00:00"));
     };
 
     const getReservationsForDay = (date) => {
