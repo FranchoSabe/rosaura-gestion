@@ -248,3 +248,76 @@
     width: 100%;
   }
 } 
+
+/* ===== ESTILOS PARA BOTONES DE TURNO ===== */
+
+.turnoSelector {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.turnoOption {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  min-height: 44px;
+}
+
+.turnoOptionSelected {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.turnoOptionSelected:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.turnoOptionUnselected {
+  background: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.turnoOptionUnselected:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.turnoOption:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
+.turnoOption:disabled:hover {
+  background: #f9fafb;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+/* Responsive para botones de turno */
+@media (max-width: 640px) {
+  .turnoSelector {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .turnoOption {
+    width: 100%;
+  }
+} 

@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { calculateWalkInQuotas } from '../../../utils/mesaLogic';
 import { UNIFIED_TABLES_LAYOUT } from '../../../utils/tablesLayout';
 import styles from './InteractiveMapController.module.css';
-import { X, Edit2, MessageCircle, Trash2, Phone, Clock, Users, MapPin } from 'lucide-react';
+import { X, Edit2, MessageCircle, Trash2, Phone, Clock, Users, MapPin, Plus, ZoomOut, ZoomIn } from 'lucide-react';
 
 const InteractiveMapController = ({
   fecha,
@@ -23,6 +23,7 @@ const InteractiveMapController = ({
 }) => {
   const [hoveredTable, setHoveredTable] = useState(null);
   const [reservationPopup, setReservationPopup] = useState(null);
+  const [isZoomedOut, setIsZoomedOut] = useState(false);
   
   // Calcular mesas ocupadas
   const occupiedTables = useMemo(() => {
@@ -121,6 +122,11 @@ const InteractiveMapController = ({
     setReservationPopup(null);
   }, []);
   
+  // Toggle zoom
+  const toggleZoom = useCallback(() => {
+    setIsZoomedOut(prev => !prev);
+  }, []);
+  
   // Funciones para acciones del popup
   const handleEditReservation = useCallback(() => {
     if (reservationPopup && onEditReservation) {
@@ -156,8 +162,8 @@ const InteractiveMapController = ({
                      isBlocked ? '#ffffff' : '#ffffff';
     
     const strokeColor = state === 'hovered' ? '#059669' :
-                       isOccupied ? '#dc2626' :
-                       isBlocked ? '#f59e0b' : '#0c4900';
+                       isOccupied ? '#2563eb' :
+                       isBlocked ? '#dc2626' : '#0c4900';
     
     const strokeWidth = state === 'hovered' ? 3 : 2;
     
@@ -183,68 +189,72 @@ const InteractiveMapController = ({
           className="transition-all duration-200"
         />
         
-        {/* Número de mesa */}
-        <text
-          x={x + width/2}
-          y={y + height/2 + (isOccupied || isBlocked ? -5 : 6)}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize="18"
-          fontWeight="bold"
-          fill="#0c4900"
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
-        >
-          {id}
-        </text>
-        
-        {/* Indicadores visuales para estados especiales */}
+        {/* Símbolos de fondo - DEBAJO del número */}
         {isOccupied && (
           <g style={{ pointerEvents: 'none' }}>
-            {/* Cruz azul para reservadas */}
+            {/* Cruz + que cubre toda la mesa */}
             <line
-              x1={x + width/2 - 5}
-              y1={y + height/2 + 10}
-              x2={x + width/2 + 5}
-              y2={y + height/2 + 10}
+              x1={x + 8}
+              y1={y + height/2}
+              x2={x + width - 8}
+              y2={y + height/2}
               stroke="#2563eb"
               strokeWidth="2"
               strokeLinecap="round"
+              style={{ opacity: 0.7 }}
             />
             <line
               x1={x + width/2}
-              y1={y + height/2 + 5}
+              y1={y + 8}
               x2={x + width/2}
-              y2={y + height/2 + 15}
+              y2={y + height - 8}
               stroke="#2563eb"
               strokeWidth="2"
               strokeLinecap="round"
+              style={{ opacity: 0.7 }}
             />
           </g>
         )}
         
         {isBlocked && (
           <g style={{ pointerEvents: 'none' }}>
-            {/* X roja para bloqueadas */}
+            {/* X que cubre toda la mesa */}
             <line
-              x1={x + width/2 - 4}
-              y1={y + height/2 + 6}
-              x2={x + width/2 + 4}
-              y2={y + height/2 + 14}
+              x1={x + 8}
+              y1={y + 8}
+              x2={x + width - 8}
+              y2={y + height - 8}
               stroke="#dc2626"
               strokeWidth="2"
               strokeLinecap="round"
+              style={{ opacity: 0.7 }}
             />
             <line
-              x1={x + width/2 + 4}
-              y1={y + height/2 + 6}
-              x2={x + width/2 - 4}
-              y2={y + height/2 + 14}
+              x1={x + width - 8}
+              y1={y + 8}
+              x2={x + 8}
+              y2={y + height - 8}
               stroke="#dc2626"
               strokeWidth="2"
               strokeLinecap="round"
+              style={{ opacity: 0.7 }}
             />
           </g>
         )}
+        
+        {/* Número de mesa - ENCIMA de los símbolos */}
+        <text
+          x={x + width/2}
+          y={y + height/2}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize="22"
+          fontWeight="bold"
+          fill="#0c4900"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {id}
+        </text>
 
       </g>
     );
@@ -256,26 +266,134 @@ const InteractiveMapController = ({
   
   return (
     <div className={styles.interactiveMapController}>
-      <div className={styles.mapContainer}>
+      <div className={styles.mapContainer} style={{ position: 'relative' }}>
+        {/* Botón de zoom fijo en esquina superior derecha */}
+        <div
+          onClick={toggleZoom}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            border: '0.5px solid rgba(0,0,0,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 10,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            backdropFilter: 'blur(10px)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" style={{ pointerEvents: 'none' }}>
+            {isZoomedOut ? (
+              // Estado compacto: "<>" (líneas apuntan hacia adentro)
+              <>
+                <line
+                  x1="4"
+                  y1="6"
+                  x2="6"
+                  y2="8"
+                  stroke="#374151"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="6"
+                  y1="8"
+                  x2="4"
+                  y2="10"
+                  stroke="#374151"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="12"
+                  y1="6"
+                  x2="10"
+                  y2="8"
+                  stroke="#374151"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="10"
+                  y1="8"
+                  x2="12"
+                  y2="10"
+                  stroke="#374151"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+              </>
+            ) : (
+              // Estado normal: "><" (líneas apuntan hacia afuera)
+              <>
+                <line
+                  x1="6"
+                  y1="6"
+                  x2="4"
+                  y2="8"
+                  stroke="#374151"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="4"
+                  y1="8"
+                  x2="6"
+                  y2="10"
+                  stroke="#374151"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="10"
+                  y1="6"
+                  x2="12"
+                  y2="8"
+                  stroke="#374151"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="12"
+                  y1="8"
+                  x2="10"
+                  y2="10"
+                  stroke="#374151"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+              </>
+            )}
+          </svg>
+        </div>
+        
         <svg
-          viewBox="0 0 280 520"
+          viewBox={isZoomedOut ? "0 0 350 650" : "0 0 235 520"}
           className={styles.mapSvg}
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid meet"
+          style={{ transition: 'all 0.3s ease' }}
         >
-          <rect x="0" y="0" width="280" height="520" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
+          <rect x="0" y="0" width="235" height="520" fill="#fafafa" stroke="#e5e7eb" strokeWidth="2" />
           
           {UNIFIED_TABLES_LAYOUT.map(renderTable)}
           
           {/* Info compacta solo cuando sea necesaria */}
           {mode === 'cupos' && (
-            <text x="140" y="15" textAnchor="middle" fontSize="10" fill="#2563eb" fontWeight="500">
+            <text x="117.5" y="40" textAnchor="middle" fontSize="10" fill="#2563eb" fontWeight="500">
               Walk-in: {currentWalkInQuotas}p | Bloqueadas: {blockedTables.size}
             </text>
           )}
           
           {mode === 'assignment' && selectedReservation && (
-            <text x="140" y="15" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="500">
+            <text x="117.5" y="40" textAnchor="middle" fontSize="10" fill="#059669" fontWeight="500">
               Asignando: {selectedReservation.cliente.nombre} ({selectedReservation.personas}p)
             </text>
           )}
@@ -284,8 +402,8 @@ const InteractiveMapController = ({
           
           {/* Leyenda simplificada cuando no hay modo especial */}
           {mode === 'view' && (
-            <text x="140" y="505" textAnchor="middle" fontSize="8" fill="#6b7280">
-              Verde: Libre | Azul: Reservada | Amarillo: Walk-in
+            <text x="117.5" y="480" textAnchor="middle" fontSize="8" fill="#6b7280">
+              Verde: Libre | Azul: Reservada | Rojo: Walk-in
             </text>
           )}
           

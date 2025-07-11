@@ -1,3 +1,219 @@
+/* ===== ESTILOS PROFESIONALES PARA ADMIN ===== */
+/* Datepicker con diseño profesional y limpio para la aplicación de administrador */
+.react-datepicker.admin-professional-calendar,
+.admin-professional-calendar .react-datepicker {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  color: #1f2937 !important;
+  padding: 1rem !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  font-family: 'Codec Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.admin-professional-calendar {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  color: #1f2937 !important;
+  padding: 1rem !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  font-family: 'Codec Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+.admin-professional-calendar .react-datepicker__header,
+.react-datepicker.admin-professional-calendar .react-datepicker__header {
+  background: white !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding-bottom: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.admin-professional-calendar .react-datepicker__current-month,
+.react-datepicker.admin-professional-calendar .react-datepicker__current-month {
+  color: #1f2937 !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.admin-professional-calendar .react-datepicker__day-name,
+.react-datepicker.admin-professional-calendar .react-datepicker__day-name {
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Botones de navegación profesionales */
+.admin-professional-calendar .react-datepicker__navigation,
+.react-datepicker.admin-professional-calendar .react-datepicker__navigation {
+  color: #6b7280 !important;
+  background: transparent !important;
+  border: none !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.admin-professional-calendar .react-datepicker__navigation:hover,
+.react-datepicker.admin-professional-calendar .react-datepicker__navigation:hover {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  transform: translateY(-1px) !important;
+}
+
+.admin-professional-calendar .react-datepicker__navigation--previous,
+.react-datepicker.admin-professional-calendar .react-datepicker__navigation--previous {
+  left: 1rem !important;
+}
+
+.admin-professional-calendar .react-datepicker__navigation--next,
+.react-datepicker.admin-professional-calendar .react-datepicker__navigation--next {
+  right: 1rem !important;
+}
+
+/* Días del calendario con estilo profesional */
+.admin-professional-calendar .react-datepicker__day,
+.react-datepicker.admin-professional-calendar .react-datepicker__day {
+  color: #374151 !important;
+  background: transparent !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  margin: 0.125rem !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  border: none !important;
+}
+
+.admin-professional-calendar .react-datepicker__day:hover:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected),
+.react-datepicker.admin-professional-calendar .react-datepicker__day:hover:not(.react-datepicker__day--disabled):not(.react-datepicker__day--selected) {
+  background: #f3f4f6 !important;
+  color: #1f2937 !important;
+  transform: scale(1.05) !important;
+}
+
+/* Día seleccionado con estilo azul profesional */
+.admin-professional-calendar .react-datepicker__day--selected,
+.admin-professional-calendar .react-datepicker__day--keyboard-selected,
+.react-datepicker.admin-professional-calendar .react-datepicker__day--selected,
+.react-datepicker.admin-professional-calendar .react-datepicker__day--keyboard-selected {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2) !important;
+  border: none !important;
+}
+
+.admin-professional-calendar .react-datepicker__day--selected:hover,
+.admin-professional-calendar .react-datepicker__day--keyboard-selected:hover,
+.react-datepicker.admin-professional-calendar .react-datepicker__day--selected:hover,
+.react-datepicker.admin-professional-calendar .react-datepicker__day--keyboard-selected:hover {
+  background: #2563eb !important;
+  transform: scale(1.05) !important;
+}
+
+/* Día de hoy con borde sutil */
+.admin-professional-calendar .react-datepicker__day--today:not(.react-datepicker__day--selected),
+.react-datepicker.admin-professional-calendar .react-datepicker__day--today:not(.react-datepicker__day--selected) {
+  background: #eff6ff !important;
+  color: #3b82f6 !important;
+  font-weight: 600 !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+/* Días no disponibles */
+.admin-professional-calendar .react-datepicker__day--disabled,
+.react-datepicker.admin-professional-calendar .react-datepicker__day--disabled {
+  color: #d1d5db !important;
+  background: transparent !important;
+  cursor: not-allowed !important;
+}
+
+.admin-professional-calendar .react-datepicker__day--disabled:hover,
+.react-datepicker.admin-professional-calendar .react-datepicker__day--disabled:hover {
+  background: transparent !important;
+  transform: none !important;
+}
+
+/* Días fuera del mes actual */
+.admin-professional-calendar .react-datepicker__day--outside-month,
+.react-datepicker.admin-professional-calendar .react-datepicker__day--outside-month {
+  color: #d1d5db !important;
+}
+
+/* Ajustes del contenedor del mes */
+.admin-professional-calendar .react-datepicker__month-container,
+.react-datepicker.admin-professional-calendar .react-datepicker__month-container {
+  width: 100% !important;
+  background: white !important;
+}
+
+.admin-professional-calendar .react-datepicker__month,
+.react-datepicker.admin-professional-calendar .react-datepicker__month {
+  margin: 0 !important;
+  background: white !important;
+}
+
+.admin-professional-calendar .react-datepicker__week,
+.react-datepicker.admin-professional-calendar .react-datepicker__week {
+  display: flex !important;
+  justify-content: space-between !important;
+}
+
+/* Eliminar cualquier gradiente o color de fondo no deseado */
+.admin-professional-calendar *,
+.react-datepicker.admin-professional-calendar * {
+  background-image: none !important;
+  background-gradient: none !important;
+}
+
+/* Asegurar que el contenedor principal sea blanco */
+.admin-professional-calendar,
+.react-datepicker.admin-professional-calendar {
+  background-color: white !important;
+  background-image: none !important;
+}
+
+/* Input del datepicker con estilo profesional */
+.admin-professional-input {
+  width: 100% !important;
+  padding: 0.75rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  background: white !important;
+  color: #1f2937 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  font-family: 'Codec Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.admin-professional-input:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.admin-professional-input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* ===== ESTILOS EXISTENTES PARA CLIENTE (MANTENER) ===== */
 .custom-green-calendar {
   background: rgba(0, 0, 0, 0.4) !important;
   backdrop-filter: blur(4px) !important;
@@ -63,6 +279,7 @@
   cursor: not-allowed !important;
 }
 
+/* ===== ESTILOS GENERALES (MANTENER) ===== */
 /* Forzar ancho completo del DatePicker */
 .react-datepicker-wrapper {
   width: 100% !important;

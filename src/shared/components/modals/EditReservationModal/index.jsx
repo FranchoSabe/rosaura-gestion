@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Sun, Moon } from 'lucide-react';
 import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { PhoneInput } from '../../ui/Input';
 import { sanitizeData } from '../../../../utils/validation';
@@ -196,20 +197,32 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
 
             <div className={styles.formGroup}>
               <label className={styles.label}>Turno</label>
-              <select
-                value={editedReservation.turno}
-                onChange={(e) => setEditedReservation({
-                  ...editedReservation,
-                  turno: e.target.value,
-                  horario: ''
-                })}
-                className={styles.select}
-                required
-              >
-                <option value="">Seleccionar turno</option>
-                <option value="mediodia">🌞 Mediodía</option>
-                <option value="noche">🌙 Noche</option>
-              </select>
+              <div className={styles.turnoSelector}>
+                <button
+                  type="button"
+                  onClick={() => setEditedReservation({
+                    ...editedReservation,
+                    turno: 'mediodia',
+                    horario: ''
+                  })}
+                  className={`${styles.turnoOption} ${editedReservation.turno === 'mediodia' ? styles.turnoOptionSelected : styles.turnoOptionUnselected}`}
+                >
+                  <Sun size={16} />
+                  Mediodía
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditedReservation({
+                    ...editedReservation,
+                    turno: 'noche',
+                    horario: ''
+                  })}
+                  className={`${styles.turnoOption} ${editedReservation.turno === 'noche' ? styles.turnoOptionSelected : styles.turnoOptionUnselected}`}
+                >
+                  <Moon size={16} />
+                  Noche
+                </button>
+              </div>
             </div>
 
             <div className={styles.formGroup}>

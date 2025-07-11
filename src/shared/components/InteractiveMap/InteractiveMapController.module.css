@@ -75,16 +75,16 @@
 }
 
 .tableOccupied {
-  /* Mesa ocupada */
-  fill: #fca5a5;
-  stroke: #dc2626;
+  /* Mesa ocupada/reservada */
+  fill: #bfdbfe;
+  stroke: #2563eb;
   stroke-width: 2;
 }
 
 .tableBlocked {
   /* Mesa bloqueada para walk-in */
-  fill: #fbbf24;
-  stroke: #d97706;
+  fill: #fca5a5;
+  stroke: #dc2626;
   stroke-width: 2;
 }
 

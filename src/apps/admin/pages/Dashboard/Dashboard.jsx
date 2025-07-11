@@ -852,62 +852,6 @@ const Dashboard = ({
       <div className={styles.todayHeader}>
         <div className={styles.todayHeaderContent}>
           <div className={styles.todayNavigation}>
-            {/* Navegación de fechas */}
-            <div className={styles.todayDateControls}>
-              <button
-                onClick={goToPreviousDay}
-                className={styles.navButton}
-                title="Día anterior"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              
-              <div className={styles.dateSelector}>
-                <button
-                  onClick={() => setShowDatePicker(!showDatePicker)}
-                  className={styles.dateSelectorButton}
-                  title="Seleccionar fecha"
-                >
-                  <Calendar size={16} />
-                  <div className={styles.dateSelectorContent}>
-                    <div className={styles.dateSelectorDay}>
-                      {formatDateTwoLines(selectedDate).dayName}
-                    </div>
-                    <div className={styles.dateSelectorDate}>
-                      {formatDateTwoLines(selectedDate).dateOnly}
-                    </div>
-                  </div>
-                </button>
-                
-                {showDatePicker && (
-                  <div className={styles.datePickerDropdown}>
-                    <DatePicker
-                      selected={new Date(selectedDate + "T00:00:00")}
-                      onChange={handleDateSelect}
-                      locale="es"
-                      inline
-                      minDate={new Date()}
-                      maxDate={(() => {
-                        const maxDate = new Date();
-                        maxDate.setMonth(maxDate.getMonth() + 1);
-                        return maxDate;
-                      })()}
-                      filterDate={(date) => isDayAvailable(date)}
-                      calendarClassName="custom-green-calendar"
-                    />
-                  </div>
-                )}
-              </div>
-              
-              <button
-                onClick={goToNextDay}
-                className={styles.navButton}
-                title="Día siguiente"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-            
             {/* Controles de Asignación */}
             <div className={styles.headerControlsGroup}>
               <button
@@ -931,7 +875,7 @@ const Dashboard = ({
                 className={styles.autoAssignButton}
                 title="Asignar mesas automáticamente según la lógica preestablecida"
               >
-                <Zap size={16} />
+                <MapPin size={16} />
                 Autoasignar
               </button>
               
@@ -947,35 +891,61 @@ const Dashboard = ({
           </div>
 
           <div className={styles.todayControls}>
-            {/* Botones de turno */}
-            <div className={styles.shiftSelector}>
+            {/* Navegación de fechas - lado derecho */}
+            <div className={styles.todayDateControls}>
               <button
-                onClick={() => setSelectedTurno('mediodia')}
-                className={`${styles.shiftButton} ${
-                  selectedTurno === 'mediodia'
-                    ? `${styles.shiftButtonActive} ${styles.shiftButtonMediodia}`
-                    : styles.shiftButtonInactive
-                }`}
+                onClick={goToPreviousDay}
+                className={styles.navButton}
+                title="Día anterior"
               >
-                Mediodía
+                <ChevronLeft size={20} />
               </button>
+              
+              <div className={styles.dateSelector}>
+                <button
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className={styles.cleanDateSelectorButton}
+                  title="Seleccionar fecha"
+                >
+                  <Calendar size={18} />
+                  <div className={styles.cleanDateSelectorContent}>
+                    <div className={styles.cleanDateSelectorDay}>
+                      {formatDateTwoLines(selectedDate).dayName}
+                    </div>
+                    <div className={styles.cleanDateSelectorDate}>
+                      {formatDateTwoLines(selectedDate).dateOnly}
+                    </div>
+                  </div>
+                </button>
+                
+                {showDatePicker && (
+                  <div className={styles.datePickerDropdown}>
+                    <DatePicker
+                      selected={new Date(selectedDate + "T00:00:00")}
+                      onChange={handleDateSelect}
+                      locale="es"
+                      inline
+                      minDate={new Date()}
+                      maxDate={(() => {
+                        const maxDate = new Date();
+                        maxDate.setMonth(maxDate.getMonth() + 1);
+                        return maxDate;
+                      })()}
+                      filterDate={(date) => isDayAvailable(date)}
+                      calendarClassName="admin-professional-calendar"
+                    />
+                  </div>
+                )}
+              </div>
+              
               <button
-                onClick={() => setSelectedTurno('noche')}
-                disabled={new Date(selectedDate + "T00:00:00").getDay() === 0}
-                className={`${styles.shiftButton} ${
-                  new Date(selectedDate + "T00:00:00").getDay() === 0 
-                    ? styles.controlButtonDisabled
-                    : selectedTurno === 'noche'
-                    ? `${styles.shiftButtonActive} ${styles.shiftButtonNoche}`
-                    : styles.shiftButtonInactive
-                }`}
-                title={new Date(selectedDate + "T00:00:00").getDay() === 0 ? 'Los domingos no hay turno noche' : ''}
+                onClick={goToNextDay}
+                className={styles.navButton}
+                title="Día siguiente"
               >
-                Noche
+                <ChevronRight size={20} />
               </button>
             </div>
-
-
           </div>
         </div>
       </div>
@@ -1052,6 +1022,38 @@ const Dashboard = ({
 
         {/* Lista de Reservas y Espera - Lado Derecho */}
         <div className={styles.reservationsSection}>
+          {/* Botones de turno centrados arriba del título */}
+          <div className={styles.centeredShiftSelector}>
+            <div className={styles.unifiedShiftSelector}>
+              <button
+                onClick={() => setSelectedTurno('mediodia')}
+                className={`${styles.unifiedShiftButton} ${styles.unifiedShiftButtonLeft} ${
+                  selectedTurno === 'mediodia'
+                    ? `${styles.unifiedShiftButtonActive} ${styles.unifiedShiftButtonMediodia}`
+                    : styles.unifiedShiftButtonInactive
+                }`}
+              >
+                <Sun size={16} />
+                Mediodía
+              </button>
+              <button
+                onClick={() => setSelectedTurno('noche')}
+                disabled={new Date(selectedDate + "T00:00:00").getDay() === 0}
+                className={`${styles.unifiedShiftButton} ${styles.unifiedShiftButtonRight} ${
+                  new Date(selectedDate + "T00:00:00").getDay() === 0 
+                    ? styles.controlButtonDisabled
+                    : selectedTurno === 'noche'
+                    ? `${styles.unifiedShiftButtonActive} ${styles.unifiedShiftButtonNoche}`
+                    : styles.unifiedShiftButtonInactive
+                }`}
+                title={new Date(selectedDate + "T00:00:00").getDay() === 0 ? 'Los domingos no hay turno noche' : ''}
+              >
+                <Moon size={16} />
+                Noche
+              </button>
+            </div>
+          </div>
+
           <div className={styles.sectionHeader}>
             <h2>Reservas ({reservasTurnoSeleccionado.length})</h2>
             <button onClick={handlePrint} className={styles.printButton}>

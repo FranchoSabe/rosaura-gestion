@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Edit2, AlertTriangle } from 'lucide-react';
-import { formatDateToString } from '../../../utils';
+import { formatDateToString } from '../../../../utils';
 import styles from './Clients.module.css';
 import ClientDetailsModal from './components/ClientDetailsModal';
 

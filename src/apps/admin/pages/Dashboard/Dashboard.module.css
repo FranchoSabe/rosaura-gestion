@@ -110,12 +110,64 @@
 .datePickerDropdown {
   position: absolute;
   top: 100%;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
   margin-top: 0.25rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   border-radius: 0.5rem;
   overflow: hidden;
+}
+
+/* Selector de fecha limpio y profesional */
+.cleanDateSelectorButton {
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 280px;
+  height: 44px;
+  justify-content: flex-start;
+  color: #1f2937;
+}
+
+.cleanDateSelectorButton:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+  color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.1);
+}
+
+.cleanDateSelectorContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
+.cleanDateSelectorDay {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: inherit;
+  line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.cleanDateSelectorDate {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.cleanDateSelectorButton:hover .cleanDateSelectorDate {
+  color: #3b82f6;
 }
 
 /* Controles del Header */
@@ -156,35 +208,40 @@
 }
 
 .createReservationButton:hover {
-  background-color: #f0fdf4;
-  color: #059669;
-  border-color: #059669;
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 .editCuposButtonActive {
-  background-color: #fbbf24;
-  color: white;
-  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+  background-color: white;
+  color: #7c3aed;
+  border: 1px solid #7c3aed;
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.1);
 }
 
 .editCuposButtonActive:hover {
-  background-color: #f59e0b;
+  background-color: #7c3aed;
+  color: white;
+  border-color: #7c3aed;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(251, 191, 36, 0.4);
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
 }
 
 .editCuposButtonInactive {
   background-color: white;
   border: 1px solid #d1d5db;
-  color: #374151;
+  color: #6b7280;
 }
 
 .editCuposButtonInactive:hover {
-  background-color: #f9fafb;
+  background-color: #6b7280;
+  color: white;
+  border-color: #6b7280;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(107, 114, 128, 0.3);
 }
 
 
@@ -208,20 +265,20 @@
   cursor: not-allowed;
 }
 
-/* Botón de asignación automática - fondo blanco, borde púrpura */
+/* Botón de asignación automática - fondo blanco, borde azul */
 .autoAssignButton {
   background-color: white;
-  color: #8b5cf6;
-  border: 1px solid #8b5cf6;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.1);
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
 .autoAssignButton:hover {
-  background-color: #faf5ff;
-  color: #7c3aed;
-  border-color: #7c3aed;
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .todayControls {
@@ -261,14 +318,14 @@
 }
 
 .shiftButtonMediodia {
-  background-color: #f59e0b;
+  background-color: #1f2937;
   color: white;
 }
 
 .shiftButtonMediodia:hover {
-  background-color: #d97706;
+  background-color: #374151;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 2px 6px rgba(31, 41, 55, 0.4);
 }
 
 .shiftButtonNoche {
@@ -300,28 +357,118 @@
   cursor: not-allowed !important;
 }
 
+/* Selector de turno centrado y unificado para la sección de reservas */
+.centeredShiftSelector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+.unifiedShiftSelector {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d1d5db;
+}
+
+.unifiedShiftButton {
+  padding: 0.875rem 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 0.875rem;
+  min-width: 120px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-right: 1px solid #d1d5db;
+  background: white;
+}
+
+.unifiedShiftButton:last-child {
+  border-right: none;
+}
+
+.unifiedShiftButtonLeft {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.unifiedShiftButtonRight {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.unifiedShiftButtonActive {
+  color: white;
+  z-index: 1;
+  position: relative;
+}
+
+.unifiedShiftButtonMediodia {
+  background-color: #1f2937;
+  color: white;
+  border-color: #1f2937;
+}
+
+.unifiedShiftButtonMediodia:hover {
+  background-color: #374151;
+  color: white;
+  border-color: #374151;
+}
+
+.unifiedShiftButtonNoche {
+  background-color: #1f2937;
+  color: white;
+  border-color: #1f2937;
+}
+
+.unifiedShiftButtonNoche:hover {
+  background-color: #374151;
+  color: white;
+  border-color: #374151;
+}
+
+.unifiedShiftButtonInactive {
+  background: white;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.unifiedShiftButtonInactive:hover {
+  background-color: #f9fafb;
+  color: #374151;
+}
+
 .printButton {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background-color: #fbbf24;
-  color: white;
-  border: none;
+  background-color: white;
+  color: #374151;
+  border: 1px solid #374151;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
   font-size: 0.875rem;
   transition: all 0.2s ease;
   height: auto;
-  box-shadow: 0 1px 3px rgba(251, 191, 36, 0.3);
+  box-shadow: 0 2px 4px rgba(55, 65, 81, 0.1);
   white-space: nowrap;
 }
 
 .printButton:hover {
-  background-color: #f59e0b;
+  background-color: #374151;
+  color: white;
+  border-color: #374151;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(251, 191, 36, 0.4);
+  box-shadow: 0 2px 6px rgba(55, 65, 81, 0.3);
 }
 
 /* Contenido Principal */
@@ -380,11 +527,12 @@
 .alertButton {
   padding: 0.375rem 0.75rem;
   border-radius: 0.375rem;
-  border: none;
+  border: 1px solid transparent;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .alertButtonCancel {
@@ -394,16 +542,26 @@
 }
 
 .alertButtonCancel:hover {
-  background-color: #f9fafb;
+  background-color: #6b7280;
+  color: white;
+  border-color: #6b7280;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(107, 114, 128, 0.3);
 }
 
 .alertButtonSave {
-  background-color: #10b981;
-  color: white;
+  background-color: white;
+  color: #10b981;
+  border: 1px solid #10b981;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
 }
 
 .alertButtonSave:hover {
-  background-color: #059669;
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 /* Lista de Reservas */
@@ -533,9 +691,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background-color: #10b981;
-  color: white;
-  border: none;
+  background-color: white;
+  color: #10b981;
+  border: 1px solid #10b981;
   border-radius: 0.375rem;
   font-size: 0.9rem; /* TAMAÑO MEDIANO - Unificado */
   font-weight: 500;
@@ -543,12 +701,15 @@
   transition: all 0.2s ease;
   flex: 1;
   min-width: 0;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
 }
 
 .phoneButton:hover {
-  background-color: #059669;
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 .phoneButton span {
@@ -562,7 +723,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 0.375rem;
   font-size: 0.9rem; /* TAMAÑO MEDIANO - Unificado */
   font-weight: 500;
@@ -571,41 +732,50 @@
   min-width: fit-content;
 }
 
-/* Estilos del botón de mesa según estado */
+/* Estilos del botón de mesa según estado - todos azules para consistencia */
 .tableButtonUnassigned {
-  background-color: #3b82f6;
-  color: white;
-  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+  background-color: white;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
 .tableButtonUnassigned:hover {
-  background-color: #2563eb;
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .tableButtonAssigned {
-  background-color: #059669;
-  color: white;
-  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.3);
+  background-color: white;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
 .tableButtonAssigned:hover {
-  background-color: #047857;
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.4);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .tableButtonPending {
-  background-color: #f59e0b;
-  color: white;
-  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.3);
+  background-color: white;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
 .tableButtonPending:hover {
-  background-color: #d97706;
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .pendingIndicator {
@@ -637,21 +807,23 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
+  background-color: white;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
 .assignTableButton:hover {
-  background-color: #2563eb;
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .assignTableButton:active {
@@ -732,7 +904,7 @@
   width: 36px;
   height: 36px;
   border-radius: 6px;
-  border: none;
+  border: 1px solid transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -742,39 +914,48 @@
 }
 
 .actionButtonPrimary {
-  background-color: #3b82f6;
-  color: white;
-  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+  background-color: white;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
 .actionButtonPrimary:hover {
-  background-color: #2563eb;
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
 }
 
 .actionButtonSuccess {
-  background-color: #10b981;
-  color: white;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+  background-color: white;
+  color: #10b981;
+  border: 1px solid #10b981;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
 }
 
 .actionButtonSuccess:hover {
-  background-color: #059669;
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 .actionButtonDanger {
-  background-color: #ef4444;
-  color: white;
-  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+  background-color: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
 }
 
 .actionButtonDanger:hover {
-  background-color: #dc2626;
+  background-color: #ef4444;
+  color: white;
+  border-color: #ef4444;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
 }
 
 /* Status Badges */
@@ -873,7 +1054,7 @@
 .confirmationButtonConfirm {
   padding: 0.75rem 1rem;
   border-radius: 6px;
-  border: none;
+  border: 1px solid transparent;
   font-weight: 500;
   font-size: 0.875rem;
   cursor: pointer;
@@ -888,24 +1069,30 @@
   background-color: white;
   color: #6b7280;
   border: 1px solid #d1d5db;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .confirmationButtonCancel:hover {
-  background-color: #f9fafb;
+  background-color: #6b7280;
+  color: white;
+  border-color: #6b7280;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(107, 114, 128, 0.3);
 }
 
 .confirmationButtonConfirm {
-  background-color: #ef4444;
-  color: white;
-  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+  background-color: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
 }
 
 .confirmationButtonConfirm:hover {
-  background-color: #dc2626;
+  background-color: #ef4444;
+  color: white;
+  border-color: #ef4444;
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
 }
 
 /* Responsive */
@@ -985,6 +1172,27 @@
     min-width: 90px;
     padding: 0.75rem 1rem;
   }
+
+  /* Estilos responsive para los botones unificados */
+  .unifiedShiftButton {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8rem;
+    min-width: 110px;
+  }
+
+  /* Estilos responsive para el selector de fecha limpio */
+  .cleanDateSelectorButton {
+    min-width: 240px;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .cleanDateSelectorDay {
+    font-size: 1rem;
+  }
+
+  .cleanDateSelectorDate {
+    font-size: 0.8rem;
+  }
   
 
 }
@@ -1042,6 +1250,39 @@
     min-width: 100%;
     height: 44px;
     padding: 0.875rem 1rem;
+  }
+
+  /* Estilos responsive para los botones unificados en móviles */
+  .centeredShiftSelector {
+    margin-bottom: 1rem;
+    padding-top: 0.25rem;
+  }
+
+  .unifiedShiftButton {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    min-width: 100px;
+  }
+
+  /* Estilos responsive para el selector de fecha limpio en móviles */
+  .cleanDateSelectorButton {
+    min-width: 200px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .cleanDateSelectorDay {
+    font-size: 0.95rem;
+  }
+
+  .cleanDateSelectorDate {
+    font-size: 0.75rem;
+  }
+
+  .datePickerDropdown {
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto;
+    min-width: 280px;
   }
 
   /* Estilos responsivos para las nuevas tarjetas de reserva */
@@ -1104,7 +1345,9 @@
   .printButton,
   .headerControlsGroup,
   .changesAlert,
-  .waitingListSection {
+  .waitingListSection,
+  .centeredShiftSelector,
+  .todayDateControls {
     display: none !important;
   }
   

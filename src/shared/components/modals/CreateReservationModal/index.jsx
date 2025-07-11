@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Save, Calendar, Clock, Users, MessageSquare, AlertCircle } from 'lucide-react';
+import { X, Save, Calendar, Clock, Users, MessageSquare, AlertCircle, Sun, Moon } from 'lucide-react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -15,7 +15,7 @@ import styles from './index.module.css';
 registerLocale('es', es);
 
 const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDate, HORARIOS, showNotification, isAdmin = false }) => {
-  const [showPhoneHelp, setShowPhoneHelp] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [newReservation, setNewReservation] = useState({
     fecha: new Date(),
     turno: 'mediodia',
@@ -173,21 +173,29 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
                 <Calendar size={16} />
                 Fecha
               </label>
-              <DatePicker
-                selected={newReservation.fecha}
-                onChange={(date) => setNewReservation({ ...newReservation, fecha: date })}
-                dateFormat="dd/MM/yyyy"
-                locale="es"
-                minDate={isAdmin ? null : new Date()}
-                maxDate={isAdmin ? null : (() => {
-                  const maxDate = new Date();
-                  maxDate.setMonth(maxDate.getMonth() + 1);
-                  return maxDate;
-                })()}
-                filterDate={isAdmin ? undefined : isValidDate}
-                className={styles.input}
-                placeholderText="Seleccionar fecha"
-              />
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(true)}
+                className={isAdmin ? "admin-professional-input" : styles.input}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  padding: '0.75rem'
+                }}
+              >
+                <span>
+                  {newReservation.fecha.toLocaleDateString('es-AR', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </span>
+                <Calendar size={16} />
+              </button>
             </div>
 
             <div className={styles.formGroup}>
@@ -195,26 +203,40 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
                 <Clock size={16} />
                 Turno
               </label>
-              <select
-                value={newReservation.turno}
-                onChange={(e) => {
-                  const newTurno = e.target.value;
-                  setNewReservation({
-                    ...newReservation,
-                    turno: newTurno,
-                    horario: HORARIOS[newTurno][0]
-                  });
-                }}
-                className={styles.select}
-              >
-                <option value="mediodia">🌞 Mediodía</option>
-                <option 
-                  value="noche"
-                  disabled={!isAdmin && newReservation.fecha && newReservation.fecha.getDay() === 0}
+              <div className={styles.turnoSelector}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewReservation({
+                      ...newReservation,
+                      turno: 'mediodia',
+                      horario: HORARIOS['mediodia'][0]
+                    });
+                  }}
+                  className={`${styles.turnoOption} ${newReservation.turno === 'mediodia' ? styles.turnoOptionSelected : styles.turnoOptionUnselected}`}
                 >
-                  🌙 Noche {!isAdmin && newReservation.fecha && newReservation.fecha.getDay() === 0 ? '(Cerrado domingos)' : ''}
-                </option>
-              </select>
+                  <Sun size={16} />
+                  Mediodía
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isAdmin || !newReservation.fecha || newReservation.fecha.getDay() !== 0) {
+                      setNewReservation({
+                        ...newReservation,
+                        turno: 'noche',
+                        horario: HORARIOS['noche'][0]
+                      });
+                    }
+                  }}
+                  disabled={!isAdmin && newReservation.fecha && newReservation.fecha.getDay() === 0}
+                  className={`${styles.turnoOption} ${newReservation.turno === 'noche' ? styles.turnoOptionSelected : styles.turnoOptionUnselected}`}
+                  title={!isAdmin && newReservation.fecha && newReservation.fecha.getDay() === 0 ? 'Cerrado domingos' : ''}
+                >
+                  <Moon size={16} />
+                  Noche {!isAdmin && newReservation.fecha && newReservation.fecha.getDay() === 0 ? '(Cerrado domingos)' : ''}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -305,21 +327,6 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
             <div className={styles.formGroup}>
               <label className={styles.label}>
                 Teléfono *
-                <div className={styles.phoneHelp}>
-                  <button 
-                    type="button"
-                    onClick={() => setShowPhoneHelp(!showPhoneHelp)}
-                    className={styles.phoneHelpButton}
-                    title="Ayuda con formato de teléfono"
-                  >
-                    <AlertCircle size={14} />
-                  </button>
-                  {showPhoneHelp && (
-                    <div className={styles.phoneHelpTooltip}>
-                      Selecciona tu país y número móvil
-                    </div>
-                  )}
-                </div>
               </label>
               <PhoneInput
                 value={newReservation.cliente.telefono}
@@ -327,7 +334,7 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
                   ...newReservation,
                   cliente: { ...newReservation.cliente, telefono: value || '' }
                 })}
-                className={`${styles.input} ${styles.phoneInput}`}
+                className={styles.phoneInput}
                 placeholder="Ingresa el número"
                 required
                 isValid={
@@ -390,6 +397,50 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
           </div>
         </form>
       </div>
+
+      {/* Popup del DatePicker centrado */}
+      {showDatePicker && (
+        <div 
+          className={styles.datePickerOverlay}
+          onClick={() => setShowDatePicker(false)}
+        >
+          <div 
+            className={styles.datePickerPopup}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.datePickerHeader}>
+              <h3>Seleccionar fecha</h3>
+              <button 
+                type="button"
+                onClick={() => setShowDatePicker(false)}
+                className={styles.datePickerCloseButton}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.datePickerContent}>
+              <DatePicker
+                selected={newReservation.fecha}
+                onChange={(date) => {
+                  setNewReservation({ ...newReservation, fecha: date });
+                  setShowDatePicker(false);
+                }}
+                dateFormat="dd/MM/yyyy"
+                locale="es"
+                minDate={isAdmin ? null : new Date()}
+                maxDate={isAdmin ? null : (() => {
+                  const maxDate = new Date();
+                  maxDate.setMonth(maxDate.getMonth() + 1);
+                  return maxDate;
+                })()}
+                filterDate={isAdmin ? undefined : isValidDate}
+                inline
+                calendarClassName={isAdmin ? "admin-professional-calendar" : "custom-green-calendar"}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   );
