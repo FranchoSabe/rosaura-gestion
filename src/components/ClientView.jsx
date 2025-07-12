@@ -12,7 +12,7 @@ import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
 import { PhoneInput } from '../shared/components/ui/Input';
 import { formatDateToString } from '../utils';
 // Importing the new UI components
-import { Button, Card } from '../shared/components/ui';
+import { Button, Card, ProgressIndicator } from '../shared/components/ui';
 
 // Registrar el locale español
 registerLocale('es', es);
@@ -502,7 +502,8 @@ export const ClientView = ({
             </div>
           </div>
           
-          <div className={`${styles.mtAuto} ${styles.pb4}`}>
+          {/* Botón admin posicionado discretamente en esquina superior derecha */}
+          <div className={styles.adminButtonContainer}>
             <Button 
               variant="ghost" 
               size="sm" 
@@ -565,6 +566,9 @@ export const ClientView = ({
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className={styles.enhancedScreenContainer}>
+          {/* Progress Indicator */}
+          <ProgressIndicator currentStep="fecha" />
+          
           {/* Selección de fecha */}
           <div className={styles.enhancedDateSection}>
             <div className={styles.enhancedSectionHeader}>
@@ -625,15 +629,15 @@ export const ClientView = ({
           </div>
 
           {/* Botón continuar a seleccionar turno */}
-          <button 
+          <Button 
+            variant="primary"
+            size="lg"
             onClick={() => setCurrentScreen('turno-select')} 
             disabled={!reservaData.fecha}
-            className={styles.enhancedContinueButton}
+            fullWidth
           >
-            <div className={styles.enhancedContinueButtonContent}>
-              Continuar
-            </div>
-          </button>
+            Continuar
+          </Button>
         </div>
 
         {/* Modal del calendario completo */}
@@ -708,21 +712,52 @@ export const ClientView = ({
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
         <div className={styles.enhancedScreenContainer}>
+          {/* Progress Indicator */}
+          <ProgressIndicator currentStep="turno" />
+          
           <div className={styles.enhancedTurnoSection}>
             <div className={styles.enhancedSectionHeader}>
               <div className={styles.enhancedSectionTitle}>
                 <Clock size={24} /> Turno
               </div>
-              <button onClick={()=>setCurrentScreen('fecha-select')} className={styles.backButtonStyled}>
-                 <ChevronLeft size={18}/>
-              </button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setCurrentScreen('fecha-select')}
+                leftIcon={<ChevronLeft size={18} />}
+                className={styles.backButtonStyled}
+              />
             </div>
             <div className={styles.enhancedTurnoGrid}>
-              <button onClick={()=>setReservaData({...reservaData, turno:'mediodia'})} className={`${styles.enhancedTurnoButton} ${reservaData.turno==='mediodia'?styles.enhancedTurnoButtonSelected:''}`}> <div className={styles.enhancedTurnoButtonContent}><Sun size={36} className={styles.textYellow200}/> Mediodía</div></button>
-              <button onClick={()=>setReservaData({...reservaData, turno:'noche'})} className={`${styles.enhancedTurnoButton} ${reservaData.turno==='noche'?styles.enhancedTurnoButtonSelected:''}`}> <div className={styles.enhancedTurnoButtonContent}><Moon size={36} className={styles.textBlue300}/> Noche</div></button>
+              <Button 
+                variant={reservaData.turno === 'mediodia' ? "primary" : "secondary"}
+                size="lg"
+                onClick={() => setReservaData({...reservaData, turno:'mediodia'})}
+                leftIcon={<Sun size={24} className={styles.textYellow200} />}
+                className={`${styles.py4} ${styles.textLg}`}
+              >
+                Mediodía
+              </Button>
+              <Button 
+                variant={reservaData.turno === 'noche' ? "primary" : "secondary"}
+                size="lg"
+                onClick={() => setReservaData({...reservaData, turno:'noche'})}
+                leftIcon={<Moon size={24} className={styles.textBlue300} />}
+                className={`${styles.py4} ${styles.textLg}`}
+              >
+                Noche
+              </Button>
             </div>
           </div>
-          <button onClick={()=>setCurrentScreen('personas-disponibilidad')} disabled={!reservaData.turno} className={styles.enhancedContinueButton}><div className={styles.enhancedContinueButtonContent}>Continuar</div></button>
+          <Button 
+            variant="primary"
+            size="lg"
+            onClick={() => setCurrentScreen('personas-disponibilidad')} 
+            disabled={!reservaData.turno}
+            fullWidth
+          >
+            Continuar
+          </Button>
         </div>
       </ClientLayout>
     );
@@ -732,64 +767,84 @@ export const ClientView = ({
   if (currentScreen === 'personas-disponibilidad') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className={styles.spaceY6}>
-          {/* Información de fecha y turno seleccionados */}
-          <div className={styles.formSection}>
-            <div className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter} ${styles.mb4}`}>
-              <div>
-                <h2 className={`${styles.textLg} ${styles.fontMedium} ${styles.textWhite}`}>
-                  {formatDate(reservaData.fecha)}
-                </h2>
-                <p className={`${styles.textSm} ${styles.textGray300}`}>
-                  Turno {reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}
-                </p>
-              </div>
-              <button 
-                onClick={() => setCurrentScreen('fecha-select')} 
-                className={styles.backButtonStyled}
-              >
-                <ChevronLeft size={18} />
-              </button>
+        <div className={styles.enhancedScreenContainer}>
+          {/* Progress Indicator */}
+          <ProgressIndicator currentStep="personas" />
+          
+          {/* Header con información de fecha y turno */}
+          <div className={styles.enhancedSectionHeader}>
+            <div className={styles.enhancedSectionTitle}>
+              <Users size={24} />
+              Cantidad de personas
             </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setCurrentScreen('fecha-select')}
+              leftIcon={<ChevronLeft size={18} />}
+              className={styles.backButtonStyled}
+            />
           </div>
+
+          {/* Información contextual */}
+          <Card variant="glass" padding="md" className={styles.mb4}>
+            <div className={`${styles.textCenter} ${styles.spaceY2}`}>
+              <p className={`${styles.textSm} ${styles.textGray200} ${styles.opacity90}`}>
+                {formatDate(reservaData.fecha)}
+              </p>
+              <div className={`${styles.flex} ${styles.itemsCenter} ${styles.justifyCenter} ${styles.gap2}`}>
+                {reservaData.turno === 'mediodia' ? (
+                  <Sun size={20} className={styles.textYellow200} />
+                ) : (
+                  <Moon size={20} className={styles.textBlue300} />
+                )}
+                <span className={`${styles.textBase} ${styles.fontMedium} ${styles.textWhite}`}>
+                  Turno {reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}
+                </span>
+              </div>
+            </div>
+          </Card>
 
           {/* Selección de cantidad de personas */}
-          <div className={styles.formSection}>
-            <label className={`${styles.block} ${styles.textSm} ${styles.fontMedium} ${styles.textGray200} ${styles.mb2}`}>
-              <Users size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.mr2}`} />Cantidad de personas
-            </label>
-            <div className={`${styles.grid} ${styles.gridCols3} ${styles.gap2} ${styles.mb2}`}>
-              {[1, 2, 3, 4, 5, 6].map(num => (
-                <button
-                  key={num}
-                  onClick={() => setReservaData({ ...reservaData, personas: num })}
-                  className={reservaData.personas === num ? buttonStyles.personasButtonSelected : buttonStyles.personasButtonUnselected}
-                >
-                  {num}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => {
-                const mensaje = `Hola, quiero hacer una reserva para ${reservaData.fecha ? formatDate(reservaData.fecha) : 'un día'} para 7 o más personas en el turno ${reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}`;
-                const encodedMensaje = encodeURIComponent(mensaje);
-                window.open(`https://wa.me/5492213995351?text=${encodedMensaje}`, '_blank');
-              }}
-              className={buttonStyles.secondaryButton}
-            >
-              <MessageCircle size={18} />
-              <span>7+</span>
-            </button>
+          <div className={`${styles.grid} ${styles.gridCols3} ${styles.gap3} ${styles.mb4}`}>
+            {[1, 2, 3, 4, 5, 6].map(num => (
+              <Button
+                key={num}
+                variant={reservaData.personas === num ? "primary" : "secondary"}
+                size="lg"
+                onClick={() => setReservaData({ ...reservaData, personas: num })}
+                className={`${styles.py3} ${styles.textLg}`}
+              >
+                {num}
+              </Button>
+            ))}
           </div>
 
+          {/* Botón para 7+ personas */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => {
+              const mensaje = `Hola, quiero hacer una reserva para ${reservaData.fecha ? formatDate(reservaData.fecha) : 'un día'} para 7 o más personas en el turno ${reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}`;
+              const encodedMensaje = encodeURIComponent(mensaje);
+              window.open(`https://wa.me/5492213995351?text=${encodedMensaje}`, '_blank');
+            }}
+            leftIcon={<MessageCircle size={18} />}
+            className={styles.mb4}
+          >
+            7+ personas
+          </Button>
+
           {/* Botón para consultar disponibilidad */}
-          <button 
+          <Button 
+            variant="primary"
+            size="lg"
             onClick={handleDateAndTurnoSubmit} 
             disabled={!reservaData.personas}
-            className={buttonStyles.primaryButton}
+            fullWidth
           >
             Consultar disponibilidad
-          </button>
+          </Button>
         </div>
       </ClientLayout>
     );
@@ -847,31 +902,34 @@ export const ClientView = ({
                     new Date(reservaData.fecha).toDateString() === day.date.toDateString();
                   
                   return (
-                    <button
+                    <Button
                       key={day.dateString}
+                      variant={isSelected ? "primary" : "secondary"}
+                      size="lg"
                       data-date={day.dateString}
                       onClick={(e) => {
                         setReservaData({ ...reservaData, fecha: day.date });
                         e.currentTarget.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
                       }}
-                      className={`${isSelected ? buttonStyles.dateButtonSelected : buttonStyles.dateButtonUnselected} 
-                        ${styles.flex} ${styles.flexCol} ${styles.itemsCenter} ${styles.py3}`}
+                      className={`${styles.flex} ${styles.flexCol} ${styles.itemsCenter} ${styles.py3}`}
                       type="button"
                     >
                       <span className={`${styles.textSm} ${styles.fontMedium}`}>{day.label}</span>
                       <span className={`${styles.textSm} ${styles.opacity75}`}>{formatDayDisplay(day.date)}</span>
-                    </button>
+                    </Button>
                   );
                 })}
-                <button
+                <Button
+                  variant="outline"
+                  size="lg"
                   onClick={() => {
                     setShowDatePicker(true);
                   }}
-                  className={`${buttonStyles.dateButtonUnselected} ${styles.flex} ${styles.flexCol} ${styles.itemsCenter} ${styles.py3}`}
+                  leftIcon={<Calendar size={16} />}
+                  className={`${styles.flex} ${styles.flexCol} ${styles.itemsCenter} ${styles.py3}`}
                 >
-                  <Calendar size={16} />
-                  <span>+ Fechas</span>
-                </button>
+                  + Fechas
+                </Button>
               </div>
             </div>
           </div>
@@ -882,18 +940,22 @@ export const ClientView = ({
               <Clock size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.mr2}`} />Turno
             </label>
             <div className={`${styles.grid} ${styles.gridCols2} ${styles.gap4}`}>
-              <button
-                onClick={() => setReservaData({...reservaData, turno: 'mediodia'})} 
-                className={reservaData.turno === 'mediodia' ? buttonStyles.turnoButtonSelected : buttonStyles.turnoButtonUnselected}
+              <Button
+                variant={reservaData.turno === 'mediodia' ? "primary" : "secondary"}
+                size="lg"
+                onClick={() => setReservaData({...reservaData, turno: 'mediodia'})}
+                leftIcon={<Sun size={20} className={styles.textYellow200} />}
               >
-                <Sun size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.textYellow200}`} /> Mediodía
-              </button>
-              <button
-                onClick={() => setReservaData({...reservaData, turno: 'noche'})} 
-                className={reservaData.turno === 'noche' ? buttonStyles.turnoButtonSelected : buttonStyles.turnoButtonUnselected}
+                Mediodía
+              </Button>
+              <Button
+                variant={reservaData.turno === 'noche' ? "primary" : "secondary"}
+                size="lg"
+                onClick={() => setReservaData({...reservaData, turno: 'noche'})}
+                leftIcon={<Moon size={20} className={styles.textBlue300} />}
               >
-                <Moon size={20} className={`${styles.inlineBlock} ${styles.alignTextBottom} ${styles.textBlue300}`} /> Noche
-              </button>
+                Noche
+              </Button>
             </div>
           </div>
 
@@ -904,36 +966,41 @@ export const ClientView = ({
             </label>
             <div className={`${styles.grid} ${styles.gridCols3} ${styles.gap2} ${styles.mb2}`}>
               {[1, 2, 3, 4, 5, 6].map(num => (
-                <button
+                <Button
                   key={num}
+                  variant={reservaData.personas === num ? "primary" : "secondary"}
+                  size="lg"
                   onClick={() => setReservaData({ ...reservaData, personas: num })}
-                  className={reservaData.personas === num ? buttonStyles.personasButtonSelected : buttonStyles.personasButtonUnselected}
+                  className={`${styles.py3} ${styles.textLg}`}
                 >
                   {num}
-                </button>
+                </Button>
               ))}
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="lg"
               onClick={() => {
                 const mensaje = `Hola, quiero hacer una reserva para ${reservaData.fecha ? formatDate(reservaData.fecha) : 'un día'} para 7 o más personas en el turno ${reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}`;
                 const encodedMensaje = encodeURIComponent(mensaje);
                 window.open(`https://wa.me/5492213995351?text=${encodedMensaje}`, '_blank');
               }}
-              className={buttonStyles.secondaryButton}
+              leftIcon={<MessageCircle size={18} />}
             >
-              <MessageCircle size={18} />
-              <span>7+</span>
-            </button>
+              7+ personas
+            </Button>
           </div>
 
           {/* Botón para consultar disponibilidad */}
-          <button 
+          <Button 
+            variant="primary"
+            size="lg"
             onClick={handleDateAndTurnoSubmit} 
             disabled={!reservaData.personas}
-            className={buttonStyles.primaryButton}
+            fullWidth
           >
             Consultar disponibilidad
-          </button>
+          </Button>
         </div>
 
         {/* Modal del calendario completo */}
@@ -1006,35 +1073,81 @@ export const ClientView = ({
   if (currentScreen === 'horario') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className={`${styles.screenContainer}`}>
-        <div className="mb-6">
-          <button onClick={() => setCurrentScreen(reservaData.isModifying ? 'fecha-personas' : 'personas-disponibilidad')} className={styles.backButton}><ChevronLeft size={16} /></button>
-          <h1 className="text-xl font-bold text-white inline-block">Horarios</h1>
-        </div>
-        <div className="space-y-4">
-          <p className="text-center text-gray-200">
-            Disponibilidad turno {reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'} el {formatDate(reservaData.fecha)}
-          </p>
+        <div className={styles.enhancedScreenContainer}>
+          {/* Progress Indicator */}
+          <ProgressIndicator currentStep="personas" />
+          
+          {/* Header con botón volver y título */}
+          <div className={styles.enhancedSectionHeader}>
+            <div className={styles.enhancedSectionTitle}>
+              <Clock size={24} />
+              Horarios disponibles
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setCurrentScreen(reservaData.isModifying ? 'fecha-personas' : 'personas-disponibilidad')}
+              leftIcon={<ChevronLeft size={18} />}
+              className={styles.backButtonStyled}
+            />
+          </div>
+
+          {/* Información contextual */}
+          <Card variant="glass" padding="md" className={styles.mb4}>
+            <div className={`${styles.textCenter} ${styles.spaceY2}`}>
+              <p className={`${styles.textSm} ${styles.textGray200} ${styles.opacity90}`}>
+                Disponibilidad para {formatDate(reservaData.fecha)}
+              </p>
+              <div className={`${styles.flex} ${styles.itemsCenter} ${styles.justifyCenter} ${styles.gap2}`}>
+                {reservaData.turno === 'mediodia' ? (
+                  <Sun size={20} className={styles.textYellow200} />
+                ) : (
+                  <Moon size={20} className={styles.textBlue300} />
+                )}
+                <span className={`${styles.textBase} ${styles.fontMedium} ${styles.textWhite}`}>
+                  Turno {reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}
+                </span>
+              </div>
+              <p className={`${styles.textSm} ${styles.textGray400}`}>
+                {reservaData.personas} {reservaData.personas === 1 ? 'persona' : 'personas'}
+              </p>
+            </div>
+          </Card>
+
+          {/* Grid de horarios o mensaje de sin disponibilidad */}
           {availableSlots.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className={`${styles.grid} ${styles.gridCols2} ${styles.gap3} ${styles.mb6}`}>
               {availableSlots.map((slot) => (
-                <button 
-                  key={slot} 
+                <Button
+                  key={slot}
+                  variant={reservaData.horario === slot ? "primary" : "secondary"}
+                  size="lg"
                   onClick={() => handleHorarioSelect(slot)}
-                  className={reservaData.horario === slot ? styles.turnoButtonSelected : styles.turnoButtonUnselected}
+                  className={`${styles.py3} ${styles.textLg}`}
                 >
                   {slot}
-                </button>
+                </Button>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <AlertCircle className="mx-auto mb-4" size={48} />
-              <p>No hay horarios disponibles para esta fecha y turno.</p>
-              <button onClick={() => setCurrentScreen(reservaData.isModifying ? 'fecha-personas' : 'personas-disponibilidad')} className={styles.secondaryButton}>Volver a seleccionar fecha</button>
-            </div>
+            <Card variant="glass" padding="lg" className={`${styles.textCenter} ${styles.py3}`}>
+              <AlertCircle className={`${styles.mx4} ${styles.mb4} ${styles.textGray400}`} size={48} />
+              <h3 className={`${styles.textLg} ${styles.fontMedium} ${styles.textWhite} ${styles.mb2}`}>
+                Sin horarios disponibles
+              </h3>
+              <p className={`${styles.textSm} ${styles.textGray200} ${styles.mb4}`}>
+                No encontramos cupos libres para esta fecha y turno.
+              </p>
+              <Button 
+                variant="outline" 
+                size="md"
+                onClick={() => setCurrentScreen(reservaData.isModifying ? 'fecha-personas' : 'personas-disponibilidad')}
+                leftIcon={<ChevronLeft size={16} />}
+              >
+                Volver a seleccionar
+              </Button>
+            </Card>
           )}
-        </div>
         </div>
       </ClientLayout>
     );
@@ -1043,22 +1156,65 @@ export const ClientView = ({
   if (currentScreen === 'contacto') {
     return (
       <ClientLayout BACKGROUND_IMAGE_URL={BACKGROUND_IMAGE_URL}>
-        <div className={styles.container}>
-          <button onClick={() => setCurrentScreen('horario')} className={styles.backButton}>
-            <ChevronLeft size={20} />
-          </button>
-          <div className={styles.formContainer}>
-            <h1 className={styles.title}>
-              {reservaData.willGoToWaitingList ? 'Lista de Espera - Tus datos' : 'Datos de contacto'}
-            </h1>
-            {reservaData.willGoToWaitingList && (
-              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-                <p className="text-sm">
-                  <strong>No hay cupos disponibles</strong> para esta fecha y turno. 
-                  Ingresá tus datos y te avisaremos por WhatsApp si se libera un lugar.
+        <div className={styles.enhancedScreenContainer}>
+          {/* Progress Indicator */}
+          <ProgressIndicator currentStep="contacto" />
+          
+          {/* Header con botón volver y título */}
+          <div className={styles.enhancedSectionHeader}>
+            <div className={styles.enhancedSectionTitle}>
+              <User size={24} />
+              {reservaData.willGoToWaitingList ? 'Lista de Espera' : 'Datos de contacto'}
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setCurrentScreen('horario')}
+              leftIcon={<ChevronLeft size={18} />}
+              className={styles.backButtonStyled}
+            />
+          </div>
+
+          {/* Información contextual de la reserva */}
+          <Card variant="glass" padding="md" className={styles.mb4}>
+            <div className={`${styles.flex} ${styles.justifyBetween} ${styles.itemsCenter} ${styles.mb3}`}>
+              <div>
+                <p className={`${styles.textSm} ${styles.textGray200} ${styles.opacity90}`}>
+                  {formatDate(reservaData.fecha)} • {reservaData.horario}
+                </p>
+                <p className={`${styles.textBase} ${styles.fontMedium} ${styles.textWhite}`}>
+                  {reservaData.personas} {reservaData.personas === 1 ? 'persona' : 'personas'}
                 </p>
               </div>
-            )}
+              <div className={`${styles.flex} ${styles.itemsCenter} ${styles.gap2}`}>
+                {reservaData.turno === 'mediodia' ? (
+                  <Sun size={18} className={styles.textYellow200} />
+                ) : (
+                  <Moon size={18} className={styles.textBlue300} />
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Alerta para lista de espera */}
+          {reservaData.willGoToWaitingList && (
+            <Card variant="gradient" padding="md" className={styles.mb4}>
+              <div className={`${styles.flex} ${styles.itemsCenter} ${styles.gap3}`}>
+                <AlertCircle size={20} className={styles.textYellow200} />
+                <div>
+                  <p className={`${styles.textSm} ${styles.fontMedium} ${styles.textWhite}`}>
+                    No hay cupos disponibles
+                  </p>
+                  <p className={`${styles.textXs} ${styles.textGray200} ${styles.opacity90}`}>
+                    Te avisaremos por WhatsApp si se libera un lugar
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Formulario en Card */}
+          <Card variant="glass" padding="lg">
             <form onSubmit={(e) => {
               e.preventDefault();
               if (reservaData.isModifying) {
@@ -1066,10 +1222,13 @@ export const ClientView = ({
               } else {
                 handleContactoSubmit();
               }
-            }} className="space-y-6">
+            }} className={styles.spaceY6}>
+              
+              {/* Campo Nombre */}
               <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center">
-                  <User size={16} className="mr-2" />Nombre completo
+                <label className={`${styles.block} ${styles.textSm} ${styles.fontMedium} ${styles.textGray200} ${styles.mb2} ${styles.flex} ${styles.itemsCenter}`}>
+                  <User size={16} className={styles.mr2} />
+                  Nombre completo
                 </label>
                 <input
                   type="text"
@@ -1079,20 +1238,28 @@ export const ClientView = ({
                     cliente: {...reservaData.cliente, nombre: e.target.value}
                   })}
                   className={styles.input}
-                  placeholder="Tu nombre"
+                  placeholder="Tu nombre completo"
+                  required
                 />
               </div>
+
+              {/* Campo Teléfono */}
               <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center">
-                  <Phone size={16} className="mr-2" />Teléfono (WhatsApp)
-                  <button 
-                    type="button"
+                <div className={`${styles.flex} ${styles.itemsCenter} ${styles.justifyBetween} ${styles.mb2}`}>
+                  <label className={`${styles.block} ${styles.textSm} ${styles.fontMedium} ${styles.textGray200} ${styles.flex} ${styles.itemsCenter}`}>
+                    <Phone size={16} className={styles.mr2} />
+                    Teléfono (WhatsApp)
+                  </label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setShowPhoneHelp(!showPhoneHelp)}
-                    className="ml-2 text-gray-400 hover:text-white"
+                    leftIcon={<AlertCircle size={14} />}
+                    className={`${styles.textXs} ${styles.textGray400}`}
                   >
-                    <AlertCircle size={14} />
-                  </button>
-                </label>
+                    Ayuda
+                  </Button>
+                </div>
                 
                 <PhoneInput
                   value={reservaData.cliente.telefono}
@@ -1112,27 +1279,32 @@ export const ClientView = ({
 
                 {/* Ayuda contextual */}
                 {showPhoneHelp && (
-                  <div className="mt-2 p-3 bg-blue-500 bg-opacity-20 rounded-lg border border-blue-400 border-opacity-40">
-                    <p className="text-blue-300 text-sm font-medium mb-2">💡 Consejos:</p>
-                    <ul className="text-blue-200 text-xs space-y-1">
+                  <Card variant="elevated" padding="sm" className={styles.mt2}>
+                    <p className={`${styles.textBlue300} ${styles.textSm} ${styles.fontMedium} ${styles.mb2}`}>
+                      💡 Consejos:
+                    </p>
+                    <ul className={`${styles.textBlue200} ${styles.textXs} ${styles.spaceY2}`}>
                       <li>• Selecciona tu país en el selector</li>
                       <li>• Ingresa solo números móviles con WhatsApp</li>
                       <li>• Sin el 0 inicial ni el 15 para Argentina</li>
                     </ul>
-                  </div>
+                  </Card>
                 )}
 
                 {/* Indicador de número válido */}
                 {reservaData.cliente.telefono && isValidPhoneNumber(reservaData.cliente.telefono) && (
-                  <p className="mt-1 text-sm text-green-400 flex items-center">
-                    <Check size={14} className="mr-1" />
+                  <p className={`${styles.mt1} ${styles.textSm} ${styles.textGreen400} ${styles.flex} ${styles.itemsCenter}`}>
+                    <Check size={14} className={styles.mr1} />
                     Número válido para WhatsApp
                   </p>
                 )}
               </div>
+
+              {/* Campo Comentarios */}
               <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2 flex items-center">
-                  <MessageCircle size={16} className="mr-2" />Aclaraciones (opcional)
+                <label className={`${styles.block} ${styles.textSm} ${styles.fontMedium} ${styles.textGray200} ${styles.mb2} ${styles.flex} ${styles.itemsCenter}`}>
+                  <MessageCircle size={16} className={styles.mr2} />
+                  Aclaraciones (opcional)
                 </label>
                 <textarea
                   value={reservaData.cliente.comentarios}
@@ -1142,22 +1314,28 @@ export const ClientView = ({
                   })}
                   className={styles.textarea}
                   placeholder="Ej: Alergias, preferencias de mesa, ocasión especial, etc."
+                  rows={3}
                 />
               </div>
-              <button
+
+              {/* Botón de envío */}
+              <Button
                 type="submit"
+                variant="primary"
+                size="lg"
+                fullWidth
                 disabled={
                   !reservaData.cliente.nombre || 
                   !reservaData.cliente.telefono || 
                   !isValidPhoneNumber(reservaData.cliente.telefono || '') ||
                   reservaData.cliente.nombre.length < 2
                 }
-                className={styles.mainButton}
+                rightIcon={<Check size={20} />}
               >
                 {reservaData.isModifying ? 'Guardar cambios' : (reservaData.willGoToWaitingList ? 'Agregar a lista de espera' : 'Confirmar reserva')}
-              </button>
+              </Button>
             </form>
-          </div>
+          </Card>
         </div>
       </ClientLayout>
     );
@@ -1195,15 +1373,19 @@ export const ClientView = ({
           </div>
 
           <div className="space-y-3 pt-4">
-            <button
+            <Button
+              variant="outline"
+              size="lg"
               onClick={() => handleCancelReservation(reservaData)}
-              className="w-full flex items-center justify-center gap-2 bg-black bg-opacity-40 text-white py-3 px-4 rounded-xl hover:bg-opacity-60 transition-all duration-200"
+              leftIcon={<X size={18} />}
+              fullWidth
             >
-              <X size={18} />
               Cancelar tu reserva
-            </button>
+            </Button>
             
-            <button 
+            <Button 
+              variant="primary"
+              size="lg"
               onClick={() => {
                 setCurrentScreen('landing');
                 setReservaData({
@@ -1215,11 +1397,12 @@ export const ClientView = ({
                 });
                 setFoundReservation(null);
                 setShowSearchForm(false);
-              }} 
-              className={styles.mainButton}
+              }}
+              leftIcon={<Check size={20} />}
+              fullWidth
             >
-              <Check size={20} />
-            </button>
+              Continuar
+            </Button>
           </div>
         </div>
 
@@ -1267,18 +1450,22 @@ export const ClientView = ({
           </div>
 
           <div className="space-y-3 pt-4">
-            <button
+            <Button
+              variant="secondary"
+              size="lg"
               onClick={() => {
                 const mensaje = `Hola! Me comunico por mi solicitud en lista de espera #${reservaData.waitingId} para el día ${formatDate(reservaData.fecha)} turno ${reservaData.turno === 'mediodia' ? 'mediodía' : 'noche'}`;
                 window.open(`https://wa.me/5492213995351?text=${encodeURIComponent(mensaje)}`, '_blank');
               }}
-              className="w-full flex items-center justify-center gap-2 bg-green-600 bg-opacity-20 text-white py-3 px-4 rounded-xl hover:bg-opacity-30 transition-all duration-200"
+              leftIcon={<MessageCircle size={18} />}
+              fullWidth
             >
-              <MessageCircle size={18} />
               Contactanos por WhatsApp
-            </button>
+            </Button>
             
-            <button 
+            <Button 
+              variant="primary"
+              size="lg"
               onClick={() => {
                 setCurrentScreen('landing');
                 setReservaData({
@@ -1289,11 +1476,12 @@ export const ClientView = ({
                   cliente: { nombre: '', telefono: '', comentarios: '' }
                 });
                 setShowWaitingListModal(false);
-              }} 
-              className={styles.mainButton}
+              }}
+              leftIcon={<Check size={20} />}
+              fullWidth
             >
-              <Check size={20} />
-            </button>
+              Continuar
+            </Button>
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Users, LogOut } from 'lucide-react';
+import { Users, LogOut, Menu, X } from 'lucide-react';
 import CreateReservationModal from '../../../shared/components/modals/CreateReservationModal';
 import styles from './AdminLayout.module.css';
 
@@ -24,6 +24,8 @@ const AdminLayout = ({
   
   // Estado para mostrar modal de creación global
   const [showCreateReservationModal, setShowCreateReservationModal] = useState(false);
+  // Estado para menú móvil
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Determinar la pestaña activa basada en la ruta actual
   const getActiveTab = () => {
@@ -54,6 +56,8 @@ const AdminLayout = ({
       default:
         navigate('/admin/dashboard');
     }
+    // Cerrar menú móvil después de navegar
+    setIsMobileMenuOpen(false);
   };
 
   // Manejar creación de reserva global
@@ -66,6 +70,14 @@ const AdminLayout = ({
       // El error será manejado por CreateReservationModal
     }
   };
+
+  // Datos de navegación
+  const navigationItems = [
+    { id: 'dashboard', label: 'Gestión Diaria' },
+    { id: 'panorama', label: 'Panorama' },
+    { id: 'clients', label: 'Clientes' },
+    { id: 'waiting-list', label: 'Lista de Espera' }
+  ];
 
   return (
     <div className={styles.adminLayout}>
@@ -80,33 +92,18 @@ const AdminLayout = ({
             </div>
           </div>
 
-          {/* Navegación central - pestañas */}
+          {/* Navegación central - pestañas (desktop) */}
           <div className={styles.navigationSection}>
             <div className={styles.tabsList}>
-              <button 
-                onClick={() => handleTabClick('dashboard')}
-                className={activeTab === 'dashboard' ? styles.tabActive : styles.tabInactive}
-              >
-                Gestión Diaria
-              </button>
-              <button 
-                onClick={() => handleTabClick('panorama')}
-                className={activeTab === 'panorama' ? styles.tabActive : styles.tabInactive}
-              >
-                Panorama
-              </button>
-              <button 
-                onClick={() => handleTabClick('clients')}
-                className={activeTab === 'clients' ? styles.tabActive : styles.tabInactive}
-              >
-                Clientes
-              </button>
-              <button 
-                onClick={() => handleTabClick('waiting-list')}
-                className={activeTab === 'waiting-list' ? styles.tabActive : styles.tabInactive}
-              >
-                Lista de Espera
-              </button>
+              {navigationItems.map((item) => (
+                <button 
+                  key={item.id}
+                  onClick={() => handleTabClick(item.id)}
+                  className={activeTab === item.id ? styles.tabActive : styles.tabInactive}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -114,10 +111,41 @@ const AdminLayout = ({
           <div className={styles.userSection}>
             <button onClick={onLogout} className={styles.logoutButton}>
               <LogOut size={16} />
-              Cerrar Sesión
+              <span className={styles.buttonText}>Cerrar Sesión</span>
             </button>
           </div>
+
+          {/* Botón menú móvil */}
+          <button 
+            className={styles.mobileMenuButton}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Menú de navegación"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
+
+        {/* Menú móvil desplegable */}
+        {isMobileMenuOpen && (
+          <div className={styles.mobileMenu}>
+            <div className={styles.mobileMenuContent}>
+              {navigationItems.map((item) => (
+                <button 
+                  key={item.id}
+                  onClick={() => handleTabClick(item.id)}
+                  className={`${styles.mobileMenuItem} ${activeTab === item.id ? styles.mobileMenuItemActive : ''}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <div className={styles.mobileMenuDivider} />
+              <button onClick={onLogout} className={styles.mobileLogoutButton}>
+                <LogOut size={16} />
+                Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Contenido de la página */}

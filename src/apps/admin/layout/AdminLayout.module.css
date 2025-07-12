@@ -10,6 +10,7 @@
   background: white;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .headerContent {
@@ -175,6 +176,100 @@
   box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
 }
 
+.buttonText {
+  display: inline;
+}
+
+/* Botón menú móvil */
+.mobileMenuButton {
+  display: none;
+  background: none;
+  border: none;
+  color: #374151;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mobileMenuButton:hover {
+  background: #f3f4f6;
+}
+
+/* Menú móvil desplegable */
+.mobileMenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.mobileMenuContent {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobileMenuItem {
+  padding: 1rem;
+  font-weight: 500;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: #374151;
+  text-align: left;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.mobileMenuItem:hover {
+  background: #f3f4f6;
+}
+
+.mobileMenuItemActive {
+  background: #3b82f6;
+  color: white;
+}
+
+.mobileMenuItemActive:hover {
+  background: #2563eb;
+}
+
+.mobileMenuDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.5rem 0;
+}
+
+.mobileLogoutButton {
+  padding: 1rem;
+  font-weight: 500;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #dc2626;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.mobileLogoutButton:hover {
+  background: #b91c1c;
+}
+
 /* Contenido principal */
 .content {
   max-width: 1400px;
@@ -210,9 +305,8 @@
 /* Responsive - móvil */
 @media (max-width: 768px) {
   .headerContent {
-    flex-direction: column;
-    gap: 1rem;
     padding: 1rem;
+    gap: 1rem;
   }
   
   .logoSection {
@@ -220,23 +314,19 @@
   }
   
   .navigationSection {
-    width: 100%;
-  }
-  
-  .tabsList {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  
-  .tab {
-    min-width: auto;
-    flex: 1;
+    display: none; /* Ocultar pestañas en móvil */
   }
   
   .userSection {
-    justify-content: center;
-    flex-wrap: wrap;
+    display: none; /* Ocultar controles de usuario en móvil */
+  }
+  
+  .mobileMenuButton {
+    display: block; /* Mostrar botón menú */
+  }
+  
+  .mobileMenu {
+    display: block; /* Mostrar menú cuando está abierto */
   }
   
   .content {
@@ -246,37 +336,43 @@
 
 /* Responsive - móvil pequeño */
 @media (max-width: 480px) {
-  .tabsList {
-    flex-direction: column;
-    gap: 0.25rem;
+  .headerContent {
+    padding: 0.75rem;
   }
   
-  .tab {
-    width: 100%;
+  .title {
+    font-size: 1.25rem;
   }
   
-  .userSection {
-    flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
+  .subtitle {
+    font-size: 0.7rem;
   }
   
-  .createReservationButton,
-  .logoutButton,
-  .userName {
-    width: 100%;
+  .mobileMenuContent {
+    padding: 0.75rem;
   }
-}
-
-/* Ocultar completamente el header en impresión */
-@media print {
-  .header {
-    display: none !important;
+  
+  .mobileMenuItem {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
+  
+  .mobileLogoutButton {
+    padding: 0.875rem;
+    font-size: 0.95rem;
   }
   
   .content {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
+    padding: 0.75rem;
+  }
+}
+
+@media print {
+  .header {
+    display: none;
+  }
+  
+  .content {
+    padding: 0;
   }
 } 

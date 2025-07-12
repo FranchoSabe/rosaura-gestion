@@ -6,6 +6,7 @@ export { Button } from './Button';
 export { Card } from './Card';  
 export { Badge } from './Badge';
 export { Loading } from './Loading';
+export { ProgressIndicator } from './ProgressIndicator';
 
 // Componentes existentes con estructura directa
 export { default as ConfirmationModal } from './ConfirmationModal/ConfirmationModal';
