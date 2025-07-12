@@ -1219,6 +1219,97 @@
   .cleanDateSelectorDate {
     font-size: 0.8rem;
   }
+
+  /* Layout principal responsive */
+  .todayMainContent {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .mapSection {
+    flex: none;
+    width: 100%;
+    min-height: 400px;
+  }
+
+  .reservationsSection {
+    flex: none;
+    width: 100%;
+    max-height: 500px;
+  }
+
+  /* Tarjetas de reservas responsive */
+  .reservationCard {
+    padding: 0.875rem;
+    gap: 0.5rem;
+  }
+
+  .reservationFirstRow {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .reservationNameContainer {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .reservationName {
+    font-size: 1rem;
+  }
+
+  .noTableAssigned {
+    font-size: 0.7rem;
+  }
+
+  .reservationPeople,
+  .reservationTime {
+    font-size: 0.85rem;
+    gap: 0.25rem;
+  }
+
+  .reservationSecondRow {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+
+  .phoneButton,
+  .tableButton {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    flex: 1;
+  }
+
+  .reservationComments {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Lista de espera responsive */
+  .waitingCard {
+    padding: 0.875rem;
+    gap: 0.75rem;
+  }
+
+  .waitingName {
+    font-size: 1rem;
+  }
+
+  .waitingDetails {
+    font-size: 0.85rem;
+  }
+
+  .waitingPhone {
+    font-size: 0.85rem;
+  }
+
+  .actionButton {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 /* Móviles pequeños */
@@ -1293,6 +1384,100 @@
     font-size: 0.75rem;
     padding: 0.625rem 0.875rem;
     height: 40px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Layout principal responsive para móviles pequeños */
+  .todayMainContent {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .mapSection {
+    min-height: 350px;
+  }
+
+  .reservationsSection {
+    max-height: 450px;
+  }
+
+  /* Tarjetas de reservas optimizadas para móviles pequeños */
+  .reservationCard {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .reservationFirstRow {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .reservationName {
+    font-size: 0.95rem;
+  }
+
+  .noTableAssigned {
+    font-size: 0.65rem;
+  }
+
+  .reservationPeople,
+  .reservationTime {
+    font-size: 0.8rem;
+    gap: 0.25rem;
+  }
+
+  .reservationSecondRow {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .phoneButton,
+  .tableButton {
+    font-size: 0.8rem;
+    padding: 0.625rem 0.75rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .reservationComments {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Lista de espera optimizada para móviles pequeños */
+  .waitingCard {
+    padding: 0.75rem;
+    gap: 0.5rem;
+    flex-direction: column;
+  }
+
+  .waitingInfo {
+    width: 100%;
+  }
+
+  .waitingName {
+    font-size: 0.95rem;
+  }
+
+  .waitingDetails {
+    font-size: 0.8rem;
+  }
+
+  .waitingPhone {
+    font-size: 0.8rem;
+  }
+
+  .waitingActions {
+    width: 100%;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .actionButton {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
   }
 }
 

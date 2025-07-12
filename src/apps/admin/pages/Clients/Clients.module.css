@@ -206,190 +206,9 @@
 
 .tableCell {
   padding: 1rem;
-  vertical-align: top;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-/* Estilos para tarjetas móviles */
-.mobileCardsContainer {
-  display: none;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.mobileCard {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.mobileCard:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.mobileCardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-}
-
-.mobileCardName {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 0.25rem;
-}
-
-.mobileCardPhone {
-  font-size: 0.9rem;
-  color: #3b82f6;
-  text-decoration: none;
-}
-
-.mobileCardPhone:hover {
-  text-decoration: underline;
-}
-
-.mobileCardStatus {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.mobileCardStatus.blacklisted {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.mobileCardStatus.normal {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-
-.mobileCardStats {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.85rem;
-}
-
-.mobileCardStat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5rem;
-  background: #f8fafc;
-  border-radius: 6px;
-  min-width: 60px;
-}
-
-.mobileCardStatLabel {
-  font-size: 0.7rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.mobileCardStatValue {
-  font-size: 1rem;
-  font-weight: 600;
+  vertical-align: middle;
+  font-size: 0.875rem;
   color: #374151;
-}
-
-.mobileCardStatValue.past {
-  color: #6b7280;
-}
-
-.mobileCardStatValue.future {
-  color: #3b82f6;
-}
-
-.mobileCardLastReservation {
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-bottom: 0.75rem;
-}
-
-.mobileCardNotes {
-  font-size: 0.85rem;
-  color: #374151;
-  background: #f9fafb;
-  padding: 0.5rem;
-  border-radius: 4px;
-  margin-bottom: 0.75rem;
-  min-height: 2.5rem;
-  display: flex;
-  align-items: center;
-}
-
-.mobileCardNotes.empty {
-  color: #9ca3af;
-  font-style: italic;
-}
-
-.mobileCardActions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.mobileCardActionButton {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: white;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.mobileCardActionButton:hover {
-  background: #f3f4f6;
-  transform: translateY(-1px);
-}
-
-.mobileCardActionButton.blacklist {
-  border-color: #dc2626;
-  color: #dc2626;
-}
-
-.mobileCardActionButton.blacklist:hover {
-  background: #dc2626;
-  color: white;
-}
-
-.mobileCardActionButton.remove {
-  border-color: #16a34a;
-  color: #16a34a;
-}
-
-.mobileCardActionButton.remove:hover {
-  background: #16a34a;
-  color: white;
-}
-
-.mobileCardActionButton.edit {
-  border-color: #3b82f6;
-  color: #3b82f6;
-}
-
-.mobileCardActionButton.edit:hover {
-  background: #3b82f6;
-  color: white;
 }
 
 /* Contenido de celdas */
@@ -614,176 +433,76 @@
 /* Responsive */
 @media (max-width: 768px) {
   .clientsContainer {
-    gap: 0.75rem;
+    gap: 1rem;
   }
-
+  
   .clientsHeader,
   .filtersContainer,
   .tableContainer {
     border-radius: 8px;
   }
-
+  
   .clientsHeader {
-    padding: 0.75rem;
+    padding: 1rem;
   }
-
-  .filtersContainer {
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem;
-  }
-
-  .searchContainer {
-    width: 100%;
-    padding-right: 0;
-  }
-
-  .headerContent {
-    gap: 0.75rem;
-  }
-
-  .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .filtersGrid {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .filterSelect {
-    width: 100%;
-    min-width: 150px;
-  }
-
-  .tableContainer {
-    overflow: visible;
-  }
-
-  /* Ocultar tabla en móviles */
-  .clientsTable {
-    display: none;
-  }
-
-  /* Mostrar tarjetas móviles */
-  .mobileCardsContainer {
-    display: flex;
-  }
-
-  /* Mejorar filtros en móvil */
+  
   .filtersContainer {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
-
+  
   .searchContainer {
-    order: 1;
+    padding-right: 0;
   }
-
+  
+  .headerContent {
+    gap: 1rem;
+  }
+  
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
   .filtersGrid {
-    order: 2;
-    flex-direction: row;
-    gap: 0.5rem;
+    justify-content: center;
+    padding-left: 0;
+    gap: 1rem;
   }
-
-  .filterGroup {
-    flex: 1;
-  }
-
+  
   .filterSelect {
-    width: 100%;
+    width: 120px;
+  }
+  
+  .tableContainer {
+    overflow-x: auto;
+  }
+  
+  .clientsTable {
+    min-width: 800px;
+  }
+  
+  .headerCell,
+  .tableCell {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .notesEditContainer {
+    min-width: 150px;
   }
 }
 
 @media (max-width: 480px) {
   .statsGrid {
     grid-template-columns: 1fr;
-    gap: 0.5rem;
   }
-
+  
   .pageTitle {
     font-size: 1.25rem;
   }
-
+  
   .statNumber {
     font-size: 1.5rem;
-  }
-
-  .mobileCardsContainer {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
-
-  .mobileCard {
-    padding: 0.75rem;
-  }
-
-  .mobileCardHeader {
-    margin-bottom: 0.5rem;
-  }
-
-  .mobileCardName {
-    font-size: 1rem;
-  }
-
-  .mobileCardPhone {
-    font-size: 0.85rem;
-  }
-
-  .mobileCardStats {
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .mobileCardStat {
-    min-width: 50px;
-    padding: 0.375rem;
-  }
-
-  .mobileCardStatLabel {
-    font-size: 0.65rem;
-  }
-
-  .mobileCardStatValue {
-    font-size: 0.9rem;
-  }
-
-  .mobileCardLastReservation {
-    font-size: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .mobileCardNotes {
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
-    min-height: 2rem;
-  }
-
-  .mobileCardActions {
-    gap: 0.375rem;
-  }
-
-  .mobileCardActionButton {
-    padding: 0.375rem 0.625rem;
-    font-size: 0.75rem;
-  }
-
-  /* Filtros más compactos en móvil pequeño */
-  .filtersContainer {
-    padding: 0.5rem;
-  }
-
-  .filtersGrid {
-    flex-direction: column;
-  }
-
-  .filterSelect {
-    font-size: 0.8rem;
-    padding: 0.375rem 0.625rem;
-  }
-
-  .searchInput {
-    font-size: 0.8rem;
-    padding: 0.375rem 0.625rem;
   }
 } 

@@ -199,243 +199,8 @@
 
 .tableCell {
   padding: 1rem;
-  vertical-align: top;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-/* Estilos para tarjetas móviles */
-.mobileCardsContainer {
-  display: none;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.mobileCard {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 1rem;
-  transition: all 0.2s ease;
-}
-
-.mobileCard:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.mobileCardHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-}
-
-.mobileCardClientInfo {
-  flex: 1;
-}
-
-.mobileCardName {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 0.25rem;
-}
-
-.mobileCardWaitingId {
-  font-size: 0.8rem;
-  color: #6b7280;
-  font-family: monospace;
-}
-
-.mobileCardPhone {
-  font-size: 0.9rem;
-  color: #3b82f6;
-  text-decoration: none;
-  display: block;
-  margin-top: 0.25rem;
-}
-
-.mobileCardPhone:hover {
-  text-decoration: underline;
-}
-
-.mobileCardStatus {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-
-.mobileCardStatus.pending {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.mobileCardStatus.contacted {
-  background: #dbeafe;
-  color: #2563eb;
-}
-
-.mobileCardStatus.awaiting {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-
-.mobileCardStatus.expired {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.mobileCardDetails {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.85rem;
-}
-
-.mobileCardDetail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5rem;
-  background: #f8fafc;
-  border-radius: 6px;
-  min-width: 60px;
-}
-
-.mobileCardDetailLabel {
-  font-size: 0.7rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.mobileCardDetailValue {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.mobileCardDateInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.85rem;
-}
-
-.mobileCardDate {
-  color: #374151;
-  font-weight: 500;
-}
-
-.mobileCardTurnoBadge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.mobileCardTurnoBadge.mediodia {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.mobileCardTurnoBadge.noche {
-  background: #1f2937;
-  color: white;
-}
-
-.mobileCardHistory {
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-bottom: 0.75rem;
-}
-
-.mobileCardNotes {
-  font-size: 0.85rem;
-  color: #374151;
-  background: #f9fafb;
-  padding: 0.5rem;
-  border-radius: 4px;
-  margin-bottom: 0.75rem;
-  min-height: 2.5rem;
-  display: flex;
-  align-items: center;
-}
-
-.mobileCardNotes.empty {
-  color: #9ca3af;
-  font-style: italic;
-}
-
-.mobileCardActions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.mobileCardActionButton {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: white;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.mobileCardActionButton:hover {
-  background: #f3f4f6;
-  transform: translateY(-1px);
-}
-
-.mobileCardActionButton.confirm {
-  border-color: #16a34a;
-  color: #16a34a;
-}
-
-.mobileCardActionButton.confirm:hover {
-  background: #16a34a;
-  color: white;
-}
-
-.mobileCardActionButton.reject {
-  border-color: #dc2626;
-  color: #dc2626;
-}
-
-.mobileCardActionButton.reject:hover {
-  background: #dc2626;
-  color: white;
-}
-
-.mobileCardActionButton.contact {
-  border-color: #3b82f6;
-  color: #3b82f6;
-}
-
-.mobileCardActionButton.contact:hover {
-  background: #3b82f6;
-  color: white;
-}
-
-.mobileCardActionButton.contacted {
-  border-color: #6b7280;
-  color: #6b7280;
-}
-
-.mobileCardActionButton.contacted:hover {
-  background: #6b7280;
-  color: white;
+  vertical-align: middle;
+  font-size: 0.875rem;
 }
 
 /* Información del cliente */
@@ -770,28 +535,28 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .waitingListContainer {
+  .waitingContainer {
     gap: 0.75rem;
   }
 
-  .waitingListHeader,
+  .waitingHeader,
   .filtersContainer,
   .tableContainer {
     border-radius: 8px;
   }
 
-  .waitingListHeader {
+  .waitingHeader {
     padding: 0.75rem;
   }
 
   .filtersContainer {
     flex-direction: column;
+    align-items: stretch;
     gap: 0.75rem;
     padding: 0.75rem;
   }
 
   .searchContainer {
-    width: 100%;
     padding-right: 0;
   }
 
@@ -804,147 +569,90 @@
   }
 
   .filtersGrid {
+    padding-left: 0;
     flex-direction: column;
     gap: 0.5rem;
   }
 
   .filterSelect {
     width: 100%;
-    min-width: 150px;
   }
 
   .tableContainer {
-    overflow: visible;
+    overflow-x: auto;
   }
 
-  /* Ocultar tabla en móviles */
   .waitingTable {
-    display: none;
+    min-width: 800px;
   }
 
-  /* Mostrar tarjetas móviles */
-  .mobileCardsContainer {
-    display: flex;
+  .headerCell,
+  .tableCell {
+    padding: 0.75rem 0.5rem;
   }
 
-  /* Mejorar filtros en móvil */
-  .filtersContainer {
+  .actionsContainer {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .searchContainer {
-    order: 1;
+  .confirmButton,
+  .rejectButton,
+  .contactButton,
+  .contactedButton {
+    justify-content: center;
+    padding: 0.5rem;
   }
 
-  .filtersGrid {
-    order: 2;
-    flex-direction: row;
-    gap: 0.5rem;
+  .modal {
+    padding: 0.5rem;
   }
 
-  .filterGroup {
-    flex: 1;
+  .modalContent {
+    padding: 1rem;
   }
 
-  .filterSelect {
-    width: 100%;
+  .modalActions {
+    flex-direction: column;
   }
 }
 
 @media (max-width: 480px) {
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+
   .statsGrid {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
 
-  .pageTitle {
-    font-size: 1.25rem;
+  .statCard {
+    padding: 0.75rem;
   }
 
   .statNumber {
     font-size: 1.5rem;
   }
 
-  .mobileCardsContainer {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
-
-  .mobileCard {
-    padding: 0.75rem;
-  }
-
-  .mobileCardHeader {
-    margin-bottom: 0.5rem;
-  }
-
-  .mobileCardName {
-    font-size: 1rem;
-  }
-
-  .mobileCardPhone {
-    font-size: 0.85rem;
-  }
-
-  .mobileCardDetails {
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .mobileCardDetail {
-    min-width: 50px;
-    padding: 0.375rem;
-  }
-
-  .mobileCardDetailLabel {
-    font-size: 0.65rem;
-  }
-
-  .mobileCardDetailValue {
-    font-size: 0.9rem;
-  }
-
-  .mobileCardDateInfo {
-    margin-bottom: 0.5rem;
-  }
-
-  .mobileCardHistory {
-    font-size: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .mobileCardNotes {
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
-    min-height: 2rem;
-  }
-
-  .mobileCardActions {
-    gap: 0.375rem;
-  }
-
-  .mobileCardActionButton {
-    padding: 0.375rem 0.625rem;
-    font-size: 0.75rem;
-  }
-
-  /* Filtros más compactos en móvil pequeño */
-  .filtersContainer {
+  .headerCell {
     padding: 0.5rem;
+    font-size: 0.75rem;
   }
 
-  .filtersGrid {
-    flex-direction: column;
+  .tableCell {
+    padding: 0.75rem 0.5rem;
   }
 
-  .filterSelect {
-    font-size: 0.8rem;
-    padding: 0.375rem 0.625rem;
+  .notesDisplay {
+    max-width: 120px;
   }
 
-  .searchInput {
-    font-size: 0.8rem;
-    padding: 0.375rem 0.625rem;
+  .confirmButton,
+  .rejectButton,
+  .contactButton,
+  .contactedButton {
+    font-size: 0.625rem;
+    padding: 0.375rem 0.5rem;
   }
 } 
