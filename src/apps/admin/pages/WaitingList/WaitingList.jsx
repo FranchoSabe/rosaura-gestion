@@ -486,6 +486,99 @@ Por favor confirma si quieres tomar esta reserva respondiendo "SÍ" a este mensa
             )}
           </tbody>
         </table>
+
+        {/* Tarjetas móviles */}
+        <div className={styles.mobileCardsContainer}>
+          {filteredWaitingList.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p>No hay solicitudes en lista de espera para los filtros seleccionados</p>
+            </div>
+          ) : (
+            filteredWaitingList.map((waiting) => {
+              const clientHistory = getClientHistory(waiting);
+              return (
+                <div key={`mobile-waiting-${waiting.id}`} className={styles.mobileCard}>
+                  <div className={styles.mobileCardHeader}>
+                    <div className={styles.mobileCardClientInfo}>
+                      <div className={styles.mobileCardName}>{waiting.cliente.nombre}</div>
+                      <div className={styles.mobileCardWaitingId}>{waiting.waitingId}</div>
+                      <a 
+                        href={`https://wa.me/${formatPhoneForWhatsApp(waiting.cliente.telefono)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.mobileCardPhone}
+                      >
+                        {waiting.cliente.telefono}
+                      </a>
+                    </div>
+                    <span className={`${styles.mobileCardStatus} ${getStatusBadge(waiting).props.className.split(' ').pop()}`}>
+                      {getStatusBadge(waiting).props.children}
+                    </span>
+                  </div>
+
+                  <div className={styles.mobileCardDetails}>
+                    <div className={styles.mobileCardDetail}>
+                      <span className={styles.mobileCardDetailValue}>{waiting.personas}</span>
+                      <span className={styles.mobileCardDetailLabel}>Personas</span>
+                    </div>
+                    <div className={styles.mobileCardDetail}>
+                      <span className={styles.mobileCardDetailValue}>{clientHistory.length}</span>
+                      <span className={styles.mobileCardDetailLabel}>Historial</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.mobileCardDateInfo}>
+                    <span className={styles.mobileCardDate}>{formatDate(waiting.fecha)}</span>
+                    <span className={`${styles.mobileCardTurnoBadge} ${waiting.turno === 'mediodia' ? 'mediodia' : 'noche'}`}>
+                      {waiting.turno === 'mediodia' ? 'Mediodía' : 'Noche'}
+                    </span>
+                  </div>
+
+                  <div className={styles.mobileCardHistory}>
+                    {clientHistory.filter(r => r.fecha >= formatDateToString(new Date())).length > 0 && (
+                      <span className={styles.activeReservations}>
+                        {clientHistory.filter(r => r.fecha >= formatDateToString(new Date())).length} reserva(s) activa(s)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className={`${styles.mobileCardNotes} ${!waiting.comentarios && !waiting.cliente?.notasInternas && !waiting.cliente?.comentarios ? 'empty' : ''}`}>
+                    {waiting.comentarios || waiting.cliente?.notasInternas || waiting.cliente?.comentarios || 'Sin notas'}
+                  </div>
+
+                  <div className={styles.mobileCardActions}>
+                    <button
+                      onClick={() => handleConfirmReservation(waiting)}
+                      className={`${styles.mobileCardActionButton} confirm`}
+                      title="Confirmar reserva"
+                    >
+                      <Check size={12} />
+                      Confirmar
+                    </button>
+                    
+                    <button
+                      onClick={() => handleRejectReservation(waiting)}
+                      className={`${styles.mobileCardActionButton} reject`}
+                      title="Rechazar solicitud"
+                    >
+                      <X size={12} />
+                      Rechazar
+                    </button>
+                    
+                    <button
+                      onClick={() => handleContactClient(waiting)}
+                      className={`${styles.mobileCardActionButton} ${waiting.contacted ? 'contacted' : 'contact'}`}
+                      title={waiting.contacted ? 'Ya contactado - Contactar nuevamente' : 'Contactar cliente'}
+                    >
+                      <MessageCircle size={12} />
+                      {waiting.contacted ? 'Recontactar' : 'Contactar'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Modal de confirmación */}
