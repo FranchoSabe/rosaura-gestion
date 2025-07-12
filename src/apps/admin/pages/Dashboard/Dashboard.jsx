@@ -851,47 +851,9 @@ const Dashboard = ({
       {/* Header con navegación de fechas y controles */}
       <div className={styles.todayHeader}>
         <div className={styles.todayHeaderContent}>
-          <div className={styles.todayNavigation}>
-            {/* Controles de Asignación */}
-            <div className={styles.headerControlsGroup}>
-              <button
-                onClick={() => setShowCreateReservationModal(true)}
-                className={styles.createReservationButton}
-              >
-                <Plus size={16} />
-                Reserva
-              </button>
-              
-              <button
-                onClick={() => setEditCuposMode(!editCuposMode)}
-                className={editCuposMode ? styles.editCuposButtonActive : styles.editCuposButtonInactive}
-              >
-                {editCuposMode ? <Lock size={16} /> : <Unlock size={16} />}
-                Cupos
-              </button>
-              
-              <button
-                onClick={handleAutoAssignTables}
-                className={styles.autoAssignButton}
-                title="Asignar mesas automáticamente según la lógica preestablecida"
-              >
-                <MapPin size={16} />
-                Autoasignar
-              </button>
-              
-              <button
-                onClick={handleClearAssignments}
-                className={styles.clearButton}
-                disabled={Object.keys(pendingAssignments).length === 0}
-              >
-                <Trash2 size={16} />
-                Limpiar
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.todayControls}>
-            {/* Navegación de fechas - lado derecho */}
+          {/* Primera fila: Fecha y Turnos */}
+          <div className={styles.todayTopRow}>
+            {/* Navegación de fechas - lado izquierdo */}
             <div className={styles.todayDateControls}>
               <button
                 onClick={goToPreviousDay}
@@ -944,6 +906,77 @@ const Dashboard = ({
                 title="Día siguiente"
               >
                 <ChevronRight size={20} />
+              </button>
+            </div>
+
+            {/* Botones de turno - lado derecho */}
+            <div className={styles.headerShiftSelector}>
+              <div className={styles.unifiedShiftSelector}>
+                <button
+                  onClick={() => setSelectedTurno('mediodia')}
+                  className={`${styles.unifiedShiftButton} ${styles.unifiedShiftButtonLeft} ${
+                    selectedTurno === 'mediodia'
+                      ? `${styles.unifiedShiftButtonActive} ${styles.unifiedShiftButtonMediodia}`
+                      : styles.unifiedShiftButtonInactive
+                  }`}
+                >
+                  <Sun size={16} />
+                  Mediodía
+                </button>
+                <button
+                  onClick={() => setSelectedTurno('noche')}
+                  disabled={new Date(selectedDate + "T00:00:00").getDay() === 0}
+                  className={`${styles.unifiedShiftButton} ${styles.unifiedShiftButtonRight} ${
+                    new Date(selectedDate + "T00:00:00").getDay() === 0 
+                      ? styles.controlButtonDisabled
+                      : selectedTurno === 'noche'
+                      ? `${styles.unifiedShiftButtonActive} ${styles.unifiedShiftButtonNoche}`
+                      : styles.unifiedShiftButtonInactive
+                  }`}
+                  title={new Date(selectedDate + "T00:00:00").getDay() === 0 ? 'Los domingos no hay turno noche' : ''}
+                >
+                  <Moon size={16} />
+                  Noche
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Segunda fila: Botones de acción */}
+          <div className={styles.todayActionRow}>
+            <div className={styles.headerControlsGroup}>
+              <button
+                onClick={() => setShowCreateReservationModal(true)}
+                className={styles.createReservationButton}
+              >
+                <Plus size={16} />
+                Reserva
+              </button>
+              
+              <button
+                onClick={() => setEditCuposMode(!editCuposMode)}
+                className={editCuposMode ? styles.editCuposButtonActive : styles.editCuposButtonInactive}
+              >
+                {editCuposMode ? <Lock size={16} /> : <Unlock size={16} />}
+                Cupos
+              </button>
+              
+              <button
+                onClick={handleAutoAssignTables}
+                className={styles.autoAssignButton}
+                title="Asignar mesas automáticamente según la lógica preestablecida"
+              >
+                <MapPin size={16} />
+                Autoasignar
+              </button>
+              
+              <button
+                onClick={handleClearAssignments}
+                className={styles.clearButton}
+                disabled={Object.keys(pendingAssignments).length === 0}
+              >
+                <Trash2 size={16} />
+                Limpiar
               </button>
             </div>
           </div>
@@ -1022,38 +1055,6 @@ const Dashboard = ({
 
         {/* Lista de Reservas y Espera - Lado Derecho */}
         <div className={styles.reservationsSection}>
-          {/* Botones de turno centrados arriba del título */}
-          <div className={styles.centeredShiftSelector}>
-            <div className={styles.unifiedShiftSelector}>
-              <button
-                onClick={() => setSelectedTurno('mediodia')}
-                className={`${styles.unifiedShiftButton} ${styles.unifiedShiftButtonLeft} ${
-                  selectedTurno === 'mediodia'
-                    ? `${styles.unifiedShiftButtonActive} ${styles.unifiedShiftButtonMediodia}`
-                    : styles.unifiedShiftButtonInactive
-                }`}
-              >
-                <Sun size={16} />
-                Mediodía
-              </button>
-              <button
-                onClick={() => setSelectedTurno('noche')}
-                disabled={new Date(selectedDate + "T00:00:00").getDay() === 0}
-                className={`${styles.unifiedShiftButton} ${styles.unifiedShiftButtonRight} ${
-                  new Date(selectedDate + "T00:00:00").getDay() === 0 
-                    ? styles.controlButtonDisabled
-                    : selectedTurno === 'noche'
-                    ? `${styles.unifiedShiftButtonActive} ${styles.unifiedShiftButtonNoche}`
-                    : styles.unifiedShiftButtonInactive
-                }`}
-                title={new Date(selectedDate + "T00:00:00").getDay() === 0 ? 'Los domingos no hay turno noche' : ''}
-              >
-                <Moon size={16} />
-                Noche
-              </button>
-            </div>
-          </div>
-
           <div className={styles.sectionHeader}>
             <h2>Reservas ({reservasTurnoSeleccionado.length})</h2>
             <button onClick={handlePrint} className={styles.printButton}>
