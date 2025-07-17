@@ -1,0 +1,522 @@
+/* Lista de Proveedores */
+.providerList {
+  width: 100%;
+}
+
+/* Grid de proveedores */
+.providersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+/* Card individual de proveedor */
+.providerCard {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.providerCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Header de la card */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.providerInfo {
+  flex: 1;
+}
+
+.providerName {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.providerName h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.categoryBadge {
+  background: #f8f9fa;
+  color: #495057;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Acciones de la card */
+.cardActions {
+  position: relative;
+}
+
+.actionButton {
+  background: none;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 6px;
+  cursor: pointer;
+  color: #6c757d;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionButton:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.actionMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  min-width: 120px;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.actionMenuItem {
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #495057;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.actionMenuItem:hover {
+  background: #f8f9fa;
+}
+
+.actionMenuItem.deleteAction {
+  color: #dc3545;
+}
+
+.actionMenuItem.deleteAction:hover {
+  background: #f8d7da;
+}
+
+/* Información de contacto */
+.contactInfo {
+  margin-bottom: 16px;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.contactItem:last-child {
+  margin-bottom: 0;
+}
+
+.contactItem svg {
+  color: #28a745;
+}
+
+.contactItem span {
+  color: #495057;
+}
+
+/* Información adicional */
+.additionalInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.infoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c757d;
+  font-size: 13px;
+}
+
+.infoItem svg {
+  color: #28a745;
+}
+
+.infoItem span {
+  color: #495057;
+}
+
+/* Rating */
+.ratingContainer {
+  display: flex;
+  align-items: center;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.starFilled {
+  color: #ffc107;
+  fill: #ffc107;
+}
+
+.starEmpty {
+  color: #dee2e6;
+}
+
+.ratingText {
+  font-size: 12px;
+  color: #6c757d;
+  margin-left: 4px;
+}
+
+/* Estadísticas */
+.statsContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6c757d;
+  font-size: 13px;
+}
+
+.statItem svg {
+  color: #28a745;
+}
+
+.statItem span {
+  color: #495057;
+}
+
+/* Notas */
+.notesContainer {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.notes {
+  font-size: 14px;
+  color: #495057;
+  margin: 0;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* Estados de carga */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #28a745;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Estado vacío */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.emptyIcon {
+  color: #28a745;
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+
+.emptyState h3 {
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.emptyState p {
+  color: #6c757d;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .providersGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .providerCard {
+    padding: 16px;
+  }
+  
+  .cardHeader {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .providerName {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .additionalInfo {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .statsContainer {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .providersGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .providerCard {
+    padding: 12px;
+    margin: 0 -8px;
+  }
+  
+  .providerName h3 {
+    font-size: 16px;
+  }
+  
+  .contactItem,
+  .infoItem,
+  .statItem {
+    font-size: 13px;
+  }
+  
+  .actionMenu {
+    right: -8px;
+  }
+}
+
+/* Animaciones */
+.providerCard {
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mejoras de accesibilidad */
+.actionButton:focus,
+.actionMenuItem:focus {
+  outline: 2px solid #28a745;
+  outline-offset: 2px;
+}
+
+/* Hover effects específicos */
+.providerCard:hover .categoryBadge {
+  background: #e9ecef;
+}
+
+.providerCard:hover .actionButton {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+/* Estados específicos por categoría */
+.providerCard[data-category="alimentos"] {
+  border-left: 4px solid #28a745;
+}
+
+.providerCard[data-category="bebidas"] {
+  border-left: 4px solid #007bff;
+}
+
+.providerCard[data-category="limpieza"] {
+  border-left: 4px solid #ffc107;
+}
+
+.providerCard[data-category="equipos"] {
+  border-left: 4px solid #6f42c1;
+}
+
+.providerCard[data-category="servicios"] {
+  border-left: 4px solid #fd7e14;
+}
+
+.providerCard[data-category="otros"] {
+  border-left: 4px solid #6c757d;
+}
+
+/* Efecto de click fuera para cerrar menú */
+.actionMenu::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+/* Mejoras visuales adicionales */
+.providerCard:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #28a745, #20c997);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.providerCard:hover:before {
+  opacity: 1;
+}
+
+/* Separadores visuales */
+.contactInfo:not(:empty)::after {
+  content: '';
+  display: block;
+  height: 1px;
+  background: #f8f9fa;
+  margin-top: 12px;
+}
+
+/* Estilos para tooltips futuros */
+.providerCard [title] {
+  cursor: help;
+  border-bottom: 1px dotted #6c757d;
+}
+
+/* ===== ERROR STATE ===== */
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #dc2626;
+  text-align: center;
+}
+
+.errorIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.errorContainer h3 {
+  margin: 0 0 1rem 0;
+  color: #dc2626;
+  font-size: 1.25rem;
+}
+
+.errorContainer p {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+  max-width: 400px;
+}
+
+.retryButton {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+} 

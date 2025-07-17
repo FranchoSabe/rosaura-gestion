@@ -36,6 +36,9 @@ const AppRouter = (props) => {
     showNotification: props.showNotification,
     showConfirmation: props.showConfirmationDialog,
     
+    // Función para crear reservas desde admin
+    onSaveReservation: props.handleSaveReservation,
+    
     // Props de estado faltantes
     editingReservation: props.editingReservation,
     setEditingReservation: props.setEditingReservation

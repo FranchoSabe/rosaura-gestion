@@ -223,101 +223,8 @@ export const loadBlockedTables = async (fecha, turno, onLoadBlockedTables) => {
   }
 };
 
-// Función para asignar mesa automáticamente a una nueva reserva (usa la lógica con combinaciones)
+// Función principal para asignar mesa automáticamente a una nueva reserva
 export const assignTableToNewReservation = (newReservation, existingReservations, currentBlocked = new Set()) => {
-  return assignTableWithCombinations(newReservation, existingReservations, currentBlocked);
-};
-
-// Función para validar conflictos de mesa
-export const validateTableAssignment = (reservationId, tableId, fecha, turno, existingReservations) => {
-  const conflictingReservation = existingReservations.find(
-    r => r.id !== reservationId && 
-        r.fecha === fecha && 
-        r.turno === turno && 
-        r.mesaAsignada === tableId
-  );
-
-  return {
-    hasConflict: !!conflictingReservation,
-    conflictingReservation: conflictingReservation || null
-  };
-};
-
-// Función para reasignación manual de mesas desde el admin panel
-export const reassignTableManually = async (reservationId, newTableId, reservations, onUpdateReservation, showNotification, forceAssignment = false) => {
-  try {
-    // Buscar la reserva a reasignar
-    const reservation = reservations.find(r => r.id === reservationId);
-    if (!reservation) {
-      throw new Error('Reserva no encontrada');
-    }
-
-    // Validar conflictos si no es una asignación forzada
-    if (!forceAssignment) {
-      const conflict = validateTableAssignment(reservationId, newTableId, reservation.fecha, reservation.turno, reservations);
-      
-      if (conflict.hasConflict) {
-        // Retornar información del conflicto para que el admin pueda decidir
-        return {
-          success: false,
-          hasConflict: true,
-          conflictingReservation: conflict.conflictingReservation,
-          message: `La mesa ${newTableId} ya está asignada a ${conflict.conflictingReservation.cliente.nombre} (${conflict.conflictingReservation.personas} personas)`
-        };
-      }
-    }
-
-    // Actualizar la reserva con la nueva mesa
-    await onUpdateReservation(reservationId, { mesaAsignada: newTableId }, true);
-
-    if (showNotification) {
-      showNotification('success', `Mesa ${newTableId} asignada correctamente${forceAssignment ? ' (forzado)' : ''}`);
-    }
-
-    return {
-      success: true,
-      hasConflict: false,
-      message: `Mesa ${newTableId} asignada correctamente`
-    };
-
-  } catch (error) {
-    console.error('Error al reasignar mesa:', error);
-    if (showNotification) {
-      showNotification('error', 'Error al asignar la mesa');
-    }
-    throw error;
-  }
-};
-
-// Función para verificar si una combinación de mesas está disponible
-export const isCombinationAvailable = (combination, occupiedTables, blockedTables) => {
-  return combination.tables.every(tableId => 
-    !occupiedTables.has(tableId) && !blockedTables.has(tableId)
-  );
-};
-
-// Función para encontrar una combinación de mesas disponible para una capacidad específica
-export const findAvailableCombination = (requiredCapacity, occupiedTables, blockedTables) => {
-  if (requiredCapacity === 4) {
-    // Buscar combinaciones de mesas de 2 que puedan formar una de 4
-    for (const combination of TABLE_COMBINATIONS.joinableFor4) {
-      if (isCombinationAvailable(combination, occupiedTables, blockedTables)) {
-        return combination;
-      }
-    }
-  } else if (requiredCapacity === 6) {
-    // Buscar combinaciones de mesas de 2 que puedan formar una de 6
-    for (const combination of TABLE_COMBINATIONS.joinableFor6) {
-      if (isCombinationAvailable(combination, occupiedTables, blockedTables)) {
-        return combination;
-      }
-    }
-  }
-  return null;
-};
-
-// Función mejorada para asignar mesa con capacidad de unión
-export const assignTableWithCombinations = (newReservation, existingReservations, currentBlocked = new Set()) => {
   // Filtrar reservas del mismo turno y fecha
   const reservationsForTurno = existingReservations.filter(
     r => r.fecha === newReservation.fecha && r.turno === newReservation.turno
@@ -413,6 +320,96 @@ export const assignTableWithCombinations = (newReservation, existingReservations
   // No hay mesa disponible
   return null;
 };
+
+// Función para validar conflictos de mesa
+export const validateTableAssignment = (reservationId, tableId, fecha, turno, existingReservations) => {
+  const conflictingReservation = existingReservations.find(
+    r => r.id !== reservationId && 
+        r.fecha === fecha && 
+        r.turno === turno && 
+        r.mesaAsignada === tableId
+  );
+
+  return {
+    hasConflict: !!conflictingReservation,
+    conflictingReservation: conflictingReservation || null
+  };
+};
+
+// Función para reasignación manual de mesas desde el admin panel
+export const reassignTableManually = async (reservationId, newTableId, reservations, onUpdateReservation, showNotification, forceAssignment = false) => {
+  try {
+    // Buscar la reserva a reasignar
+    const reservation = reservations.find(r => r.id === reservationId);
+    if (!reservation) {
+      throw new Error('Reserva no encontrada');
+    }
+
+    // Validar conflictos si no es una asignación forzada
+    if (!forceAssignment) {
+      const conflict = validateTableAssignment(reservationId, newTableId, reservation.fecha, reservation.turno, reservations);
+      
+      if (conflict.hasConflict) {
+        // Retornar información del conflicto para que el admin pueda decidir
+        return {
+          success: false,
+          hasConflict: true,
+          conflictingReservation: conflict.conflictingReservation,
+          message: `La mesa ${newTableId} ya está asignada a ${conflict.conflictingReservation.cliente.nombre} (${conflict.conflictingReservation.personas} personas)`
+        };
+      }
+    }
+
+    // Actualizar la reserva con la nueva mesa
+    await onUpdateReservation(reservationId, { mesaAsignada: newTableId }, true);
+
+    if (showNotification) {
+      showNotification('success', `Mesa ${newTableId} asignada correctamente${forceAssignment ? ' (forzado)' : ''}`);
+    }
+
+    return {
+      success: true,
+      hasConflict: false,
+      message: `Mesa ${newTableId} asignada correctamente`
+    };
+
+  } catch (error) {
+    console.error('Error al reasignar mesa:', error);
+    if (showNotification) {
+      showNotification('error', 'Error al asignar la mesa');
+    }
+    throw error;
+  }
+};
+
+// Función para verificar si una combinación de mesas está disponible
+export const isCombinationAvailable = (combination, occupiedTables, blockedTables) => {
+  return combination.tables.every(tableId => 
+    !occupiedTables.has(tableId) && !blockedTables.has(tableId)
+  );
+};
+
+// Función para encontrar una combinación de mesas disponible para una capacidad específica
+export const findAvailableCombination = (requiredCapacity, occupiedTables, blockedTables) => {
+  if (requiredCapacity === 4) {
+    // Buscar combinaciones de mesas de 2 que puedan formar una de 4
+    for (const combination of TABLE_COMBINATIONS.joinableFor4) {
+      if (isCombinationAvailable(combination, occupiedTables, blockedTables)) {
+        return combination;
+      }
+    }
+  } else if (requiredCapacity === 6) {
+    // Buscar combinaciones de mesas de 2 que puedan formar una de 6
+    for (const combination of TABLE_COMBINATIONS.joinableFor6) {
+      if (isCombinationAvailable(combination, occupiedTables, blockedTables)) {
+        return combination;
+      }
+    }
+  }
+  return null;
+};
+
+
 
 // Función para rebalancear cupos walk-in - SIMPLIFICADA
 // Ya no realiza ajustes automáticos, solo respeta los bloqueos manuales

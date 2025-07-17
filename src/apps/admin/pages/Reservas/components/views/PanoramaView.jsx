@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Calendar, Users, Phone, Clock, X } from 'lucide-react';
-import { UNIFIED_TABLES_LAYOUT } from '../../../../utils/tablesLayout';
-import { calculateAutoAssignments } from '../../../../utils/mesaLogic';
-import { formatDateToString } from '../../../../utils';
-import styles from './Panorama.module.css';
+import { UNIFIED_TABLES_LAYOUT } from '../../../../../../utils/tablesLayout';
+import { calculateAutoAssignments } from '../../../../../../utils/mesaLogic';
+import { formatDateToString } from '../../../../../../utils';
+import { isDayClosed } from '../../../../../../shared/constants/operatingDays';
+import styles from './PanoramaView.module.css';
 
 // TurnoPreviewModal - Modal para preview de turno específico
 const TurnoPreviewModal = ({ preview, onClose, onGoToDailyView, currentDate, currentTurno, tableAssignments }) => {
@@ -258,7 +259,7 @@ const TurnoPreviewModal = ({ preview, onClose, onGoToDailyView, currentDate, cur
 const Panorama = ({ reservations, formatDate, onGoToDailyView }) => {
   const [selectedTurnoPreview, setSelectedTurnoPreview] = useState(null);
 
-  // Obtener próximos 7 días excluyendo lunes (cerrado ambos turnos)
+  // Obtener próximos 7 días excluyendo días cerrados
   const getNext7Days = useCallback(() => {
     const days = [];
     const today = new Date();
@@ -266,7 +267,7 @@ const Panorama = ({ reservations, formatDate, onGoToDailyView }) => {
     
     while (days.length < 7) {
       const dayOfWeek = currentDate.getDay();
-      if (dayOfWeek !== 1) { // Excluir lunes (cerrado ambos turnos)
+      if (!isDayClosed(dayOfWeek)) { // Excluir días cerrados usando nueva función
         days.push(new Date(currentDate));
       }
       currentDate.setDate(currentDate.getDate() + 1);

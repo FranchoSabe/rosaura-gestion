@@ -1,0 +1,2260 @@
+/* Página de gestión de pedidos */
+.pedidosPage {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.titleIcon {
+  color: #dc2626;
+  width: 32px;
+  height: 32px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Selector de turno */
+.turnSelector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.turnSelectorLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.turnSelectorButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.turnButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 110px;
+  justify-content: center;
+}
+
+.turnButtonActive {
+  background: #1f2937;
+  color: white;
+  border-color: #1f2937;
+  box-shadow: 0 2px 4px rgba(31, 41, 55, 0.2);
+}
+
+.turnButtonInactive {
+  background: white;
+  color: #6b7280;
+  border-color: #d1d5db;
+}
+
+.turnButtonInactive:hover {
+  background: #f9fafb;
+  border-color: #1f2937;
+  color: #1f2937;
+  transform: translateY(-1px);
+}
+
+.turnButtonDisabled {
+  background: #f3f4f6 !important;
+  color: #9ca3af !important;
+  border-color: #e5e7eb !important;
+  cursor: not-allowed !important;
+}
+
+/* Controles de operación */
+.operationControls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Indicador de estado de operación */
+.operationStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-width: 140px;
+}
+
+.statusOpen {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #86efac;
+}
+
+.statusClosed {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusOpen .statusIndicator {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.statusClosed .statusIndicator {
+  background: #ef4444;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Selector de modo */
+.modeSelector {
+  display: flex;
+  align-items: center;
+}
+
+.modeButton {
+  padding: 0.75rem 1.25rem;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 130px;
+  justify-content: center;
+}
+
+.modeButtonLibre {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border-color: #1d4ed8;
+  box-shadow: 0 2px 4px rgba(29, 78, 216, 0.2);
+}
+
+.modeButtonLibre:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(29, 78, 216, 0.3);
+}
+
+.modeButtonTurno {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border-color: #d97706;
+  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+}
+
+.modeButtonTurno:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(217, 119, 6, 0.3);
+}
+
+/* Acciones de operación */
+.operationActions {
+  display: flex;
+  align-items: center;
+}
+
+/* Controles de testing */
+.modeButtonTesting {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  border-color: #7c3aed;
+  box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+}
+
+.modeButtonTesting:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(124, 58, 237, 0.3);
+}
+
+.testingControls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  border-radius: 0.75rem;
+  border: 2px solid #d1d5db;
+}
+
+.dateSelector {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-direction: column;
+}
+
+.dateSelectorLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.dateInputWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.dateInput {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+  height: 44px; /* Altura mínima para touch */
+  
+  /* Asegurar que el calendario nativo funcione */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  position: relative;
+  z-index: 1;
+}
+
+.dateInput::-webkit-calendar-picker-indicator {
+  color: #8b5cf6;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  margin-left: 0.25rem;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  position: relative;
+  z-index: 2;
+}
+
+.dateInput::-webkit-calendar-picker-indicator:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 50%;
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.dateInput:hover {
+  border-color: #9ca3af;
+}
+
+/* Fallback para navegadores que no soportan input[type="date"] */
+.dateInput:invalid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23868689' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px;
+}
+
+.dateInputHelper {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.dateInputWrapper:hover .dateInputHelper {
+  opacity: 1;
+  color: #8b5cf6;
+}
+
+/* Información del mapa actualizada */
+.infoTesting {
+  color: #8b5cf6;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background: #f3f4f6;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+}
+
+/* Acciones de operación */
+.operationActions {
+  display: flex;
+  align-items: center;
+}
+
+.closeOperationButton {
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.closeOperationButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.reopenOperationButton {
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.reopenOperationButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
+}
+
+/* Responsive para controles de operación */
+@media (max-width: 1200px) {
+  .operationControls {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+  }
+  
+  .turnSelector {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .turnSelectorButtons {
+    gap: 0.25rem;
+  }
+  
+  .turnButton {
+    padding: 0.5rem 0.75rem;
+    min-width: 90px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .operationControls {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+  }
+  
+  .operationStatus,
+  .modeButton,
+  .closeOperationButton,
+  .reopenOperationButton {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.addButton:hover {
+  background: #b91c1c;
+}
+
+.content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+}
+
+/* Loading */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.loading {
+  font-size: 1.125rem;
+  color: #6b7280;
+}
+
+/* Banner de inicialización */
+.initializationBanner {
+  background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.initializationContent h3 {
+  color: #92400e;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.initializationContent p {
+  color: #b45309;
+  margin: 0 0 1.5rem 0;
+}
+
+.initializeButton {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 1rem;
+}
+
+.initializeButton:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.initializeButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Estadísticas */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 0.75rem;
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.statContent {
+  flex: 1;
+}
+
+.statNumber {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Filtros */
+.filters {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filterLabel {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.statusFilter {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  font-size: 0.875rem;
+  color: #374151;
+  min-width: 200px;
+}
+
+.statusFilter:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* Mapa de mesas */
+.mapSection {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.mapHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.mapHeader h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.mapInfo {
+  display: flex;
+  align-items: center;
+}
+
+.infoLibre {
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background: #dbeafe;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #93c5fd;
+}
+
+.infoTurno {
+  color: #f59e0b;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background: #fef3c7;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #fcd34d;
+}
+
+/* Banner de operación cerrada */
+.operationClosedBanner {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  border: 2px solid #fca5a5;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);
+}
+
+.closedBannerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #991b1b;
+  font-weight: 600;
+  gap: 1rem;
+}
+
+.quickReopenButton {
+  padding: 0.5rem 1rem;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.quickReopenButton:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.mapContainer {
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 2px dashed #cbd5e1;
+  margin-bottom: 1rem;
+  transition: opacity 0.2s ease;
+}
+
+.mapContainer[disabled] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.mapContainer {
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.mapLegend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.legendColor {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* Estilos para tarjetas de pedidos */
+
+.orderCard {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  transition: all 0.2s;
+}
+
+.orderCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.15);
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.orderTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.orderTitle h4 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.tableNumber {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.orderTime {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.orderProducts {
+  margin-bottom: 1rem;
+}
+
+.productItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.productItem:last-child {
+  border-bottom: none;
+}
+
+.productQuantity {
+  font-weight: 600;
+  color: #dc2626;
+  min-width: 2rem;
+}
+
+.productName {
+  flex: 1;
+  color: #374151;
+  margin: 0 0.5rem;
+}
+
+.productPrice {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.orderFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.orderTotal {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.statusSelect {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.orderNotes {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+/* Estado vacío */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem;
+}
+
+.emptyIcon {
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.emptyState h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.emptyState p {
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Modal de pedido fullscreen */
+.fullscreenOrderModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f8fafc;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: white;
+  border-bottom: 2px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.orderHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.tableInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.orderTotal {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #fecaca;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: #f3f4f6;
+  color: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Header del contenedor de productos integrado */
+.productsSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Filtros de categoría integrados */
+.integratedCategoryFilters {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.25rem;
+}
+
+.integratedCategoryButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: white;
+  color: #374151;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.integratedCategoryButton:hover {
+  border-color: #dc2626;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.integratedCategoryButtonActive {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.integratedCategoryButtonActive:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+/* Contenido principal mejorado */
+.orderMainContent {
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.productsSection {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border-radius: 1rem;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.productCard {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.2s;
+}
+
+.productCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #dc2626;
+}
+
+.productInfo {
+  flex: 1;
+}
+
+.productName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.productPrice {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.addToCartButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.addToCartButton:hover {
+  background: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Sección de pedido mejorada */
+.orderSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  max-height: 100%;
+}
+
+.orderSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem 1.5rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.productCount {
+  background: #dc2626;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.orderContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0; /* Permite flex shrink */
+}
+
+.emptyOrder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6b7280;
+  flex: 1;
+}
+
+.emptyOrder svg {
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+/* Lista de items del pedido con altura dinámica */
+.orderItems {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+  min-height: 350px; /* Mínimo para 5-6 items */
+  max-height: calc(100vh - 300px); /* Dinámico según pantalla - menos espacio perdido */
+}
+
+.orderItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.orderItem:last-child {
+  border-bottom: none;
+}
+
+.orderItemDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.orderItemName {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.itemNotes {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+.standaloneNotesButton {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.5rem;
+}
+
+.standaloneNotesButton:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+.orderItemControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f3f4f6;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.quantityControlButton {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantityControlButton:hover {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+}
+
+.itemQuantity {
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.orderItemPrice {
+  font-weight: 700;
+  color: #dc2626;
+  font-size: 1.125rem;
+  min-width: 5rem;
+  text-align: right;
+}
+
+/* Notas del pedido */
+.orderNotesSection {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.notesLabel {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.notesInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 0.9rem;
+  color: #374151;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.notesInput:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+/* Total del pedido */
+.orderTotalSection {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+
+.totalAmount {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* Botones de acción */
+.orderActions {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 2px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+
+.cancelOrderButton {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.75rem;
+  background: white;
+  color: #374151;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelOrderButton:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  transform: translateY(-2px);
+}
+
+.sendToKitchenButton {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: #f59e0b;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sendToKitchenButton:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.sendToKitchenButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.saveOrderButton {
+  flex: 2;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: #10b981;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.saveOrderButton:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.saveOrderButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.viewTableButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border: 2px solid #3b82f6;
+  border-radius: 0.75rem;
+  background: white;
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewTableButton:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .orderMainContent {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .productsSection {
+    flex: none;
+    max-height: 60vh;
+  }
+  
+  .orderSection {
+    flex: none;
+    max-height: 40vh;
+  }
+  
+  .productsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .turnSelector {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .turnSelectorLabel {
+    font-size: 0.8rem;
+  }
+
+  .turnSelectorButtons {
+    flex: 1;
+    max-width: 300px;
+  }
+
+  .turnButton {
+    flex: 1;
+    min-width: 0;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .mapSection {
+    padding: 1rem;
+  }
+
+  .mapLegend {
+    gap: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .legendItem {
+    font-size: 0.8rem;
+  }
+
+  .ordersGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .orderHeader {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .orderFooter {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .productsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .productSelector {
+    flex-direction: column;
+  }
+
+  .formActions {
+    flex-direction: column;
+  }
+
+  /* Modal responsive */
+  .orderMainContent {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .orderHeader {
+    padding: 1rem;
+  }
+
+  .orderHeaderLeft {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .integratedCategoryFilters {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .integratedCategoryButton {
+    min-width: 70px;
+    font-size: 0.875rem;
+  }
+
+  .orderMainContent {
+    flex-direction: column;
+  }
+
+  .productsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .productCard {
+    padding: 1rem;
+  }
+
+  .orderActions {
+    padding: 1rem;
+    flex-direction: column;
+  }
+
+  .cancelOrderButton,
+  .sendToKitchenButton,
+  .saveOrderButton,
+  .viewTableButton {
+    flex: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .orderMainContent {
+    gap: 1rem;
+  }
+
+  .productsSection {
+    flex: 1.5;
+  }
+
+  .orderSection {
+    flex: 1;
+  }
+
+  .productsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+
+  .turnSelector {
+    gap: 0.75rem;
+  }
+
+  .turnSelectorLabel {
+    font-size: 0.8rem;
+  }
+
+  .turnButton {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    min-width: 90px;
+  }
+}
+
+/* Modal de notas del item */
+.notesModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.notesModal {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.notesModal h4 {
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.notesModalInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 80px;
+  margin-bottom: 1rem;
+}
+
+.notesModalInput:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.notesModalActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.notesModalCancel {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notesModalCancel:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.notesModalSave {
+  padding: 0.5rem 1rem;
+  border: 1px solid #dc2626;
+  border-radius: 0.375rem;
+  background: #dc2626;
+  color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notesModalSave:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+} 
+
+/* Contenedor principal optimizado para layout horizontal */
+.mainContent {
+  display: flex;
+  flex: 1;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  overflow: visible;
+  align-items: flex-start;
+}
+
+/* Mapa de Mesas - Lado Izquierdo */
+.mapSection {
+  flex: 1.8;
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  min-height: 500px;
+  max-height: 800px; /* Aumentado para mejor visualización */
+  height: fit-content;
+}
+
+.mapContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  position: relative;
+}
+
+.mapContainer svg {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 650px; /* Aumentado significativamente */
+}
+
+.mapLegend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+  background: #f3f4f6;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  margin-top: 1rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.legendColor {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  border: 2px solid;
+}
+
+/* Lista de Pedidos - Lado Derecho */
+.ordersSection {
+  flex: 0 0 350px; /* Ancho reducido para dar más espacio al mapa */
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  /* Eliminar restricciones de altura para scroll global */
+  min-height: 0;
+}
+
+.sectionHeader {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.filtersContainer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.statusFilter {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.statusFilter:focus {
+  outline: none;
+  ring: 2px solid #3b82f6;
+  ring-offset: 1px;
+  border-color: #3b82f6;
+}
+
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* Eliminar scroll interno para permitir scroll global */
+}
+
+.ordersGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Estilos para vista de cocina */
+.kitchenInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.kitchenOrdersList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kitchenOrderCard {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.kitchenOrderCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #d1d5db;
+}
+
+/* Nuevo header principal con mesa prominente */
+.kitchenOrderMainHeader {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+}
+
+.kitchenOrderTablePrimary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.kitchenOrderMesaText {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  position: relative;
+  padding-left: 1rem;
+}
+
+.kitchenOrderMesaText::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+}
+
+.kitchenOrderSecondaryInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+
+.kitchenOrderTimer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #dc2626;
+  font-weight: 600;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.timerText {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.kitchenOrderDetails {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+  flex: 1;
+}
+
+.itemCount {
+  font-weight: 500;
+  color: #374151;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  font-size: 0.75rem;
+}
+
+.orderIdSecondary {
+  font-weight: 500;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.deliveredButton {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+}
+
+.deliveredButton:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.expandButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 0.375rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.expandButton:hover {
+  background: rgba(100, 116, 139, 0.2);
+  color: #374151;
+  border-color: rgba(100, 116, 139, 0.3);
+}
+
+.kitchenOrderDetails {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.kitchenOrderProducts {
+  margin-bottom: 1rem;
+}
+
+.kitchenProductItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.kitchenProductItem:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.productQuantity {
+  font-weight: 600;
+  color: #374151;
+  min-width: 2rem;
+}
+
+.productName {
+  color: #1f2937;
+  flex: 1;
+}
+
+.kitchenOrderNotes {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #fef3c7;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.kitchenOrderTotal {
+  font-weight: 600;
+  color: #1f2937;
+  text-align: right;
+  font-size: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .mainContent {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .ordersSection {
+    flex: none;
+    /* Eliminar restricción de altura para permitir scroll global */
+  }
+  
+  .mapSection {
+    max-height: 500px;
+  }
+  
+  .mapContainer svg {
+    max-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    padding: 0.5rem;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .filtersContainer {
+    width: 100%;
+  }
+  
+  .statusFilter {
+    width: 100%;
+  }
+  
+  .mapContainer svg {
+    max-height: 350px;
+  }
+  
+  .ordersSection {
+    padding: 1rem;
+  }
+  
+  .mapSection {
+    padding: 1rem;
+  }
+  
+  /* Tarjetas de cocina responsive */
+  .kitchenOrderMainHeader {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .kitchenOrderTablePrimary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .kitchenOrderMesaText {
+    font-size: 1.125rem;
+    text-align: center;
+    padding-left: 0;
+  }
+  
+  .kitchenOrderMesaText::before {
+    display: none;
+  }
+  
+  .deliveredButton {
+    width: 100%;
+    justify-content: center;
+    padding: 0.6rem;
+    font-size: 0.875rem;
+  }
+  
+  .kitchenOrderSecondaryInfo {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .kitchenOrderTimer {
+    order: 1;
+    flex: 0 0 auto;
+  }
+  
+  .kitchenOrderDetails {
+    order: 2;
+    flex: 1;
+    min-width: 0;
+    justify-content: space-between;
+  }
+  
+  .expandButton {
+    order: 3;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+  }
+} 
+
+/* Estilos para toggle de modo testing */
+.testingToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.testingToggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+  user-select: none;
+}
+
+.testingToggleInput {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.testingToggleSlider {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  background-color: #d1d5db;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.testingToggleSlider:before {
+  content: '';
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.testingToggleInput:checked + .testingToggleSlider {
+  background-color: #3b82f6;
+}
+
+.testingToggleInput:checked + .testingToggleSlider:before {
+  transform: translateX(20px);
+}
+
+.testingToggleText {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* Botón de arqueo de caja */
+.cashCountButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  min-width: 160px;
+  justify-content: center;
+}
+
+.cashCountButton:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.cashCountButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+/* Ajustes responsive para nuevos elementos */
+@media (max-width: 768px) {
+  .testingToggle {
+    gap: 0.25rem;
+  }
+  
+  .testingToggleText {
+    font-size: 0.75rem;
+  }
+  
+  .cashCountButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    min-width: 120px;
+  }
+  
+  .mapContainer svg {
+    max-height: 400px; /* Ajuste para móvil */
+  }
+} 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { ClientView } from '../components/ClientView';
-import { LoginView } from '../components/LoginView';
+import { ClientView } from '../apps/client/pages/ClientView/ClientView';
+import { LoginView } from '../apps/client/pages/Login/LoginView';
 
 /**
  * Router para la aplicación de cliente público

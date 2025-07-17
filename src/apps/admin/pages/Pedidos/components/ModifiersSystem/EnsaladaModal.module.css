@@ -1,0 +1,369 @@
+/* EnsaladaModal.module.css - Optimizado para pantallas táctiles */
+
+/* Modal optimizado para pantallas táctiles */
+.touchOptimizedEnsaladaModal {
+  width: 90% !important;
+  max-width: 700px !important;
+  height: 80vh !important;
+  max-height: 80vh !important;
+}
+
+@media (max-width: 1024px) {
+  .touchOptimizedEnsaladaModal {
+    width: 95% !important;
+    max-width: 90vw !important;
+    height: 85vh !important;
+    max-height: 85vh !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .touchOptimizedEnsaladaModal {
+    width: 100% !important;
+    max-width: 100vw !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+    margin: 0 !important;
+    border-radius: 1rem 1rem 0 0 !important;
+  }
+}
+.ensaladaModal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 75vh;
+  max-height: 75vh;
+  overflow: hidden;
+}
+
+/* Header del modal */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 0.75rem;
+  border: 1px solid #bbf7d0;
+}
+
+.headerIcon {
+  width: 48px;
+  height: 48px;
+  background: #059669;
+  color: white;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.headerContent h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.headerContent p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Sección de ingredientes */
+.ingredientsSection {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0.5rem;
+}
+
+/* Grupo de ingredientes */
+.ingredientGroup {
+  margin-bottom: 2rem;
+}
+
+.groupHeader {
+  margin-bottom: 1rem;
+}
+
+.groupTitle {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requiredIndicator {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.groupSubtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Error del grupo */
+.groupError {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+/* Grid de opciones */
+.optionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+/* Opción individual */
+.option {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.25rem 1rem;
+  min-height: 60px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.option:hover {
+  border-color: #059669;
+  background: #f0fdf4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+}
+
+.option.selected {
+  border-color: #059669;
+  background: #f0fdf4;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
+}
+
+/* Contenido de la opción */
+.optionContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Indicador de checkbox */
+.checkboxIndicator {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.option.selected .checkboxIndicator {
+  border-color: #059669;
+  background: #059669;
+}
+
+.option:hover .checkboxIndicator {
+  border-color: #059669;
+}
+
+/* Información de la opción */
+.optionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.optionName {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.optionPrice {
+  font-size: 0.875rem;
+  color: #059669;
+  font-weight: 600;
+}
+
+/* Sección de preview */
+.previewSection {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.previewHeader {
+  margin-bottom: 1rem;
+}
+
+.previewHeader h4 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.previewContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.previewText {
+  flex: 1;
+  font-size: 1.125rem;
+  color: #1f2937;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.previewPrice {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Botones de acción */
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  min-height: 54px;
+  border: 2px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancelButton:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.confirmButton {
+  flex: 2;
+  padding: 1rem 1.5rem;
+  min-height: 54px;
+  border: 2px solid #059669;
+  background: #059669;
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.confirmButton:hover {
+  background: #047857;
+  border-color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.confirmButton.disabled {
+  background: #d1d5db;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.confirmButton.disabled:hover {
+  background: #d1d5db;
+  border-color: #d1d5db;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .ensaladaModal {
+    max-height: 90vh;
+  }
+  
+  .modalHeader {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .headerIcon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .optionsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .option {
+    padding: 0.75rem;
+  }
+  
+  .optionContent {
+    gap: 0.5rem;
+  }
+  
+  .checkboxIndicator {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .optionName {
+    font-size: 0.875rem;
+  }
+  
+  .optionPrice {
+    font-size: 0.75rem;
+  }
+  
+  .previewContent {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .modalActions {
+    flex-direction: column;
+  }
+} 

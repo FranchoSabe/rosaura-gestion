@@ -64,5 +64,76 @@ service cloud.firestore {
       // Solo staff puede modificar o eliminar de la lista de espera
       allow update, delete: if isStaff();
     }
+
+    // Reglas para proveedores
+    match /proveedores/{providerId} {
+      // Permitir lectura pública temporalmente para debugging
+      // TODO: Cambiar a isStaff() una vez resuelto el problema de auth
+      allow read: if true;
+      
+      // Solo staff puede modificar proveedores
+      allow write: if isStaff();
+    }
+
+    // Reglas para productos de proveedores
+    match /productos_proveedores/{productId} {
+      // Permitir lectura pública temporalmente para debugging
+      // TODO: Cambiar a isStaff() una vez resuelto el problema de auth
+      allow read: if true;
+      
+      // Solo staff puede modificar productos
+      allow write: if isStaff();
+    }
+
+    // Reglas para pedidos a proveedores
+    match /pedidos_proveedores/{orderId} {
+      // Permitir lectura pública temporalmente para debugging
+      // TODO: Cambiar a isStaff() una vez resuelto el problema de auth
+      allow read: if true;
+      
+      // Solo staff puede modificar pedidos
+      allow write: if isStaff();
+    }
+
+    // ==========================================
+    // SISTEMA DE PEDIDOS - NUEVAS COLECCIONES
+    // ==========================================
+
+    // Reglas para productos del menú
+    match /productos/{productId} {
+      // Permitir todas las operaciones temporalmente para desarrollo
+      // TODO: Cambiar a isStaff() una vez implementada la autenticación
+      allow read, write: if true;
+    }
+
+    // Reglas para pedidos del restaurante
+    match /pedidos/{orderId} {
+      // Permitir todas las operaciones temporalmente para desarrollo
+      // TODO: Cambiar a isStaff() una vez implementada la autenticación
+      allow read, write: if true;
+    }
+
+    // Reglas para estado de mesas
+    match /mesas/{tableId} {
+      // Permitir todas las operaciones temporalmente para desarrollo
+      // TODO: Cambiar a isStaff() una vez implementada la autenticación
+      allow read, write: if true;
+    }
+
+    // Reglas para arqueos de caja
+    match /arqueos_caja/{arqId} {
+      // TEMPORAL: Permitir lectura a todos para testing
+      // TODO: Cambiar a isStaff() una vez funcionando
+      allow read: if true;
+      
+      // Escritura: Solo staff autenticado puede crear/modificar arqueos
+      allow write: if isStaff();
+    }
+    
+    // Reglas para ventas y estadísticas (colección de respaldo)
+    match /ventas/{ventaId} {
+      // Solo staff puede acceder a datos de ventas
+      allow read, write: if isStaff();
+    }
   }
 } 

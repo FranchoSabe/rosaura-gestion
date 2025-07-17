@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 // Configuración de Firebase usando variables de entorno
@@ -177,14 +177,46 @@ export const getClients = async () => {
   }
 };
 
-// Suscripción en tiempo real a cambios
+// Suscripción en tiempo real a cambios - TODAS las reservas (SOLO para estadísticas históricas)
+// 🚨 USAR CON CUIDADO: Esta función carga TODAS las reservas de la base de datos
+// Para uso diario, usar subscribeToReservationsByDate() que es más eficiente
 export const subscribeToReservations = (callback) => {
   return onSnapshot(collection(db, "reservas"), (snapshot) => {
     const reservations = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+    console.log(`🚨 CARGA COMPLETA: ${reservations.length} reservas históricas cargadas`);
     callback(reservations);
+  });
+};
+
+// 🎯 NUEVO: Suscripción optimizada para fecha específica (SIN índices complejos)
+export const subscribeToReservationsByDate = (callback, targetDate) => {
+  const reservasRef = collection(db, "reservas");
+  
+  // Query simple: solo filtrar por fecha (no requiere índice compuesto)
+  const q = query(
+    reservasRef,
+    where("fecha", "==", targetDate)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const reservations = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    console.log(`📅 Reservas del día ${targetDate}: ${reservations.length} documentos`);
+    callback(reservations);
+  }, (error) => {
+    console.error('❌ Error en suscripción de reservas:', error);
+    // Fallback: cargar todas las reservas y filtrar del lado cliente
+    return subscribeToReservations((allReservations) => {
+      const filtered = allReservations.filter(r => r.fecha === targetDate);
+      console.log(`📅 Reservas del día ${targetDate} (filtradas): ${filtered.length} documentos`);
+      callback(filtered);
+    });
   });
 };
 
@@ -461,6 +493,1285 @@ export const rejectWaitingReservation = async (waitingReservationId, reason = ''
     return true;
   } catch (error) {
     console.error("Error al rechazar reserva en espera:", error);
+    throw error;
+  }
+};
+
+// === FUNCIONES PARA PROVEEDORES ===
+
+// Función para agregar un proveedor
+export const addProvider = async (providerData) => {
+  try {
+    console.log('Agregando proveedor:', providerData);
+
+    const dataToSave = {
+      ...providerData,
+      createdAt: new Date(),
+      status: 'active',
+      totalPedidos: 0,
+      ultimoPedido: null
+    };
+
+    console.log('Datos a guardar:', dataToSave);
+
+    const docRef = await addDoc(collection(db, "proveedores"), dataToSave);
+
+    console.log('Proveedor guardado en Firebase:', {
+      id: docRef.id,
+      nombre: dataToSave.nombre,
+      categoria: dataToSave.categoria
+    });
+
+    return { id: docRef.id };
+  } catch (error) {
+    console.error("Error al agregar proveedor:", error);
+    throw error;
+  }
+};
+
+// Función para obtener todos los proveedores
+export const getProviders = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "proveedores"));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error("Error al obtener proveedores:", error);
+    throw error;
+  }
+};
+
+// Suscripción en tiempo real a proveedores
+export const subscribeToProviders = (callback, errorCallback) => {
+  return onSnapshot(
+    collection(db, "proveedores"), 
+    (snapshot) => {
+      const providers = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      callback(providers);
+    },
+    (error) => {
+      console.error("Error en suscripción a proveedores:", error);
+      if (errorCallback) {
+        errorCallback(error);
+      }
+    }
+  );
+};
+
+// Función para actualizar un proveedor
+export const updateProvider = async (providerId, providerData) => {
+  try {
+    console.log('Actualizando proveedor:', { providerId, providerData });
+    
+    const providerRef = doc(db, "proveedores", providerId);
+    await updateDoc(providerRef, {
+      ...providerData,
+      updatedAt: new Date()
+    });
+
+    console.log('Proveedor actualizado con éxito');
+    return true;
+  } catch (error) {
+    console.error("Error al actualizar proveedor:", error);
+    throw error;
+  }
+};
+
+// Función para eliminar un proveedor
+export const deleteProvider = async (providerId) => {
+  try {
+    console.log('Eliminando proveedor:', providerId);
+    
+    const providerRef = doc(db, "proveedores", providerId);
+    await deleteDoc(providerRef);
+
+    console.log('Proveedor eliminado con éxito');
+    return true;
+  } catch (error) {
+    console.error("Error al eliminar proveedor:", error);
+    throw error;
+  }
+};
+
+// Función para actualizar el estado de un proveedor
+export const updateProviderStatus = async (providerId, status) => {
+  try {
+    const providerRef = doc(db, "proveedores", providerId);
+    await updateDoc(providerRef, {
+      status: status,
+      updatedAt: new Date()
+    });
+    return true;
+  } catch (error) {
+    console.error("Error al actualizar estado del proveedor:", error);
+    throw error;
+  }
+};
+
+// === FUNCIONES PARA PRODUCTOS DE PROVEEDORES ===
+
+// Función para agregar un producto a un proveedor
+export const addProviderProduct = async (providerId, productData) => {
+  try {
+    console.log('Agregando producto a proveedor:', { providerId, productData });
+
+    const dataToSave = {
+      ...productData,
+      providerId: providerId,
+      createdAt: new Date(),
+      status: 'available'
+    };
+
+    const docRef = await addDoc(collection(db, "productos_proveedores"), dataToSave);
+
+    console.log('Producto agregado:', {
+      id: docRef.id,
+      nombre: dataToSave.nombre,
+      providerId: providerId
+    });
+
+    return { id: docRef.id };
+  } catch (error) {
+    console.error("Error al agregar producto:", error);
+    throw error;
+  }
+};
+
+// Función para obtener productos de un proveedor
+export const getProviderProducts = async (providerId) => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "productos_proveedores"));
+    const products = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    return products.filter(product => product.providerId === providerId);
+  } catch (error) {
+    console.error("Error al obtener productos del proveedor:", error);
+    throw error;
+  }
+};
+
+// === FUNCIONES PARA PEDIDOS A PROVEEDORES ===
+
+// Función para crear un pedido a un proveedor
+export const createProviderOrder = async (orderData) => {
+  try {
+    console.log('Creando pedido a proveedor:', orderData);
+
+    const dataToSave = {
+      ...orderData,
+      createdAt: new Date(),
+      status: 'pending',
+      total: orderData.productos.reduce((sum, prod) => sum + (prod.precio * prod.cantidad), 0)
+    };
+
+    const docRef = await addDoc(collection(db, "pedidos_proveedores"), dataToSave);
+
+    // Actualizar estadísticas del proveedor
+    const providerRef = doc(db, "proveedores", orderData.providerId);
+    await updateDoc(providerRef, {
+      ultimoPedido: new Date(),
+      totalPedidos: (await getDoc(providerRef)).data().totalPedidos + 1 || 1,
+      updatedAt: new Date()
+    });
+
+    console.log('Pedido creado:', {
+      id: docRef.id,
+      providerId: orderData.providerId,
+      total: dataToSave.total
+    });
+
+    return { id: docRef.id };
+  } catch (error) {
+    console.error("Error al crear pedido:", error);
+    throw error;
+  }
+};
+
+// Función para obtener pedidos de un proveedor
+export const getProviderOrders = async (providerId) => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "pedidos_proveedores"));
+    const orders = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    return orders.filter(order => order.providerId === providerId);
+  } catch (error) {
+    console.error("Error al obtener pedidos del proveedor:", error);
+    throw error;
+  }
+};
+
+// ==========================================
+// SISTEMA DE PEDIDOS - PRODUCTOS DEL MENÚ
+// ==========================================
+
+// Función para agregar un producto al menú
+export const addProduct = async (productData) => {
+  try {
+    const dataToSave = {
+      ...productData,
+      disponible: true,
+      fechaCreacion: new Date(),
+      fechaModificacion: new Date()
+    };
+
+    const docRef = await addDoc(collection(db, 'productos'), dataToSave);
+    console.log('Producto agregado exitosamente:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("Error al agregar producto:", error);
+    throw error;
+  }
+};
+
+// Función para obtener todos los productos
+export const getProducts = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'productos'));
+    const products = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    return products;
+  } catch (error) {
+    console.error("Error al obtener productos:", error);
+    throw error;
+  }
+};
+
+// Función para suscribirse a cambios en productos
+export const subscribeToProducts = (callback, errorCallback) => {
+  try {
+    const unsubscribe = onSnapshot(collection(db, 'productos'), 
+      (querySnapshot) => {
+        try {
+          const products = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          callback(products);
+        } catch (docError) {
+          console.error("Error procesando documentos de productos:", docError);
+          // Devolver array vacío en caso de error
+          callback([]);
+        }
+      },
+      (error) => {
+        console.error("Error en suscripción a productos:", error);
+        // Devolver array vacío en caso de error
+        callback([]);
+        if (errorCallback) errorCallback(error);
+      }
+    );
+    return unsubscribe;
+  } catch (error) {
+    console.error("Error al crear suscripción a productos:", error);
+    callback([]);
+    if (errorCallback) errorCallback(error);
+  }
+};
+
+// Función para actualizar un producto
+export const updateProduct = async (productId, productData) => {
+  try {
+    const dataToUpdate = {
+      ...productData,
+      fechaModificacion: new Date()
+    };
+    
+    const productRef = doc(db, 'productos', productId);
+    await updateDoc(productRef, dataToUpdate);
+    console.log('Producto actualizado exitosamente:', productId);
+  } catch (error) {
+    console.error("Error al actualizar producto:", error);
+    throw error;
+  }
+};
+
+// Función para eliminar un producto
+export const deleteProduct = async (productId) => {
+  try {
+    const productRef = doc(db, 'productos', productId);
+    await deleteDoc(productRef);
+    console.log('Producto eliminado exitosamente:', productId);
+  } catch (error) {
+    console.error("Error al eliminar producto:", error);
+    throw error;
+  }
+};
+
+// Función para actualizar disponibilidad de producto
+export const updateProductAvailability = async (productId, disponible) => {
+  try {
+    const productRef = doc(db, 'productos', productId);
+    await updateDoc(productRef, {
+      disponible: disponible,
+      fechaModificacion: new Date()
+    });
+    console.log('Disponibilidad de producto actualizada:', productId);
+  } catch (error) {
+    console.error("Error al actualizar disponibilidad:", error);
+    throw error;
+  }
+};
+
+// Función para limpiar todos los productos (para desarrollo)
+export const clearAllProducts = async () => {
+  try {
+    const productsSnapshot = await getDocs(collection(db, 'productos'));
+    const deletePromises = productsSnapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    console.log('Todos los productos han sido eliminados');
+    return true;
+  } catch (error) {
+    console.error("Error al limpiar productos:", error);
+    throw error;
+  }
+};
+
+// ==========================================
+// SISTEMA DE PEDIDOS - PEDIDOS
+// ==========================================
+
+// Función para generar ID único de pedido
+const generateOrderId = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = 'P';
+  for (let i = 0; i < 5; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
+// Función para agregar un pedido
+export const addOrder = async (orderData) => {
+  try {
+    const orderId = generateOrderId();
+    const dataToSave = {
+      ...orderData,
+      orderId: orderId.toUpperCase(),
+      // Respetar el estado que viene en orderData, o usar 'pendiente' como fallback
+      estado: orderData.estado || 'pendiente',
+      fechaCreacion: new Date(),
+      fechaActualizacion: new Date()
+    };
+
+    const docRef = await addDoc(collection(db, 'pedidos'), dataToSave);
+    console.log('✅ Pedido guardado:', { id: docRef.id, estado: dataToSave.estado, mesa: dataToSave.mesa });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error al agregar pedido:", error);
+    throw error;
+  }
+};
+
+// Función para obtener todos los pedidos
+export const getOrders = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'pedidos'));
+    const orders = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      // Remover el campo 'id' de los datos para evitar conflicto
+      const { id: dataId, ...restData } = data;
+      return {
+        id: doc.id,                    // Document ID real de Firebase (NUNCA sobrescribir)
+        firebaseDocId: doc.id,         // Backup del ID real
+        legacyId: dataId,              // Campo id del documento original (si existe)
+        ...restData                    // Resto de datos sin el campo 'id' conflictivo
+      };
+    });
+    return orders;
+  } catch (error) {
+    console.error("Error al obtener pedidos:", error);
+    throw error;
+  }
+};
+
+// Función para suscribirse a cambios en pedidos
+export const subscribeToOrders = (callback, errorCallback) => {
+  try {
+    const unsubscribe = onSnapshot(collection(db, 'pedidos'), 
+      (querySnapshot) => {
+        try {
+          const orders = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            // Remover el campo 'id' de los datos para evitar conflicto
+            const { id: dataId, ...restData } = data;
+            return {
+              id: doc.id,                    // Document ID real de Firebase (NUNCA sobrescribir)
+              firebaseDocId: doc.id,         // Backup del ID real
+              legacyId: dataId,              // Campo id del documento original (si existe)
+              ...restData                    // Resto de datos sin el campo 'id' conflictivo
+            };
+          });
+          callback(orders);
+        } catch (docError) {
+          console.error("Error procesando documentos de pedidos:", docError);
+          // Devolver array vacío en caso de error
+          callback([]);
+        }
+      },
+      (error) => {
+        console.error("Error en suscripción a pedidos:", error);
+        // Devolver array vacío en caso de error
+        callback([]);
+        if (errorCallback) errorCallback(error);
+      }
+    );
+    return unsubscribe;
+  } catch (error) {
+    console.error("Error al crear suscripción a pedidos:", error);
+    callback([]);
+    if (errorCallback) errorCallback(error);
+  }
+};
+
+// Función para actualizar un pedido
+export const updateOrder = async (orderId, orderData) => {
+  try {
+    const dataToUpdate = {
+      ...orderData,
+      fechaActualizacion: new Date()
+    };
+    
+    const orderRef = doc(db, 'pedidos', orderId);
+    await updateDoc(orderRef, dataToUpdate);
+    console.log('Pedido actualizado exitosamente:', orderId);
+  } catch (error) {
+    console.error("Error al actualizar pedido:", error);
+    throw error;
+  }
+};
+
+// Función para actualizar estado de pedido (con datos adicionales como método de pago y descuentos)
+export const updateOrderStatus = async (orderId, estado, additionalData = {}) => {
+  try {
+    console.log('🔥 FIREBASE - updateOrderStatus INICIO:', orderId, 'nuevo estado:', estado, 'datos adicionales:', additionalData);
+    console.log('🔍 FIREBASE - Tipo de orderId:', typeof orderId, 'Longitud:', orderId?.length);
+    
+    // Verificar que el orderId no esté vacío
+    if (!orderId) {
+      throw new Error('OrderId no puede estar vacío');
+    }
+    
+    // NUEVO: Verificar si el documento existe antes de intentar actualizarlo
+    const orderRef = doc(db, 'pedidos', orderId);
+    console.log('📄 FIREBASE - Referencia del documento creada:', orderRef.path);
+    console.log('📄 FIREBASE - Verificando existencia del documento...');
+    
+    const docSnap = await getDoc(orderRef);
+    if (!docSnap.exists()) {
+      console.error('❌ FIREBASE - DOCUMENTO NO EXISTE:', orderId);
+      console.log('🔍 FIREBASE - Listando documentos existentes...');
+      
+      // Listar los primeros 5 documentos para debug
+      const querySnapshot = await getDocs(collection(db, 'pedidos'));
+      console.log('📊 FIREBASE - Documentos existentes en colección:');
+      querySnapshot.docs.slice(0, 5).forEach(doc => {
+        console.log(`  - ID: ${doc.id}, orderId: ${doc.data().orderId}, estado: ${doc.data().estado}`);
+      });
+      
+      throw new Error(`Documento no encontrado: ${orderId}`);
+    }
+    
+    console.log('✅ FIREBASE - Documento encontrado:', docSnap.data().orderId || 'sin orderId');
+    const updateData = {
+      estado: estado,
+      fechaActualizacion: new Date(),
+      ...additionalData  // Agregar datos adicionales como metodoPago, descuentos, etc.
+    };
+    
+    // Guardar timestamp específico para estados importantes
+    switch (estado) {
+      case 'cocina':
+        updateData.fechaEnviadoCocina = new Date();
+        break;
+      case 'listo':
+        updateData.fechaListo = new Date();
+        break;
+      case 'entregado':
+        updateData.fechaEntregado = new Date();
+        break;
+      case 'pendiente_pago':
+        updateData.fechaCerradoMesa = new Date();
+        break;
+      case 'cerrado':
+        updateData.fechaCobrado = new Date();
+        break;
+    }
+    
+    console.log('📝 FIREBASE - Datos a actualizar:', JSON.stringify(updateData, null, 2));
+    
+    console.log('🔄 FIREBASE - Ejecutando updateDoc...');
+    try {
+      await updateDoc(orderRef, updateData);
+      console.log('🎯 FIREBASE - updateDoc ejecutado sin errores');
+    } catch (updateError) {
+      console.error('❌ FIREBASE - Error específico en updateDoc:', updateError);
+      console.error('❌ FIREBASE - Código de error:', updateError.code);
+      console.error('❌ FIREBASE - Mensaje:', updateError.message);
+      throw updateError;
+    }
+    
+    console.log('✅ FIREBASE - Estado de pedido actualizado exitosamente:', orderId, estado);
+  } catch (error) {
+    console.error("❌ FIREBASE - Error al actualizar estado:", error);
+    throw error;
+  }
+};
+
+// Función para eliminar un pedido
+export const deleteOrder = async (orderId) => {
+  try {
+    const orderRef = doc(db, 'pedidos', orderId);
+    await deleteDoc(orderRef);
+    console.log('Pedido eliminado exitosamente:', orderId);
+  } catch (error) {
+    console.error("Error al eliminar pedido:", error);
+    throw error;
+  }
+};
+
+// ==========================================
+// SISTEMA DE PEDIDOS - ESTADO DE MESAS
+// ==========================================
+
+// Función para actualizar estado de mesa
+export const updateTableStatus = async (tableNumber, status, orderId = null) => {
+  try {
+    const tableRef = doc(db, 'mesas', tableNumber.toString());
+    const dataToUpdate = {
+      numero: tableNumber,
+      estado: status,
+      fechaUltimaActividad: new Date()
+    };
+    
+    if (orderId) {
+      dataToUpdate.pedidoActual = orderId;
+    } else {
+      dataToUpdate.pedidoActual = null;
+    }
+    
+    // Usar setDoc con merge para crear o actualizar
+    await setDoc(tableRef, dataToUpdate, { merge: true });
+    console.log('Estado de mesa actualizado:', tableNumber, status);
+  } catch (error) {
+    console.error("Error al actualizar estado de mesa:", error);
+    throw error;
+  }
+};
+
+// Función para obtener estados de todas las mesas
+export const getTableStatuses = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'mesas'));
+    const tables = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    return tables;
+  } catch (error) {
+    console.error("Error al obtener estados de mesas:", error);
+    throw error;
+  }
+};
+
+// Función para suscribirse a cambios en estado de mesas
+export const subscribeToTableStatuses = (callback, errorCallback) => {
+  try {
+    const unsubscribe = onSnapshot(collection(db, 'mesas'), 
+      (querySnapshot) => {
+        try {
+          const tables = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          callback(tables);
+        } catch (docError) {
+          console.error("Error procesando documentos de mesas:", docError);
+          // Devolver array vacío en caso de error
+          callback([]);
+        }
+      },
+      (error) => {
+        console.error("Error en suscripción a mesas:", error);
+        // Devolver array vacío en caso de error
+        callback([]);
+        if (errorCallback) errorCallback(error);
+      }
+    );
+    return unsubscribe;
+  } catch (error) {
+    console.error("Error al crear suscripción a mesas:", error);
+    callback([]);
+    if (errorCallback) errorCallback(error);
+  }
+};
+
+// Función para obtener pedido actual de una mesa
+export const getTableCurrentOrder = async (tableNumber) => {
+  try {
+    const tableRef = doc(db, 'mesas', tableNumber.toString());
+    const tableDoc = await getDoc(tableRef);
+    
+    if (tableDoc.exists()) {
+      const tableData = tableDoc.data();
+      if (tableData.pedidoActual) {
+        const orderRef = doc(db, 'pedidos', tableData.pedidoActual);
+        const orderDoc = await getDoc(orderRef);
+        
+        if (orderDoc.exists()) {
+          return {
+            id: orderDoc.id,
+            ...orderDoc.data()
+          };
+        }
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error al obtener pedido actual de mesa:", error);
+    throw error;
+  }
+};
+
+// =================== SISTEMA DE CHECK-IN ===================
+
+/**
+ * Verificar si una mesa tiene conflicto con otra reserva
+ */
+export const checkMesaConflict = async (mesaReal, fecha, turno, excludeReservationId) => {
+  try {
+    const reservationsSnapshot = await getDocs(collection(db, "reservas"));
+    const reservations = reservationsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    // Buscar si otra reserva del mismo día/turno ya está asignada a esa mesa
+    const conflictingReservation = reservations.find(reservation => 
+      reservation.id !== excludeReservationId &&
+      reservation.fecha === fecha &&
+      reservation.turno === turno &&
+      (reservation.mesaAsignada === mesaReal || reservation.mesaReal === mesaReal) &&
+      reservation.status === 'active'
+    );
+
+    return conflictingReservation || null;
+  } catch (error) {
+    console.error("Error al verificar conflicto de mesa:", error);
+    throw error;
+  }
+};
+
+/**
+ * Reasignar automáticamente una reserva a una nueva mesa
+ */
+export const reassignReservation = async (reservationId, newMesaAsignada) => {
+  try {
+    const reservationRef = doc(db, "reservas", reservationId);
+    await updateDoc(reservationRef, {
+      mesaAsignada: newMesaAsignada,
+      reasignada: true,
+      fechaReasignacion: new Date(),
+      updatedAt: new Date()
+    });
+
+    console.log(`Reserva ${reservationId} reasignada automáticamente a mesa ${newMesaAsignada}`);
+    return true;
+  } catch (error) {
+    console.error("Error al reasignar reserva:", error);
+    throw error;
+  }
+};
+
+/**
+ * Encontrar mesa disponible para reasignación automática
+ */
+export const findAvailableTableForReassignment = async (fecha, turno, personas, excludeTableId) => {
+  try {
+    // Obtener todas las reservas del día/turno
+    const reservationsSnapshot = await getDocs(collection(db, "reservas"));
+    const reservations = reservationsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    // Mesas ocupadas por reservas confirmadas
+    const occupiedTables = new Set();
+    reservations.forEach(reservation => {
+      if (reservation.fecha === fecha && 
+          reservation.turno === turno && 
+          reservation.status === 'active') {
+        if (reservation.mesaReal) {
+          occupiedTables.add(reservation.mesaReal);
+        } else if (reservation.mesaAsignada && reservation.estadoCheckIn !== 'confirmado') {
+          occupiedTables.add(reservation.mesaAsignada);
+        }
+      }
+    });
+
+    // Orden de preferencia por capacidad (del MIGRATION_PLAN.md)
+    const RESERVATION_ORDER = {
+      2: [2, 8, 11, 21, 1, 31],
+      4: [9, 10, 6, 12, 13, 3],
+      6: [7]
+    };
+
+    // Buscar mesa disponible según capacidad
+    const tablesForCapacity = RESERVATION_ORDER[personas] || RESERVATION_ORDER[4]; // Default a 4 personas
+    
+    for (const tableId of tablesForCapacity) {
+      if (tableId !== excludeTableId && !occupiedTables.has(tableId)) {
+        return tableId;
+      }
+    }
+
+    // Si no hay mesas específicas disponibles, buscar cualquier mesa disponible
+    const allTables = [1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 21, 31];
+    for (const tableId of allTables) {
+      if (tableId !== excludeTableId && !occupiedTables.has(tableId)) {
+        return tableId;
+      }
+    }
+
+    return null; // No hay mesas disponibles
+  } catch (error) {
+    console.error("Error al buscar mesa disponible para reasignación:", error);
+    throw error;
+  }
+};
+
+/**
+ * Hacer check-in de una reserva con selección de mesa real
+ */
+export const updateReservationCheckIn = async (reservationId, mesaReal) => {
+  try {
+    // Obtener datos de la reserva
+    const reservationRef = doc(db, "reservas", reservationId);
+    const reservationDoc = await getDoc(reservationRef);
+    
+    if (!reservationDoc.exists()) {
+      throw new Error("Reserva no encontrada");
+    }
+
+    const reservationData = reservationDoc.data();
+
+    // Verificar si hay conflicto con otra reserva
+    const conflictingReservation = await checkMesaConflict(
+      mesaReal, 
+      reservationData.fecha, 
+      reservationData.turno, 
+      reservationId
+    );
+
+    let reasignaciones = [];
+
+    // Si hay conflicto, reasignar la otra reserva
+    if (conflictingReservation) {
+      const newTable = await findAvailableTableForReassignment(
+        reservationData.fecha,
+        reservationData.turno,
+        conflictingReservation.personas,
+        mesaReal
+      );
+
+      if (newTable) {
+        await reassignReservation(conflictingReservation.id, newTable);
+        reasignaciones.push({
+          reservationId: conflictingReservation.id,
+          clientName: conflictingReservation.cliente?.nombre,
+          oldTable: conflictingReservation.mesaAsignada || conflictingReservation.mesaReal,
+          newTable: newTable
+        });
+      } else {
+        throw new Error(`No hay mesas disponibles para reasignar la reserva de ${conflictingReservation.cliente?.nombre}`);
+      }
+    }
+
+    // ✅ LÓGICA MEJORADA: Preparar datos para actualizar la reserva
+    const updateData = {
+      mesaReal: mesaReal,
+      estadoCheckIn: 'confirmado',
+      horaLlegada: new Date(),
+      updatedAt: new Date()
+    };
+
+    // 🔄 UNIFICACIÓN CRÍTICA: Si el cliente se sentó en una mesa diferente a la asignada,
+    // limpiar mesaAsignada para que quede solo mesaReal
+    if (reservationData.mesaAsignada && reservationData.mesaAsignada !== mesaReal) {
+      console.log(`🔄 UNIFICANDO MESAS: Cliente se sentó en mesa ${mesaReal} (era ${reservationData.mesaAsignada})`);
+      updateData.mesaAsignada = null; // ✅ Limpiar mesa preasignada
+      console.log(`✅ Mesa preasignada ${reservationData.mesaAsignada} liberada automáticamente`);
+    }
+
+    // Actualizar la reserva con check-in
+    await updateDoc(reservationRef, updateData);
+
+    // Actualizar estado de la mesa a ocupada
+    await updateTableStatus(mesaReal, 'ocupada');
+
+    // Liberar mesa original si era diferente
+    if (reservationData.mesaAsignada && reservationData.mesaAsignada !== mesaReal) {
+      // Solo liberar si no se reasignó a otra reserva
+      const stillAssigned = reasignaciones.some(r => r.newTable === reservationData.mesaAsignada);
+      if (!stillAssigned) {
+        await updateTableStatus(reservationData.mesaAsignada, 'libre');
+      }
+    }
+
+    console.log(`Check-in exitoso: Reserva ${reservationId} en mesa ${mesaReal}`);
+    
+    return {
+      success: true,
+      reasignaciones: reasignaciones,
+      checkInData: {
+        reservationId,
+        mesaReal,
+        clientName: reservationData.cliente?.nombre,
+        horaLlegada: new Date()
+      }
+    };
+
+  } catch (error) {
+    console.error("Error al hacer check-in:", error);
+    throw error;
+  }
+};
+
+/**
+ * Conectar un pedido existente con un cliente (para check-in automático)
+ */
+export const connectOrderToClient = async (orderId, clienteId, reservationId) => {
+  try {
+    const orderRef = doc(db, "pedidos", orderId);
+    await updateDoc(orderRef, {
+      clienteId: clienteId,
+      reservationId: reservationId,
+      clienteConectado: true,
+      fechaConexion: new Date(),
+      updatedAt: new Date()
+    });
+
+    console.log(`Pedido ${orderId} conectado con cliente ${clienteId}`);
+    return true;
+  } catch (error) {
+    console.error("Error al conectar pedido con cliente:", error);
+    throw error;
+  }
+};
+
+/**
+ * Obtener reservas pendientes de check-in para un día/turno específico
+ */
+export const getReservationsPendingCheckIn = async (fecha, turno) => {
+  try {
+    const reservationsSnapshot = await getDocs(collection(db, "reservas"));
+    const reservations = reservationsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    // Filtrar reservas del día/turno que no han hecho check-in
+    const pendingReservations = reservations.filter(reservation =>
+      reservation.fecha === fecha &&
+      reservation.turno === turno &&
+      reservation.status === 'active' &&
+      (!reservation.estadoCheckIn || reservation.estadoCheckIn === 'pendiente')
+    );
+
+    return pendingReservations;
+  } catch (error) {
+    console.error("Error al obtener reservas pendientes de check-in:", error);
+    throw error;
+  }
+};
+
+/**
+ * 🔧 FUNCIÓN DE LIMPIEZA: Unificar mesas en reservas con check-in
+ * Para resolver inconsistencias donde mesaAsignada != mesaReal después del check-in
+ */
+export const cleanupTableAssignments = async () => {
+  try {
+    console.log('🔧 Iniciando limpieza de asignaciones de mesa...');
+    
+    const reservasRef = collection(db, "reservas");
+    const q = query(
+      reservasRef,
+      where("estadoCheckIn", "==", "confirmado")
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const inconsistentReservations = [];
+    let cleanedCount = 0;
+    
+    // Identificar reservas con inconsistencias
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (data.mesaAsignada && data.mesaReal && data.mesaAsignada !== data.mesaReal) {
+        inconsistentReservations.push({
+          id: docSnap.id,
+          clientName: data.cliente?.nombre,
+          mesaAsignada: data.mesaAsignada,
+          mesaReal: data.mesaReal,
+          fecha: data.fecha,
+          turno: data.turno
+        });
+      }
+    });
+    
+    console.log(`🔍 Encontradas ${inconsistentReservations.length} reservas con inconsistencias`);
+    
+    // Limpiar inconsistencias
+    for (const reservation of inconsistentReservations) {
+      try {
+        await updateDoc(doc(db, "reservas", reservation.id), {
+          mesaAsignada: null, // Limpiar mesa preasignada
+          updatedAt: new Date(),
+          cleanedUp: true, // Marcar como limpiado
+          cleanedUpDate: new Date()
+        });
+        
+        console.log(`✅ Limpiado: ${reservation.clientName} - Mesa ${reservation.mesaAsignada} → ${reservation.mesaReal}`);
+        cleanedCount++;
+      } catch (error) {
+        console.error(`❌ Error limpiando reserva ${reservation.id}:`, error);
+      }
+    }
+    
+    console.log(`🔧 Limpieza completada: ${cleanedCount} reservas unificadas`);
+    
+    return {
+      success: true,
+      totalInconsistencies: inconsistentReservations.length,
+      cleanedCount: cleanedCount,
+      details: inconsistentReservations
+    };
+    
+  } catch (error) {
+    console.error("Error al limpiar asignaciones de mesa:", error);
+    throw error;
+  }
+};
+
+/**
+ * 🔍 FUNCIÓN DE DIAGNÓSTICO: Verificar consistencia de mesas
+ * Para reportar inconsistencias sin modificar datos
+ */
+export const checkTableConsistency = async (fecha = null, turno = null) => {
+  try {
+    console.log('🔍 Verificando consistencia de asignaciones de mesa...');
+    
+    const reservasRef = collection(db, "reservas");
+    let q;
+    
+    if (fecha && turno) {
+      q = query(
+        reservasRef,
+        where("fecha", "==", fecha),
+        where("turno", "==", turno),
+        where("estadoCheckIn", "==", "confirmado")
+      );
+    } else {
+      q = query(
+        reservasRef,
+        where("estadoCheckIn", "==", "confirmado")
+      );
+    }
+    
+    const querySnapshot = await getDocs(q);
+    const report = {
+      totalReservations: 0,
+      consistentReservations: 0,
+      inconsistentReservations: 0,
+      inconsistencies: []
+    };
+    
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      report.totalReservations++;
+      
+      if (data.mesaAsignada && data.mesaReal && data.mesaAsignada !== data.mesaReal) {
+        report.inconsistentReservations++;
+        report.inconsistencies.push({
+          id: docSnap.id,
+          clientName: data.cliente?.nombre,
+          mesaAsignada: data.mesaAsignada,
+          mesaReal: data.mesaReal,
+          fecha: data.fecha,
+          turno: data.turno
+        });
+      } else {
+        report.consistentReservations++;
+      }
+    });
+    
+    console.log('📊 Reporte de consistencia:', report);
+    return report;
+    
+  } catch (error) {
+    console.error("Error al verificar consistencia:", error);
+    throw error;
+  }
+};
+
+/**
+ * 🧹 FUNCIÓN DE LIMPIEZA TOTAL: Borrar todos los registros sin tocar las colecciones
+ * Útil para testing y desarrollo - limpia toda la data sin afectar la estructura
+ */
+export const clearAllData = async () => {
+  try {
+    console.log('🧹 Iniciando limpieza total de base de datos...');
+    
+    const collections = [
+      { name: 'reservas', displayName: 'Reservas' },
+      { name: 'pedidos', displayName: 'Pedidos' },
+      { name: 'productos', displayName: 'Productos' },
+      { name: 'proveedores', displayName: 'Proveedores' },
+      { name: 'mesas', displayName: 'Estados de Mesa' },
+      { name: 'clientes', displayName: 'Clientes' },
+      { name: 'lista_espera', displayName: 'Lista de Espera' }
+    ];
+    
+    const results = {
+      success: true,
+      deletedCounts: {},
+      errors: []
+    };
+    
+    // Limpiar cada colección
+    for (const collectionConfig of collections) {
+      try {
+        console.log(`🗑️ Limpiando colección: ${collectionConfig.displayName}...`);
+        
+        const snapshot = await getDocs(collection(db, collectionConfig.name));
+        const deletePromises = [];
+        
+        // Preparar borrado en lotes
+        snapshot.forEach((docSnap) => {
+          deletePromises.push(deleteDoc(doc(db, collectionConfig.name, docSnap.id)));
+        });
+        
+        // Ejecutar borrado
+        await Promise.all(deletePromises);
+        
+        const deletedCount = snapshot.size;
+        results.deletedCounts[collectionConfig.name] = deletedCount;
+        
+        console.log(`✅ ${collectionConfig.displayName}: ${deletedCount} registros eliminados`);
+        
+      } catch (error) {
+        console.error(`❌ Error limpiando ${collectionConfig.displayName}:`, error);
+        results.errors.push({
+          collection: collectionConfig.name,
+          error: error.message
+        });
+      }
+    }
+    
+    // Resumen final
+    const totalDeleted = Object.values(results.deletedCounts).reduce((sum, count) => sum + count, 0);
+    
+    console.log('🧹 Limpieza completada:', {
+      totalDeleted,
+      byCollection: results.deletedCounts,
+      errorsCount: results.errors.length
+    });
+    
+    if (results.errors.length > 0) {
+      results.success = false;
+    }
+    
+    return {
+      ...results,
+      totalDeleted,
+      message: `Limpieza completada: ${totalDeleted} registros eliminados total`
+    };
+    
+  } catch (error) {
+    console.error("Error en limpieza total:", error);
+    throw error;
+  }
+};
+
+/**
+ * 🧹 FUNCIÓN DE LIMPIEZA SELECTIVA: Borrar solo ciertas colecciones
+ * Más seguro para testing específico
+ */
+export const clearSelectedData = async (collectionsToClean = ['reservas', 'pedidos']) => {
+  try {
+    console.log('🧹 Iniciando limpieza selectiva de:', collectionsToClean);
+    
+    const results = {
+      success: true,
+      deletedCounts: {},
+      errors: []
+    };
+    
+    for (const collectionName of collectionsToClean) {
+      try {
+        console.log(`🗑️ Limpiando colección: ${collectionName}...`);
+        
+        const snapshot = await getDocs(collection(db, collectionName));
+        const deletePromises = [];
+        
+        snapshot.forEach((docSnap) => {
+          deletePromises.push(deleteDoc(doc(db, collectionName, docSnap.id)));
+        });
+        
+        await Promise.all(deletePromises);
+        
+        const deletedCount = snapshot.size;
+        results.deletedCounts[collectionName] = deletedCount;
+        
+        console.log(`✅ ${collectionName}: ${deletedCount} registros eliminados`);
+        
+      } catch (error) {
+        console.error(`❌ Error limpiando ${collectionName}:`, error);
+        results.errors.push({
+          collection: collectionName,
+          error: error.message
+        });
+      }
+    }
+    
+    const totalDeleted = Object.values(results.deletedCounts).reduce((sum, count) => sum + count, 0);
+    
+    if (results.errors.length > 0) {
+      results.success = false;
+    }
+    
+    return {
+      ...results,
+      totalDeleted,
+      message: `Limpieza selectiva completada: ${totalDeleted} registros eliminados`
+    };
+    
+  } catch (error) {
+    console.error("Error en limpieza selectiva:", error);
+    throw error;
+  }
+};
+
+// ==========================================
+// SISTEMA DE ARQUEO DE CAJA
+// ==========================================
+
+// Función para guardar arqueo de caja
+export const addCashRegister = async (cashRegisterData) => {
+  try {
+    console.log('Guardando arqueo de caja:', cashRegisterData);
+
+    const dataToSave = {
+      ...cashRegisterData,
+      createdAt: new Date(),
+      status: 'completed'
+    };
+
+    const docRef = await addDoc(collection(db, 'arqueos_caja'), dataToSave);
+    
+    console.log('Arqueo de caja guardado exitosamente:', {
+      id: docRef.id,
+      fecha: dataToSave.fecha,
+      turno: dataToSave.turno,
+      total: dataToSave.totales.total
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error("Error al guardar arqueo de caja:", error);
+    throw error;
+  }
+};
+
+// Función para obtener arqueos de caja
+export const getCashRegisters = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'arqueos_caja'));
+    const cashRegisters = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    return cashRegisters;
+  } catch (error) {
+    console.error("Error al obtener arqueos de caja:", error);
+    throw error;
+  }
+};
+
+// Función para suscribirse a cambios en arqueos de caja
+export const subscribeToCashRegisters = (callback, errorCallback) => {
+  try {
+    const unsubscribe = onSnapshot(collection(db, 'arqueos_caja'), 
+      (querySnapshot) => {
+        try {
+          const cashRegisters = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          callback(cashRegisters);
+        } catch (docError) {
+          console.error("Error procesando documentos de arqueos:", docError);
+          callback([]);
+        }
+      },
+      (error) => {
+        console.error("Error en suscripción a arqueos:", error);
+        callback([]);
+        if (errorCallback) errorCallback(error);
+      }
+    );
+    return unsubscribe;
+  } catch (error) {
+    console.error("Error al crear suscripción a arqueos:", error);
+    callback([]);
+    if (errorCallback) errorCallback(error);
+  }
+};
+
+// Función para obtener arqueos de caja por fecha
+export const getCashRegistersByDate = async (fecha) => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'arqueos_caja'));
+    const cashRegisters = querySnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .filter(register => register.fecha === fecha);
+    return cashRegisters;
+  } catch (error) {
+    console.error("Error al obtener arqueos por fecha:", error);
+    throw error;
+  }
+};
+
+// Función para obtener arqueos de caja por rango de fechas
+export const getCashRegistersByDateRange = async (fechaInicio, fechaFin) => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'arqueos_caja'));
+    const cashRegisters = querySnapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+      .filter(register => 
+        register.fecha >= fechaInicio && register.fecha <= fechaFin
+      );
+    return cashRegisters;
+  } catch (error) {
+    console.error("Error al obtener arqueos por rango de fechas:", error);
     throw error;
   }
 };

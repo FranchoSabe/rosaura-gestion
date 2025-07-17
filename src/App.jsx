@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ClientView } from './components/ClientView';
-import { LoginView } from './components/LoginView';
+import { ClientView } from './apps/client/pages/ClientView/ClientView';
+import { LoginView } from './apps/client/pages/Login/LoginView';
 import AppRouter from './router/AppRouter';
 import { NotificationContainer, ConfirmationModal } from './shared/components/ui';
 import { 
@@ -12,6 +12,7 @@ import {
   deleteReservation,
   searchReservation,
   subscribeToReservations, 
+  subscribeToReservationsByDate,
   subscribeToClients,
   addWaitingReservation,
   subscribeToWaitingReservations,
@@ -24,9 +25,12 @@ import {
 } from './firebase';
 import { assignTableToNewReservation, DEFAULT_BLOCKED_TABLES, TABLES_LAYOUT } from './utils/mesaLogic';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { parsePhoneNumber } from 'react-phone-number-input';
+
 import { formatDateToString } from './utils';
 import { db } from './firebase';
+import { isTurnoClosed, getAvailableHours } from './shared/constants/operatingDays';
+import { calculateAvailableSlots, isValidReservationDate } from './shared/services/reservationLogic';
+import { createReservation } from './shared/services/reservationService';
 
 // --- CONFIGURACIÓN Y DATOS ---
 const LOGO_URL = null; // Usamos texto con tipografía Daniel en lugar de imagen
@@ -57,12 +61,16 @@ function App() {
   const [notifications, setNotifications] = useState([]);
   const [confirmation, setConfirmation] = useState(null);
   const [editingReservation, setEditingReservation] = useState(null);
-
-  // Suscribirse a cambios en tiempo real
+  
+  // 🎯 Suscribirse a reservas del día actual únicamente 
   useEffect(() => {
-    const unsubscribeReservations = subscribeToReservations((reservas) => {
+    // Obtener fecha actual en formato YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+    
+    console.log(`🎯 Cargando reservas del día: ${today}`);
+    const unsubscribeReservations = subscribeToReservationsByDate((reservas) => {
       setData(prev => ({ ...prev, reservas }));
-    });
+    }, today);
 
     const unsubscribeClients = subscribeToClients((clientes) => {
       setData(prev => ({ ...prev, clientes }));
@@ -78,17 +86,77 @@ function App() {
       unsubscribeClients();
       unsubscribeWaitingList();
     };
-  }, []);
+  }, []); // Solo ejecutar una vez al montar el componente
 
-  // Función para mostrar notificaciones (migrada desde AdminView)
-  const showNotification = useCallback((type, message) => {
-    const id = Date.now();
-    setNotifications(prev => [...prev, { id, type, message }]);
+  // 🔔 SISTEMA DE NOTIFICACIONES MEJORADO
+  // Categorías de notificaciones con diferentes comportamientos
+  const NOTIFICATION_CATEGORIES = {
+    CRITICAL: 'critical',    // Errores críticos - siempre mostrar
+    IMPORTANT: 'important',  // Acciones importantes - mostrar
+    ROUTINE: 'routine',      // Acciones rutinarias - mostrar menos
+    DEBUG: 'debug'           // Información de debug - no mostrar en producción
+  };
+
+  // Configuración de notificaciones por tipo
+  const getNotificationConfig = (message) => {
+    // Notificaciones críticas (siempre mostrar)
+    if (message.includes('Error') || message.includes('error')) {
+      return { category: NOTIFICATION_CATEGORIES.CRITICAL, duration: 6000, priority: 'high' };
+    }
     
-    // Auto-remove después de 4 segundos
+    // Notificaciones importantes (mostrar)
+    if (message.includes('cerrada') || message.includes('cobrar') || message.includes('descuento') || message.includes('cancelado')) {
+      return { category: NOTIFICATION_CATEGORIES.IMPORTANT, duration: 4000, priority: 'medium' };
+    }
+    
+    // Notificaciones rutinarias (mostrar menos tiempo)
+    if (message.includes('enviado a cocina') || message.includes('entregado') || message.includes('Estado actualizado')) {
+      return { category: NOTIFICATION_CATEGORIES.ROUTINE, duration: 2000, priority: 'low' };
+    }
+    
+    // Notificaciones de debug (no mostrar en operación normal)
+    if (message.includes('Recargados') || message.includes('inicializado') || message.includes('reiniciado')) {
+      return { category: NOTIFICATION_CATEGORIES.DEBUG, duration: 1000, priority: 'low' };
+    }
+    
+    return { category: NOTIFICATION_CATEGORIES.ROUTINE, duration: 3000, priority: 'medium' };
+  };
+
+  const showNotification = useCallback((message, type = 'info') => {
+    const config = getNotificationConfig(message);
+    
+    // No mostrar notificaciones de debug en operación normal
+    if (config.category === NOTIFICATION_CATEGORIES.DEBUG) {
+      console.log(`[DEBUG] ${message}`);
+      return;
+    }
+    
+    // Limitar notificaciones rutinarias (máximo 3 simultáneas)
+    if (config.category === NOTIFICATION_CATEGORIES.ROUTINE) {
+      setNotifications(prev => {
+        const routineCount = prev.filter(n => n.category === NOTIFICATION_CATEGORIES.ROUTINE).length;
+        if (routineCount >= 2) {
+          return prev; // No agregar más notificaciones rutinarias
+        }
+        return prev;
+      });
+    }
+    
+    const id = Date.now();
+    const notification = { 
+      id, 
+      type, 
+      message, 
+      category: config.category,
+      priority: config.priority
+    };
+    
+    setNotifications(prev => [...prev, notification]);
+    
+    // Auto-remove con duración variable según importancia
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id));
-    }, 4000);
+    }, config.duration);
   }, []);
 
   const closeNotification = useCallback((id) => {
@@ -115,8 +183,11 @@ function App() {
   const getAvailableSlotsDynamic = async (fecha, turno) => {
     const fechaObj = new Date(fecha + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
-    if (dayOfWeek === 1) return []; // Lunes cerrado ambos turnos
-    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos cerrado turno noche
+    
+    // Usar nueva función unificada para verificar si está cerrado
+    if (isTurnoClosed(dayOfWeek, turno)) {
+      return []; // Día/turno cerrado según configuración
+    }
     
     try {
       // Cargar bloqueos específicos para esta fecha/turno
@@ -204,131 +275,70 @@ function App() {
       
     } catch (error) {
       console.error('Error al cargar bloqueos para cupos dinámicos:', error);
-      // Fallback al sistema anterior en caso de error
-      return getAvailableSlots(fecha, turno);
+      // Fallback al sistema anterior en caso de error - convertir a formato simple
+      const slots = await getAvailableSlots(fecha, turno);
+      return slots.map(slot => slot.horario);
     }
   };
 
-  const getAvailableSlots = (fecha, turno) => {
+  const getAvailableSlots = async (fecha, turno) => {
     const fechaObj = new Date(fecha + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
-    if (dayOfWeek === 1) return []; // Lunes cerrado ambos turnos
-    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos cerrado turno noche
     
-    // Obtener reservas existentes para esta fecha/turno
+    // Usar nueva función unificada para verificar si está cerrado
+    if (isTurnoClosed(dayOfWeek, turno)) {
+      return []; // Día/turno cerrado según configuración
+    }
+    
+    // Filtrar reservas por fecha y turno
     const reservasDelDia = data.reservas.filter(
       r => r.fecha === fecha && r.turno === turno
     );
     
-        // Capacidad por tipo de mesa para todo el turno
-    const capacidad = {
-      'pequena': { max: 4, size: 2 },  // 4 mesas para 1-2 personas por turno
-      'mediana': { max: 4, size: 4 },  // 4 mesas para 3-4 personas por turno
-      'grande': { max: 2, size: 6 }    // 2 mesas para 5-6 personas por turno (Mesa 7 + combinación 2+3)
-    };
-
-    // Contar mesas ocupadas por tipo para todo el turno
-    const mesasOcupadas = {
-      pequena: 0,
-      mediana: 0,
-      grande: 0
-    };
-    
+    // Calcular ocupación por horario
+    const ocupacionPorHorario = {};
     reservasDelDia.forEach(reserva => {
-      if (reserva.personas <= 2) mesasOcupadas.pequena++;
-      else if (reserva.personas <= 4) mesasOcupadas.mediana++;
-      else mesasOcupadas.grande++;
+      const horario = reserva.horario;
+      if (!ocupacionPorHorario[horario]) {
+        ocupacionPorHorario[horario] = 0;
+      }
+      ocupacionPorHorario[horario] += reserva.personas || 1;
     });
     
-    // Verificar si hay capacidad disponible para el tamaño de reserva actual
-    const hayCapacidad = 
-      (reservaData.personas <= 2 && mesasOcupadas.pequena < capacidad.pequena.max) ||
-      (reservaData.personas <= 4 && mesasOcupadas.mediana < capacidad.mediana.max) ||
-      (reservaData.personas > 4 && mesasOcupadas.grande < capacidad.grande.max);
-    
-    // Si hay capacidad, devolver todos los horarios disponibles
-    const horariosDisponibles = hayCapacidad ? HORARIOS[turno] : [];
-    
-    return horariosDisponibles;
+    // Generar slots con cupos disponibles (formato requerido por CreateReservationModal)
+    return HORARIOS[turno].map(horario => ({
+      horario,
+      cuposDisponibles: Math.max(0, 30 - (ocupacionPorHorario[horario] || 0)) // 30 personas máximo por horario
+    }));
   };
 
-  const getAvailableSlotsForEdit = (fecha, turno, personas, excludeReservationId) => {
-    const fechaObj = new Date(fecha + "T00:00:00");
-    const dayOfWeek = fechaObj.getDay();
-    if (dayOfWeek === 1) return []; // Lunes cerrado ambos turnos
-    if (turno === 'noche' && dayOfWeek === 0) return []; // Domingos cerrado turno noche
-    
-    // Obtener reservas existentes para esta fecha/turno, excluyendo la que estamos editando
-    const reservasDelDia = data.reservas.filter(
-      r => r.fecha === fecha && r.turno === turno && r.id !== excludeReservationId
+  // FUNCIÓN SIMPLIFICADA: Usar lógica unificada
+  const getAvailableSlotsDynamicSimplified = async (fecha, turno) => {
+    return await calculateAvailableSlots(
+      fecha,
+      turno,
+      reservaData?.personas || null,
+      null, // Sin exclusión de reserva
+      data.reservas,
+      handleLoadBlockedTables,
+      false // No es admin mode
     );
-    
-        // Capacidad por tipo de mesa para todo el turno
-    const capacidad = {
-      'pequena': { max: 4, size: 2 },  // 4 mesas para 1-2 personas por turno
-      'mediana': { max: 4, size: 4 },  // 4 mesas para 3-4 personas por turno
-      'grande': { max: 2, size: 6 }    // 2 mesas para 5-6 personas por turno (Mesa 7 + combinación 2+3)
-    };
+  };
 
-    // Contar mesas ocupadas por tipo para todo el turno
-    const mesasOcupadas = {
-      pequena: 0,
-      mediana: 0,
-      grande: 0
-    };
-    
-    reservasDelDia.forEach(reserva => {
-      if (reserva.personas <= 2) mesasOcupadas.pequena++;
-      else if (reserva.personas <= 4) mesasOcupadas.mediana++;
-      else mesasOcupadas.grande++;
-    });
-    
-    // Verificar si hay capacidad disponible para el tamaño de reserva actual
-    const hayCapacidad = 
-      (personas <= 2 && mesasOcupadas.pequena < capacidad.pequena.max) ||
-      (personas <= 4 && mesasOcupadas.mediana < capacidad.mediana.max) ||
-      (personas > 4 && mesasOcupadas.grande < capacidad.grande.max);
-    
-    // Si hay capacidad, devolver todos los horarios disponibles
-    const horariosDisponibles = hayCapacidad ? HORARIOS[turno] : [];
-    
-    return horariosDisponibles;
+  const getAvailableSlotsForEdit = async (fecha, turno, personas, excludeReservationId) => {
+    return await calculateAvailableSlots(
+      fecha,
+      turno,
+      personas,
+      excludeReservationId,
+      data.reservas,
+      handleLoadBlockedTables,
+      true // Admin mode para edición
+    );
   };
 
   const isValidDate = (fecha, turno = null, adminOverride = false) => {
-    if (adminOverride) return true;
-    if (!fecha) return false;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const selectedDate = new Date(fecha + "T00:00:00");
-    
-    // 1. No más de 1 mes de anticipación
-    const maxDate = new Date();
-    maxDate.setMonth(maxDate.getMonth() + 1);
-    
-    // 2. Mínimo 2 horas de anticipación para reservas del día actual
-    const now = new Date();
-    const minTimeToday = new Date();
-    minTimeToday.setHours(now.getHours() + 2); // 2 horas antes
-    
-    // Si es hoy, verificar que haya al menos 2 horas de anticipación
-    if (selectedDate.toDateString() === today.toDateString()) {
-      // Usar el turno pasado como parámetro o el del estado global
-      const turnoToUse = turno || reservaData.turno;
-      const primerTurno = HORARIOS[turnoToUse]?.[0];
-      if (primerTurno) {
-        const [horas, minutos] = primerTurno.split(':').map(Number);
-        const horaTurno = new Date();
-        horaTurno.setHours(horas, minutos, 0, 0);
-        
-        return horaTurno > minTimeToday;
-      }
-      return false;
-    }
-    
-    return selectedDate >= today && selectedDate <= maxDate;
+    return isValidReservationDate(fecha, turno || 'mediodia', adminOverride);
   };
 
   const handleLogin = async (username, password) => {
@@ -399,7 +409,7 @@ function App() {
       return;
     }
     // Usar el sistema dinámico de cupos que respeta los bloqueos
-    const slots = await getAvailableSlotsDynamic(fechaString, reservaData.turno);
+          const slots = await getAvailableSlotsDynamicSimplified(fechaString, reservaData.turno);
     
     // Si no hay slots disponibles, ir directamente a recopilar datos para lista de espera
     if (slots.length === 0) {
@@ -426,142 +436,45 @@ function App() {
     // Prevenir envíos duplicados
     if (isSubmitting) return;
     setIsSubmitting(true);
+    
     try {
-      // Convertir fecha a string si es necesario
-      const fechaString = formatDateToString(reservaData.fecha);
+      console.log('🔄 Creando reserva desde cliente con servicio unificado:', reservaData);
       
-      // Verificar si hay cupo disponible ANTES de crear el cliente
-      const slotsDisponibles = await getAvailableSlotsDynamic(fechaString, reservaData.turno);
-      
-      // Si viene marcado como willGoToWaitingList O no hay slots disponibles
-      if (reservaData.willGoToWaitingList || slotsDisponibles.length === 0) {
-        // No hay cupo - agregar a lista de espera
-        const phoneNumber = parsePhoneNumber(reservaData.cliente.telefono);
-        const newClient = {
-          nombre: reservaData.cliente.nombre,
-          telefono: phoneNumber ? phoneNumber.number.slice(1) : reservaData.cliente.telefono, // Remover + inicial
-          ultimaReserva: fechaString,
-          listaNegra: false
-        };
-        
-        // Agregar comentarios solo si no está vacío/undefined
-        if (reservaData.cliente.comentarios && reservaData.cliente.comentarios.trim() !== '') {
-          newClient.comentarios = reservaData.cliente.comentarios;
-        }
+      const result = await createReservation({
+        reservationData: reservaData,
+        existingReservations: data.reservas,
+        getAvailableSlots: getAvailableSlotsDynamicSimplified,
+        loadBlockedTables: handleLoadBlockedTables,
+        isAdmin: false // Modo cliente: validaciones estrictas
+      });
 
-        console.log('Sin cupo disponible - agregando a lista de espera');
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
-        // Agregar cliente a la base de datos
-        const clientId = await addClient(newClient);
+      console.log('✅ Resultado de creación:', result);
 
-        // Crear entrada en lista de espera
-        const waitingReservation = {
-          fecha: fechaString,
-          turno: reservaData.turno,
-          horario: reservaData.horario || HORARIOS[reservaData.turno][0], // Horario preferido o el primero disponible
-          personas: reservaData.personas,
-          clienteId: clientId,
-          cliente: newClient
-        };
-
-        const { id, waitingId } = await addWaitingReservation(waitingReservation);
-        
-        // Actualizar estado para mostrar mensaje de lista de espera
+      // Manejar resultado según el tipo
+      if (result.type === 'waiting') {
+        // Lista de espera
         setReservaData({
           ...reservaData,
-          id,
-          waitingId,
-          isWaitingList: true
+          ...result.data
         });
-        
         setShowWaitingListModal(true);
         setCurrentScreen('lista-espera');
-        return;
-      }
-        
-      // Hay cupo disponible - proceder normalmente
-      const phoneNumber = parsePhoneNumber(reservaData.cliente.telefono);
-      const newClient = {
-        nombre: reservaData.cliente.nombre,
-        telefono: phoneNumber ? phoneNumber.number.slice(1) : reservaData.cliente.telefono, // Remover + inicial
-        ultimaReserva: fechaString,
-        listaNegra: false
-      };
-      
-      // Agregar comentarios solo si no está vacío/undefined
-      if (reservaData.cliente.comentarios && reservaData.cliente.comentarios.trim() !== '') {
-        newClient.comentarios = reservaData.cliente.comentarios;
-      }
-
-      console.log('Creando nuevo cliente:', newClient);
-
-      // Agregar cliente a la base de datos
-      const clientId = await addClient(newClient);
-
-      // Crear nueva reserva temporal para asignación de mesa
-      const tempReservation = {
-        fecha: fechaString,
-        turno: reservaData.turno,
-        horario: reservaData.horario,
-        personas: reservaData.personas,
-        clienteId: clientId,
-        cliente: newClient
-      };
-
-      // Intentar asignar mesa automáticamente usando los bloqueos específicos del turno
-      let blockedTables;
-      try {
-        const blockedTablesForDate = await handleLoadBlockedTables(fechaString, reservaData.turno);
-        blockedTables = new Set(blockedTablesForDate || []);
-        
-        // Si no hay bloqueos guardados, usar los predeterminados
-        if (blockedTables.size === 0) {
-          Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
-            blockedTables.add(tableId);
-          });
-        }
-      } catch (error) {
-        console.error('Error al cargar bloqueos, usando predeterminados:', error);
-        blockedTables = new Set();
-        Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
-          blockedTables.add(tableId);
-        });
-      }
-
-      const mesaAsignada = assignTableToNewReservation(tempReservation, data.reservas, blockedTables);
-
-      // Crear nueva reserva con mesa asignada (o null si no hay disponible)
-      const newReservation = {
-        ...tempReservation,
-        mesaAsignada: mesaAsignada
-      };
-
-      console.log('Creando nueva reserva:', newReservation);
-      if (mesaAsignada) {
-        console.log('Mesa asignada automáticamente:', mesaAsignada);
       } else {
-        console.log('No se pudo asignar mesa automáticamente');
+        // Reserva confirmada
+        setReservaData({
+          ...reservaData,
+          ...result.data
+        });
+        setShowReservationModal(true);
+        setCurrentScreen('confirmacion');
       }
 
-      // Agregar reserva a la base de datos
-      const { id, reservationId } = await addReservation(newReservation);
-      
-      console.log('Reserva creada con éxito:', { id, reservationId });
-      
-      // Actualizar los datos de la reserva con el ID
-      const updatedReservaData = {
-        ...reservaData,
-        id,
-        reservationId
-      };
-      
-      console.log('Actualizando estado con nueva reserva:', updatedReservaData);
-      
-      setReservaData(updatedReservaData);
-      setShowReservationModal(true);
-      setCurrentScreen('confirmacion');
     } catch (error) {
-      console.error("Error al crear reserva:", error);
+      console.error("❌ Error al crear reserva:", error);
       alert("Error al crear la reserva. Por favor, intenta nuevamente.");
     } finally {
       setIsSubmitting(false);
@@ -581,6 +494,35 @@ function App() {
     }
     
     return date.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  // Función específica para crear reservas desde el panel de admin usando el servicio unificado
+  const handleSaveReservation = async (reservationData) => {
+    try {
+      console.log('🔄 Creando reserva desde admin con servicio unificado:', reservationData);
+      
+      const result = await createReservation({
+        reservationData,
+        existingReservations: data.reservas,
+        getAvailableSlots,
+        loadBlockedTables: handleLoadBlockedTables,
+        isAdmin: true // Modo admin: sin restricciones estrictas
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      console.log('✅ Reserva admin creada exitosamente:', result.data);
+      
+      // ✅ NO actualizar estado manual - la suscripción en tiempo real lo hará automáticamente
+      // Esto evita duplicados en la lista de reservas
+      
+      return result.data;
+    } catch (error) {
+      console.error('❌ Error al crear reserva desde admin:', error);
+      throw error;
+    }
   };
 
   const handleUpdateReservation = async (reservationId, updatedData, adminOverride = false) => {
@@ -663,7 +605,7 @@ function App() {
   const handleConfirmWaitingReservation = async (waitingReservationId, waitingData, selectedHorario, currentBlocked = null) => {
     try {
       // Verificar que aún hay cupo disponible antes de confirmar
-      const slotsDisponibles = getAvailableSlots(waitingData.fecha, waitingData.turno);
+      const slotsDisponibles = await getAvailableSlots(waitingData.fecha, waitingData.turno);
       if (slotsDisponibles.length === 0) {
         throw new Error('Ya no hay cupos disponibles para este turno.');
       }
@@ -805,6 +747,7 @@ function App() {
       onUpdateClientNotes={handleUpdateClientNotes}
       onUpdateReservation={handleUpdateReservation}
       onDeleteReservation={handleDeleteReservation}
+      handleSaveReservation={handleSaveReservation}
       onConfirmWaitingReservation={handleConfirmWaitingReservation}
       onDeleteWaitingReservation={handleDeleteWaitingReservation}
       onMarkAsNotified={handleMarkAsNotified}

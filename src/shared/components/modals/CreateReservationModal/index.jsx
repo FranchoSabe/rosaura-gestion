@@ -134,9 +134,14 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
         console.log('Creating reservation data:', sanitizedData);
       }
 
-      await onSave(sanitizedData);
-      showNotification?.('success', 'Reserva creada exitosamente');
-      onClose();
+      if (typeof onSave === 'function') {
+        await onSave(sanitizedData);
+        showNotification?.('success', 'Reserva creada exitosamente');
+        onClose();
+      } else {
+        showNotification?.('error', 'Función de guardado no disponible');
+        console.error('onSave prop is not a function:', onSave);
+      }
     } catch (error) {
       showNotification?.('error', 'Error al crear la reserva');
       console.error('Error creating reservation:', error);

@@ -1,0 +1,262 @@
+/* Página de Configuración */
+.reservasContainer {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header de la página */
+.pageHeader {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border-left: 4px solid #6c757d;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.titleSection {
+  flex: 1;
+}
+
+.titleWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.titleWithIcon svg {
+  color: #6c757d;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.pageSubtitle {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.createButton:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* Barra de filtros */
+.filtersBar {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.filtersContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.searchSection {
+  flex: 1;
+  max-width: 400px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.searchBox svg {
+  color: #6c757d;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #212529;
+}
+
+.searchInput::placeholder {
+  color: #6c757d;
+}
+
+.filterSection {
+  display: flex;
+  gap: 8px;
+}
+
+.filterButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: white;
+  color: #6c757d;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterButton:hover {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+/* Contenido principal */
+.mainContent {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  min-height: 400px;
+}
+
+/* Mensaje de desarrollo */
+.developmentNotice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  text-align: center;
+  min-height: 400px;
+}
+
+.noticeIcon {
+  margin-bottom: 24px;
+  color: #6c757d;
+  opacity: 0.7;
+}
+
+.noticeTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0 0 12px 0;
+}
+
+.noticeDescription {
+  font-size: 16px;
+  color: #6c757d;
+  margin: 0 0 32px 0;
+  max-width: 500px;
+}
+
+.featuresList {
+  text-align: left;
+  max-width: 400px;
+  margin-bottom: 32px;
+}
+
+.featuresList h3 {
+  font-size: 18px;
+  color: #212529;
+  margin: 0 0 16px 0;
+}
+
+.featuresList ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.featuresList li {
+  padding: 8px 0;
+  color: #495057;
+  font-size: 14px;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.featuresList li:last-child {
+  border-bottom: none;
+}
+
+.temporaryMessage {
+  padding: 16px 24px;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  max-width: 500px;
+}
+
+.temporaryMessage p {
+  margin: 0;
+  color: #155724;
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reservasContainer {
+    padding: 16px;
+  }
+  
+  .headerContent {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filtersContent {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .searchSection {
+    max-width: 100%;
+  }
+  
+  .developmentNotice {
+    padding: 40px 20px;
+  }
+  
+  .pageTitle {
+    font-size: 20px;
+  }
+  
+  .noticeTitle {
+    font-size: 20px;
+  }
+} 

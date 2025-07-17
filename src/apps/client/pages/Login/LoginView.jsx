@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ClientLayout from './ClientLayout';
+import ClientLayout from '../../layout/ClientLayout';
 import styles from './LoginView.module.css';
 
 export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
@@ -67,4 +67,4 @@ export const LoginView = ({ handleLogin, setScreen, BACKGROUND_IMAGE_URL }) => {
             </form>
         </ClientLayout>
     );
-};
+}; 

@@ -3,16 +3,16 @@ import { Calendar, Clock, Users, Phone, MessageCircle, ChevronLeft, Check, Alert
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { es } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
-import "../datepicker-custom.css";
-import ClientLayout from './ClientLayout';
+import "../../../../datepicker-custom.css";
+import ClientLayout from '../../layout/ClientLayout';
 import styles from './ClientView.module.css';
-import buttonStyles from '../styles/shared/Buttons.module.css';
-import ReservationDetails from './ReservationDetails';
+import ReservationDetails from '../../../../components/ReservationDetails';
 import { isValidPhoneNumber, parsePhoneNumber } from 'react-phone-number-input';
-import { PhoneInput } from '../shared/components/ui/Input';
-import { formatDateToString } from '../utils';
+import { PhoneInput } from '../../../../shared/components/ui/Input';
+import { formatDateToString } from '../../../../utils';
 // Importing the new UI components
-import { Button, Card, ProgressIndicator } from '../shared/components/ui';
+import { Button, Card, ProgressIndicator } from '../../../../shared/components/ui';
+import { isTurnoClosed, isDayClosed, getClosedDayMessage, MONDAY_RESERVATIONS_ENABLED } from '../../../../shared/constants/operatingDays';
 
 // Registrar el locale español
 registerLocale('es', es);
@@ -53,13 +53,15 @@ const SearchReservationForm = ({ onSearch, onClose }) => {
           />
           <p className={styles.helpText}>Ingresa el código que recibiste en tu confirmación</p>
         </div>
-        <button
+        <Button
           type="submit"
-          className={buttonStyles.primaryButton}
+          variant="primary"
+          size="md"
+          leftIcon={<FileSearch size={18} />}
+          fullWidth
         >
-          <FileSearch size={18} />
           Buscar Reserva
-        </button>
+        </Button>
       </form>
     </div>
   );
@@ -253,14 +255,14 @@ export const ClientView = ({
     const fechaObj = new Date(dateString + "T00:00:00");
     const dayOfWeek = fechaObj.getDay();
     
-    // Verificar si el día está cerrado
-    if (dayOfWeek === 1) return 'closed'; // Lunes cerrado ambos turnos
+    // Verificar si el día está cerrado usando nueva función
+    if (isDayClosed(dayOfWeek)) return 'closed';
     
     // Si no hay turno o personas seleccionadas, no mostrar indicador
     if (!turno || !personas) return 'no-turno';
     
-    // Si es domingo y turno noche, está cerrado
-    if (dayOfWeek === 0 && turno === 'noche') return 'closed';
+    // Verificar si el turno específico está cerrado
+    if (isTurnoClosed(dayOfWeek, turno)) return 'closed';
     
     // Capacidad total por turno
     const capacidadTotal = {
@@ -557,7 +559,8 @@ export const ClientView = ({
     const weekDays = generateWeekDays();
     
     const isDayDisabled = (date) => {
-      if (date.getDay() === 1) return true; // Lunes cerrado
+      const dayOfWeek = date.getDay();
+      if (isDayClosed(dayOfWeek)) return true; // Usar nueva función
       if (date > maxDate) return true;
       if (date < today) return true;
       return false;
@@ -662,12 +665,14 @@ export const ClientView = ({
                       const selectedDate = new Date(date);
                       selectedDate.setHours(0, 0, 0, 0);
                       
-                      // Verificar que no sea lunes
-                      if (selectedDate.getDay() !== 1) {
+                      const dayOfWeek = selectedDate.getDay();
+                      
+                      // Verificar que el día esté disponible
+                      if (!isDayClosed(dayOfWeek)) {
                         setReservaData({ ...reservaData, fecha: selectedDate });
                         setShowDatePicker(false);
                       } else {
-                        alert('Los lunes permanecemos cerrados. Por favor selecciona otro día.');
+                        alert(getClosedDayMessage(dayOfWeek));
                       }
                     }
                   }}
@@ -678,8 +683,8 @@ export const ClientView = ({
                     return maxDate;
                   })()}
                   filterDate={(date) => {
-                    // Filtrar lunes
-                    return date.getDay() !== 1;
+                    // Filtrar días cerrados usando nueva función
+                    return !isDayClosed(date.getDay());
                   }}
                   renderDayContents={(day, date) => (
                     <div className="relative flex items-center justify-center w-full h-full">
@@ -696,7 +701,10 @@ export const ClientView = ({
               
               <div className="mt-4 text-center space-y-2">
                 <p className="text-sm text-white opacity-70">
-                  Los lunes permanecemos cerrados
+                  {MONDAY_RESERVATIONS_ENABLED ? 
+                    'Horarios de atención disponibles' : 
+                    'Los lunes permanecemos cerrados temporalmente'
+                  }
                 </p>
                 
               </div>
@@ -860,7 +868,8 @@ export const ClientView = ({
     const weekDays = generateWeekDays();
     
     const isDayDisabled = (date) => {
-      if (date.getDay() === 1) return true; // Lunes cerrado
+      const dayOfWeek = date.getDay();
+      if (isDayClosed(dayOfWeek)) return true; // Usar nueva función
       if (date > maxDate) return true;
       if (date < today) return true;
       return false;
@@ -1511,4 +1520,4 @@ export const ClientView = ({
   }
   
   return <div>Cargando...</div>
-};
+}; 

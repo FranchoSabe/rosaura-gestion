@@ -37,6 +37,31 @@ export const UNIFIED_TABLES_LAYOUT = [
   { id: 31, x: 120, y: 380, width: 45, height: 45, capacity: 2 },
 ];
 
+/**
+ * Función para rotar el layout 90 grados en sentido horario
+ * Mantiene las posiciones relativas pero cambia la orientación
+ */
+export const rotateLayout90Degrees = (layout, originalWidth = 235, originalHeight = 520) => {
+  return layout.map(table => ({
+    ...table,
+    // Rotar coordenadas: x' = y, y' = originalWidth - x - width
+    x: table.y,
+    y: originalWidth - table.x - table.width,
+    // Intercambiar width y height
+    width: table.height,
+    height: table.width
+  }));
+};
+
+// Layout horizontal: rotación del layout original
+export const HORIZONTAL_TABLES_LAYOUT = rotateLayout90Degrees(UNIFIED_TABLES_LAYOUT);
+
+// Dimensiones para el layout horizontal
+export const LAYOUT_DIMENSIONS = {
+  vertical: { width: 235, height: 520 },
+  horizontal: { width: 450, height: 235 } // Reducido de 520 a 450 para eliminar espacio vacío derecho
+};
+
 // Orden de asignación de mesas optimizado
 export const UNIFIED_RESERVATION_ORDER = {
   2: [8, 11, 21, 1, 31, 2, 14, 24], // Optimizado para preservar walk-ins

@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Users, LogOut, Menu, X } from 'lucide-react';
+import { 
+  Users, 
+  LogOut, 
+  Menu, 
+  X, 
+  BarChart3, 
+  Calendar, 
+  Truck, 
+  TrendingUp, 
+  UserCheck, 
+  Settings,
+  ChefHat,
+  ClipboardList
+} from 'lucide-react';
 import CreateReservationModal from '../../../shared/components/modals/CreateReservationModal';
 import styles from './AdminLayout.module.css';
 
@@ -30,9 +43,17 @@ const AdminLayout = ({
   // Determinar la pestaña activa basada en la ruta actual
   const getActiveTab = () => {
     if (location.pathname.includes('/dashboard')) return 'dashboard';
-    if (location.pathname.includes('/panorama')) return 'panorama';
+    if (location.pathname.includes('/reservas')) return 'reservas';
     if (location.pathname.includes('/clients')) return 'clients';
-    if (location.pathname.includes('/waiting-list')) return 'waiting-list';
+    if (location.pathname.includes('/menu')) return 'menu';
+    if (location.pathname.includes('/pedidos')) return 'pedidos';
+    if (location.pathname.includes('/proveedores')) return 'proveedores';
+    if (location.pathname.includes('/ventas')) return 'ventas';
+    if (location.pathname.includes('/empleados')) return 'empleados';
+    if (location.pathname.includes('/configuracion')) return 'configuracion';
+    // Rutas legacy (mantener para compatibilidad)
+    if (location.pathname.includes('/panorama')) return 'reservas'; // Panorama integrado en reservas
+    if (location.pathname.includes('/waiting-list')) return 'dashboard'; // Redirigir waiting-list a dashboard
     return 'dashboard'; // default
   };
 
@@ -44,14 +65,29 @@ const AdminLayout = ({
       case 'dashboard':
         navigate('/admin/dashboard');
         break;
-      case 'panorama':
-        navigate('/admin/panorama');
+      case 'reservas':
+        navigate('/admin/reservas');
         break;
       case 'clients':
         navigate('/admin/clients');
         break;
-      case 'waiting-list':
-        navigate('/admin/waiting-list');
+      case 'menu':
+        navigate('/admin/menu');
+        break;
+      case 'pedidos':
+        navigate('/admin/pedidos');
+        break;
+      case 'proveedores':
+        navigate('/admin/proveedores');
+        break;
+      case 'ventas':
+        navigate('/admin/ventas');
+        break;
+      case 'empleados':
+        navigate('/admin/empleados');
+        break;
+      case 'configuracion':
+        navigate('/admin/configuracion');
         break;
       default:
         navigate('/admin/dashboard');
@@ -71,13 +107,24 @@ const AdminLayout = ({
     }
   };
 
-  // Datos de navegación
-  const navigationItems = [
-    { id: 'dashboard', label: 'Gestión Diaria' },
-    { id: 'panorama', label: 'Panorama' },
-    { id: 'clients', label: 'Clientes' },
-    { id: 'waiting-list', label: 'Lista de Espera' }
-  ];
+  // Datos de navegación organizados por categorías
+  const navigationItems = {
+    main: [
+      { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+      { id: 'reservas', label: 'Reservas', icon: Calendar },
+      { id: 'pedidos', label: 'Pedidos', icon: ClipboardList },
+      { id: 'clients', label: 'Clientes', icon: Users }
+    ],
+    management: [
+      { id: 'menu', label: 'Menú', icon: ChefHat },
+      { id: 'proveedores', label: 'Proveedores', icon: Truck },
+      { id: 'ventas', label: 'Ventas', icon: TrendingUp }
+    ],
+    system: [
+      { id: 'empleados', label: 'Empleados', icon: UserCheck },
+      { id: 'configuracion', label: 'Configuración', icon: Settings }
+    ]
+  };
 
   return (
     <div className={styles.adminLayout}>
@@ -88,22 +135,69 @@ const AdminLayout = ({
           <div className={styles.logoSection}>
             <div className={styles.titleSection}>
               <h1 className={styles.title}>Rosaura</h1>
-              <p className={styles.subtitle}>Sistema de Reservas</p>
+              <p className={styles.subtitle}>Sistema de Gestión Integral</p>
             </div>
           </div>
 
           {/* Navegación central - pestañas (desktop) */}
           <div className={styles.navigationSection}>
             <div className={styles.tabsList}>
-              {navigationItems.map((item) => (
-                <button 
-                  key={item.id}
-                  onClick={() => handleTabClick(item.id)}
-                  className={activeTab === item.id ? styles.tabActive : styles.tabInactive}
-                >
-                  {item.label}
-                </button>
-              ))}
+              {/* Pestañas principales */}
+              <div className={styles.tabGroup}>
+                {navigationItems.main.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button 
+                      key={item.id}
+                      onClick={() => handleTabClick(item.id)}
+                      className={activeTab === item.id ? styles.tabActive : styles.tabInactive}
+                    >
+                      <IconComponent size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Separador */}
+              <div className={styles.tabSeparator}></div>
+              
+              {/* Pestañas de gestión */}
+              <div className={styles.tabGroup}>
+                {navigationItems.management.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button 
+                      key={item.id}
+                      onClick={() => handleTabClick(item.id)}
+                      className={activeTab === item.id ? styles.tabActive : styles.tabInactive}
+                    >
+                      <IconComponent size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Separador */}
+              <div className={styles.tabSeparator}></div>
+              
+              {/* Pestañas de sistema */}
+              <div className={styles.tabGroup}>
+                {navigationItems.system.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button 
+                      key={item.id}
+                      onClick={() => handleTabClick(item.id)}
+                      className={activeTab === item.id ? styles.tabActive : styles.tabInactive}
+                    >
+                      <IconComponent size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -129,15 +223,60 @@ const AdminLayout = ({
         {isMobileMenuOpen && (
           <div className={styles.mobileMenu}>
             <div className={styles.mobileMenuContent}>
-              {navigationItems.map((item) => (
-                <button 
-                  key={item.id}
-                  onClick={() => handleTabClick(item.id)}
-                  className={`${styles.mobileMenuItem} ${activeTab === item.id ? styles.mobileMenuItemActive : ''}`}
-                >
-                  {item.label}
-                </button>
-              ))}
+              {/* Sección principal */}
+              <div className={styles.mobileMenuSection}>
+                <div className={styles.mobileMenuSectionTitle}>Principal</div>
+                {navigationItems.main.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button 
+                      key={item.id}
+                      onClick={() => handleTabClick(item.id)}
+                      className={`${styles.mobileMenuItem} ${activeTab === item.id ? styles.mobileMenuItemActive : ''}`}
+                    >
+                      <IconComponent size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Sección gestión */}
+              <div className={styles.mobileMenuSection}>
+                <div className={styles.mobileMenuSectionTitle}>Gestión</div>
+                {navigationItems.management.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button 
+                      key={item.id}
+                      onClick={() => handleTabClick(item.id)}
+                      className={`${styles.mobileMenuItem} ${activeTab === item.id ? styles.mobileMenuItemActive : ''}`}
+                    >
+                      <IconComponent size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Sección sistema */}
+              <div className={styles.mobileMenuSection}>
+                <div className={styles.mobileMenuSectionTitle}>Sistema</div>
+                {navigationItems.system.map((item) => {
+                  const IconComponent = item.icon;
+                  return (
+                    <button 
+                      key={item.id}
+                      onClick={() => handleTabClick(item.id)}
+                      className={`${styles.mobileMenuItem} ${activeTab === item.id ? styles.mobileMenuItemActive : ''}`}
+                    >
+                      <IconComponent size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              
               <div className={styles.mobileMenuDivider} />
               <button onClick={onLogout} className={styles.mobileLogoutButton}>
                 <LogOut size={16} />
