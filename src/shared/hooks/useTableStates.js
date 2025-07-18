@@ -10,9 +10,10 @@ import { calculateRealTableStates, getTableAvailabilityStats } from '../services
  * @param {Set} manualBlocks - Set de mesas bloqueadas manualmente
  * @param {string} selectedDate - Fecha seleccionada (YYYY-MM-DD)
  * @param {string} selectedTurno - Turno seleccionado ('mediodia' | 'noche' | 'pedidos')
+ * @param {Set} exceptions - Set de excepciones para anular bloqueos predeterminados
  * @returns {Object} Estados y datos de mesa unificados
  */
-export const useTableStates = (reservations = [], orders = [], manualBlocks = new Set(), selectedDate = null, selectedTurno = null) => {
+export const useTableStates = (reservations = [], orders = [], manualBlocks = new Set(), selectedDate = null, selectedTurno = null, exceptions = new Set()) => {
   
   // Throttling para logging (solo mostrar cada 500ms)
   const lastLogTime = useRef(0);
@@ -27,7 +28,8 @@ export const useTableStates = (reservations = [], orders = [], manualBlocks = ne
       orders,
       manualBlocks,
       selectedDate,
-      selectedTurno
+      selectedTurno,
+      exceptions
     );
 
     // Estados calculados
@@ -104,15 +106,17 @@ export const useTableStates = (reservations = [], orders = [], manualBlocks = ne
     // Obtener estadísticas usando el servicio unificado
     const stats = getTableAvailabilityStats(tableStates);
 
-    // Logging inteligente con throttling
-    const now = Date.now();
-    logCounter.current += 1;
-    
-    // Solo mostrar log si han pasado 500ms desde el último O si es la primera ejecución
-    if (now - lastLogTime.current > 500 || logCounter.current === 1) {
-      console.log(`📈 ESTADÍSTICAS FINALES (ejecución #${logCounter.current}):`, stats);
-      console.log(`🔄 Dependencias: reservas=${reservations.length}, pedidos=${orders.length}, fecha=${selectedDate}, turno=${selectedTurno}`);
-      lastLogTime.current = now;
+    // Logging completamente deshabilitado para evitar spam en consola
+    // Solo se habilitará en casos de debugging específico
+    if (false && process.env.NODE_ENV === 'development') {
+      const now = Date.now();
+      logCounter.current += 1;
+      
+      // Solo mostrar log si han pasado 5 segundos desde el último
+      if (now - lastLogTime.current > 5000) {
+        console.log(`📊 RESUMEN useTableStates (#${logCounter.current}): ${stats.available} libres | ${stats.availableWalkin} walk-in | ${stats.reserved} reservadas | ${stats.occupied} ocupadas`);
+        lastLogTime.current = now;
+      }
     }
 
     return {
@@ -144,7 +148,7 @@ export const useTableStates = (reservations = [], orders = [], manualBlocks = ne
         unifiedStates: tableStates
       }
     };
-  }, [reservations, orders, manualBlocks, selectedDate, selectedTurno]);
+  }, [reservations, orders, manualBlocks, selectedDate, selectedTurno, exceptions]);
 };
 
 export default useTableStates; 

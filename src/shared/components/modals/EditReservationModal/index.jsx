@@ -55,38 +55,38 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
     
     // Validar campos obligatorios
     if (!editedReservation.cliente.nombre?.trim()) {
-      showNotification('error', 'El nombre del cliente es obligatorio.');
+      showNotification('El nombre del cliente es obligatorio.', 'error');
       return;
     }
     
     if (!editedReservation.cliente.telefono?.trim()) {
-      showNotification('error', 'El teléfono del cliente es obligatorio.');
+      showNotification('El teléfono del cliente es obligatorio.', 'error');
       return;
     }
 
     // Validar teléfono con react-phone-number-input
     if (!isValidPhoneNumber(editedReservation.cliente.telefono)) {
-      showNotification('error', 'Por favor, ingresa un número de teléfono válido.');
+      showNotification('Por favor, ingresa un número de teléfono válido.', 'error');
       return;
     }
     
     if (!editedReservation.fecha) {
-      showNotification('error', 'La fecha es obligatoria.');
+      showNotification('La fecha es obligatoria.', 'error');
       return;
     }
     
     if (!editedReservation.turno) {
-      showNotification('error', 'El turno es obligatorio.');
+      showNotification('El turno es obligatorio.', 'error');
       return;
     }
     
     if (!editedReservation.horario) {
-      showNotification('error', 'El horario es obligatorio.');
+      showNotification('El horario es obligatorio.', 'error');
       return;
     }
     
     if (!editedReservation.personas || editedReservation.personas < 1) {
-      showNotification('error', 'La cantidad de personas es obligatoria.');
+      showNotification('La cantidad de personas es obligatoria.', 'error');
       return;
     }
 
@@ -121,11 +121,11 @@ const EditReservationModal = ({ reservation, onClose, onSave, getAvailableSlotsF
       }
       
       await onSave(sanitizedData);
-      showNotification?.('success', 'Reserva actualizada correctamente');
+      showNotification?.('Reserva actualizada correctamente', 'success');
       onClose();
     } catch (error) {
       console.error('Error al guardar:', error);
-      showNotification?.('error', 'Error al actualizar la reserva');
+      showNotification?.('Error al actualizar la reserva', 'error');
     }
   };
 

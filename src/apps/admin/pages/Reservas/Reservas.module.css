@@ -13,8 +13,8 @@
   display: flex;
   flex: 1;
   gap: 1rem;
-  padding: 1rem;
-  height: calc(100vh - 100px); /* Reducido de 120px a 100px para dar más espacio vertical */
+  padding: 0.75rem; /* Reducido para dar más espacio al mapa */
+  height: calc(100vh - 80px); /* Reducido aún más para maximizar espacio */
   overflow: hidden;
   
   /* Balance visual optimizado */
@@ -29,11 +29,12 @@
   border: 1px solid #e5e7eb;
   overflow: hidden;
   display: flex;
-  align-items: center;
+  align-items: stretch; /* Cambiar para permitir expansión completa */
   justify-content: center;
   
-  /* Sin espacios innecesarios */
+  /* Sin espacios innecesarios - maximizar espacio para el mapa */
   padding: 0;
+  min-height: 500px; /* Asegurar altura mínima generosa */
 }
 
 .todayPanel {
@@ -1125,6 +1126,83 @@
   background-color: #eff6ff !important;
   color: #2563eb !important;
   border-color: #2563eb !important;
+}
+
+.tableButton.tableButtonActive {
+  background-color: #f59e0b !important;
+  color: white !important;
+  border: 1px solid #f59e0b !important;
+  animation: pulseAssignment 1.5s infinite;
+}
+
+.tableButton.tableButtonActive:hover {
+  background-color: #d97706 !important;
+  border-color: #d97706 !important;
+}
+
+@keyframes pulseAssignment {
+  0%, 100% { 
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.1);
+  }
+}
+
+/* ===== INDICADOR DE MODO ASIGNACIÓN ===== */
+
+.assignmentModeIndicator {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: pulseAssignmentIndicator 2s infinite;
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+  margin: 0.5rem 0;
+}
+
+.assignmentModeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.assignmentCancelButton {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.assignmentCancelButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+@keyframes pulseAssignmentIndicator {
+  0%, 100% { 
+    box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+  }
+  50% { 
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+  }
 }
 
 .pendingIndicator {
@@ -2692,6 +2770,75 @@
   transform: translateY(0);
 }
 
+/* 🆕 Estilos para botones de guardar/cancelar cambios */
+.helpSaveButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
+}
+
+.helpSaveButton:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.helpSaveButton:active {
+  transform: translateY(0);
+}
+
+.helpCancelChangesButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px;
+}
+
+.helpCancelChangesButton:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.helpCancelChangesButton:active {
+  transform: translateY(0);
+}
+
+/* 🆕 Indicador de cambios pendientes */
+.unsavedIndicator {
+  color: #f59e0b;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* Responsive para dispositivos móviles */
 @media (max-width: 768px) {
   .contextualHelpBar {
@@ -2812,6 +2959,24 @@
 }
 
 /* ===== INDICADOR DE MODO ACTIVO (MEJORADO) ===== */
+
+/* Estilo para botón de modo gestión activo */
+.activeModeButton {
+  background: linear-gradient(135deg, #059669, #10b981) !important;
+  color: white !important;
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { 
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1);
+  }
+}
 
 .checkInModeIndicator {
   background: linear-gradient(135deg, #10b981, #059669);

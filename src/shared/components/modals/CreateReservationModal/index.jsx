@@ -60,13 +60,13 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
 
     // Validaciones
     if (!newReservation.cliente.nombre.trim()) {
-      showNotification?.('error', 'El nombre es obligatorio');
+      showNotification?.('El nombre es obligatorio', 'error');
       setIsSaving(false);
       return;
     }
 
     if (!newReservation.cliente.telefono.trim()) {
-      showNotification?.('error', 'El teléfono es obligatorio');
+      showNotification?.('El teléfono es obligatorio', 'error');
       setIsSaving(false);
       return;
     }
@@ -76,13 +76,13 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
       // Para admins: solo verificar que tenga al menos algunos números
       const hasNumbers = /\d{3,}/.test(newReservation.cliente.telefono);
       if (!hasNumbers) {
-        showNotification?.('warning', 'El teléfono debe contener al menos algunos números');
+        showNotification?.('El teléfono debe contener al menos algunos números', 'warning');
         // Pero no bloquear la creación, solo advertir
       }
     } else {
       // Para clientes: validación estricta usando el número completo
       if (!isValidPhoneNumber(newReservation.cliente.telefono)) {
-        showNotification?.('error', 'Formato de teléfono inválido');
+        showNotification?.('Formato de teléfono inválido', 'error');
         setIsSaving(false);
         return;
       }
@@ -101,20 +101,20 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
       );
 
       if (!horarioDisponible) {
-        showNotification?.('error', 'El horario seleccionado no tiene cupos suficientes');
+        showNotification?.('El horario seleccionado no tiene cupos suficientes', 'error');
         setIsSaving(false);
         return;
       }
     }
 
     try {
-      // Preparar datos con el formato correcto de teléfono
-      const phoneNumber = parsePhoneNumber(newReservation.cliente.telefono);
-      
-      // Limpiar objeto cliente para eliminar campos undefined (Firebase no los acepta)
+      // Preparar datos del cliente
       const cleanCliente = {};
       cleanCliente.nombre = newReservation.cliente.nombre.trim();
-      cleanCliente.telefono = phoneNumber ? phoneNumber.number.slice(1) : newReservation.cliente.telefono;
+      
+      // Para el teléfono: mantener el formato completo de react-phone-number-input
+      // que ya incluye el código de país y será validado correctamente en el servicio
+      cleanCliente.telefono = newReservation.cliente.telefono;
       
       // Solo agregar comentarios si existe y no está vacío
       if (newReservation.cliente.comentarios && newReservation.cliente.comentarios.trim()) {
@@ -136,14 +136,14 @@ const CreateReservationModal = ({ onClose, onSave, getAvailableSlots, isValidDat
 
       if (typeof onSave === 'function') {
         await onSave(sanitizedData);
-        showNotification?.('success', 'Reserva creada exitosamente');
+        showNotification?.('Reserva creada exitosamente', 'success');
         onClose();
       } else {
-        showNotification?.('error', 'Función de guardado no disponible');
+        showNotification?.('Función de guardado no disponible', 'error');
         console.error('onSave prop is not a function:', onSave);
       }
     } catch (error) {
-      showNotification?.('error', 'Error al crear la reserva');
+      showNotification?.('Error al crear la reserva', 'error');
       console.error('Error creating reservation:', error);
     } finally {
       setIsSaving(false);

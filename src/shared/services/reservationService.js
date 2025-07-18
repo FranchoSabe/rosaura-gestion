@@ -29,17 +29,15 @@ const DEFAULT_BLOCKED_TABLES = {
  * FUNCIÓN PRINCIPAL: Crear reserva unificada
  * Usa el nuevo sistema de gestión de mesas para asignación automática
  */
-export const createReservation = async (
-  reservationData,
-  {
+export const createReservation = async (reservationData, options = {}) => {
+  const {
     isAdmin = false,
     getAvailableSlots = null,
     existingReservations = [],
     loadBlockedTables = null,
     existingOrders = [],
     manualBlocks = new Set()
-  }
-) => {
+  } = options;
   try {
     // Iniciando creación de reserva
 
@@ -202,15 +200,21 @@ const validateReservationData = async (reservationData, getAvailableSlots, isAdm
       return { isValid: false, error: 'Debe especificar el horario.' };
     }
 
-    // Validar teléfono
+    // Validar teléfono de forma más permisiva
     if (reservationData.cliente.telefono) {
       try {
+        // Intentar parsear el teléfono
         const phoneNumber = parsePhoneNumber(reservationData.cliente.telefono);
-        if (!phoneNumber || !phoneNumber.isValid()) {
+        if (phoneNumber && !phoneNumber.isValid()) {
           return { isValid: false, error: 'El formato del teléfono no es válido.' };
         }
+        // Si parsePhoneNumber devuelve null/undefined, asumimos que es un formato local válido
       } catch (error) {
-        return { isValid: false, error: 'El formato del teléfono no es válido.' };
+        // Si hay error en el parseo, verificar que al menos tenga números
+        const hasNumbers = /\d{6,}/.test(reservationData.cliente.telefono);
+        if (!hasNumbers) {
+          return { isValid: false, error: 'El teléfono debe contener al menos 6 dígitos.' };
+        }
       }
     }
 
@@ -226,15 +230,19 @@ const validateReservationData = async (reservationData, getAvailableSlots, isAdm
  * Preparar datos del cliente
  */
 const prepareClientData = async (clienteData) => {
-  let formattedPhone = clienteData.telefono;
+  // Mantener el teléfono tal como viene desde el formulario
+  // ya que el modal se encarga del formato correcto
+  let formattedPhone = clienteData.telefono.trim();
   
+  // Solo intentar formatear si realmente es necesario
   try {
     const phoneNumber = parsePhoneNumber(clienteData.telefono);
     if (phoneNumber && phoneNumber.isValid()) {
       formattedPhone = phoneNumber.formatInternational();
     }
   } catch (error) {
-    console.warn('No se pudo formatear el teléfono:', error);
+    // Si falla el formateo, usar el teléfono original
+    console.info('Usando teléfono sin formatear:', clienteData.telefono);
   }
 
   return {

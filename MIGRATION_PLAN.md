@@ -1,225 +1,348 @@
-# 🏢 SISTEMA DE GESTIÓN INTEGRAL ROSAURA - PLAN ACTUALIZADO
+# 🚀 ROSAURA GESTIÓN - PLAN DE DESARROLLO 2025
 
-## 🎯 OBJETIVO PRINCIPAL
-**Sistema POS completo** que reemplaza Floreant con gestión integral de restaurante:
-- Reservas y gestión de mesas ✅
-- Toma de pedidos y facturación ✅
-- Impresión de tickets de cocina ✅
-- Arqueo de caja y estadísticas ✅
-- Gestión completa unificada ✅
-
----
-
-## 🚀 **ESTADO ACTUAL DEL PROYECTO**
-**Fecha**: 23 de Enero 2025  
+## 🎯 **ESTADO ACTUAL DEL SISTEMA**
+**Fecha**: 25 de Enero 2025  
 **Servidor**: http://localhost:5173/
-**Fases completadas**: 1-5 + Refactorización Modular ✅
+**Sistema**: 100% funcional y operativo
 
-### **✅ SISTEMA COMPLETAMENTE FUNCIONAL**
+### ✅ **FUNCIONALIDADES OPERATIVAS COMPLETADAS**
+- **Sistema de Reservas Avanzado**: Check-in, reasignación, popup unificado
+- **Sistema de Pedidos Completo**: Toma de pedidos, modificadores, facturación
+- **Gestión de Mesas Unificada**: Estados en tiempo real, bloqueos manuales  
+- **Arqueo de Caja**: Métodos de pago reales, descuentos, estadísticas
+- **Notificaciones Inteligentes**: Categorización automática, reducción 70% interrupciones
+- **UI/UX Optimizada**: Responsive, tablets, componentes modulares
 
-#### **🏗️ ARQUITECTURA MODULAR IMPLEMENTADA:**
+---
+
+## 🔥 **PRÓXIMAS FASES DE DESARROLLO**
+
+### **FASE 6: SISTEMA DE GESTIÓN DE MESAS AVANZADO**
+*Prioridad: ALTA - Innovación operativa crítica*
+
+#### 🪑 **6.1 Sistema de Unir Mesas**
+**Objetivo**: Flexibilidad total en distribución de mesas para eventos especiales
+
+**Funcionalidades**:
+- Botón "Unir Mesas" en mapa interactivo
+- Selección múltiple de mesas adyacentes
+- Suma automática de capacidades (Mesa 1: 4 + Mesa 2: 6 = 10 personas)
+- Vista unificada en mapa (mesas agrupadas visualmente)
+- Reservas asignadas al "grupo de mesas" temporal
+- Desunir automático al final del turno
+
+**Arquitectura Técnica**:
 ```
-src/apps/admin/pages/Reservas/
-├── components/
-│   ├── modals/                     ✅ COMPLETADO
-│   │   ├── ConfirmationModal.jsx   (43 líneas)
-│   │   ├── ConflictModal.jsx       (55 líneas)  
-│   │   ├── CheckInModal.jsx        (101 líneas)
-│   │   └── ReassignmentModal.jsx   (129 líneas)
-│   └── sections/                   ✅ COMPLETADO
-│       ├── ReservationsList.jsx    (120 líneas)
-│       └── WaitingListSection.jsx  (70 líneas)
-├── Reservas.jsx                    ✅ MODULARIZADO
-└── Reservas.module.css             ✅ OPTIMIZADO
+src/shared/services/tableGroupService.js
+├── createTableGroup()      → Unir mesas seleccionadas
+├── disbandTableGroup()     → Separar mesas al final del turno
+├── validateGrouping()      → Verificar mesas compatibles (adyacentes)
+└── calculateGroupCapacity() → Sumar capacidades individuales
 ```
 
-#### **📊 REDUCCIÓN LOGRADA:**
-- **Archivo original**: 2,343 líneas → **Actual**: ~1,400 líneas (-40%)
-- **Componentes extraídos**: 6 módulos profesionales
-- **Mantenibilidad**: +300% más fácil de mantener
+**Estados de Mesa Extendidos**:
+- `grouped`: Mesa parte de un grupo temporal
+- `group-leader`: Mesa principal del grupo (muestra info total)
+- `group-member`: Mesa secundaria (referencia al líder)
 
-### **🎯 FUNCIONALIDADES CRÍTICAS OPERATIVAS:**
+#### 🚶‍♂️ **6.2 Walk-in Directo desde Reservas**
+**Objetivo**: Gestión inmediata de clientes sin reserva
 
-#### **📋 Sistema de Reservas Avanzado:**
-- **Check-in profesional**: Con reasignación automática de conflictos
-- **Estados unificados**: Verde (libre), Azul (reservada), Rojo (ocupada)
-- **Feedback visual**: Nombres tachados con checkmarks al hacer check-in
-- **Modal de reasignación**: Resuelve conflictos elegantemente
-
-#### **🍽️ Sistema de Pedidos Completo:**
-- **Toma de pedidos**: Por mesa con modal optimizado para tablets
-- **Estados simplificados**: 'cocina' → 'entregado' (2 estados vs 6)
-- **Múltiples pedidos por mesa**: Arquitectura real de restaurante
-- **Sistema de modificadores**: Ensaladas personalizadas, punto de cocción
-- **Descuentos y pagos**: Efectivo/Tarjeta/Transferencia con cálculos exactos
-
-#### **💰 Sistema de Cobro y Arqueo:**
-- **Descuentos aplicados**: Por porcentaje o monto fijo con razón
-- **Métodos de pago reales**: No más "siempre efectivo"
-- **Arqueo de caja avanzado**: Desglose por método con totales exactos
-- **Timestamps específicos**: fechaEnviadoCocina, fechaCobrado, etc.
-
-### **🔧 MEJORAS OPERATIVAS IMPLEMENTADAS:**
-
-#### **📱 UX/UI Optimizada:**
-- **Operativa simplificada**: Sistema automático + arqueo real + testing opcional
-- **Layout coherente**: Mismo diseño entre reservas y pedidos
-- **Responsive design**: Optimizado para tablets (dispositivos principales)
-- **Filtros inteligentes**: Solo pedidos relevantes mostrados
-
-#### **🔔 Sistema de Notificaciones Inteligente:**
-- **Categorización automática**: Críticas (6s), Importantes (4s), Rutinarias (2s)
-- **70% menos interrupciones**: Flujo de trabajo sin distracciones
-- **UI transparente**: No interrumpe clicks, efectos glass
-
-#### **🥗 Configuración Avanzada:**
-- **21 ingredientes**: Verduras, proteínas, extras configurables
-- **Sistema centralizado**: src/shared/constants/modifiers.js
-- **Precios dinámicos**: Cálculo automático según selección
+**Funcionalidades**:
+- Botón "Agregar Walk-in" en vista de reservas
+- Check-in automático sin datos de reserva previa
+- Asignación inteligente de mesa disponible
+- Cliente temporal: "Walk-in Mesa X - [Timestamp]"
+- Seguimiento de ocupación real tiempo real
 
 ---
 
-## 📋 **FLUJO OPERATIVO ACTUAL COMPLETO**
+### **FASE 7: SISTEMA DE GESTIÓN DE MOZOS**
+*Prioridad: ALTA - Control operativo de personal*
 
-### **🏨 RESERVAS Y CHECK-IN:**
-1. **Cliente reserva** → Mesa azul (reservada) en mapa
-2. **Check-in automático** → Verifica conflictos, reasigna si necesario
-3. **Feedback visual** → Nombre tachado + checkmark + mesa roja
-4. **Estados tiempo real** → Actualización automática sin recargar
+#### 👨‍🍳 **7.1 Selección de Mozos por Turno**
+**Objetivo**: Configuración flexible de personal por día
 
-### **🍽️ PEDIDOS Y COCINA:**
-5. **Crear pedido** → Estado 'cocina' (aparece en lista)
-6. **Vista cocina** → Solo pedidos pendientes, botón "Entregado"
-7. **Múltiples pedidos** → Mesa maneja entrada + principal + postre
-8. **Popup mesa** → Muestra todos los pedidos consolidados
+**Funcionalidades**:
+- Modal "Configurar Mozos del Turno" al iniciar día
+- Lista de mozos predeterminados: Mozo 1, Mozo 2, Mozo 3, Mozo 4
+- Asignación de nombres reales: Mateo, Biancu, etc.
+- Persistencia por fecha para estadísticas históricas
+- Vista previa de horarios y turnos trabajados
 
-### **💰 DESCUENTOS Y PAGOS:**
-9. **Aplicar descuento** → No cierra modal, imprime ticket automático
-10. **Estado "pendiente_pago"** → Mesa púrpura, lista para cobrar
-11. **PaymentModal** → SUBTOTAL - DESCUENTO = TOTAL (desglosado)
-12. **Método real guardado** → Efectivo/Tarjeta/Transferencia exacto
-
-### **📊 ARQUEO Y CIERRE:**
-13. **Arqueo de caja** → Totales por método + descuentos aplicados
-14. **Datos precisos** → Para análisis y reportes futuros
-
----
-
-## 🚀 **PRÓXIMAS MEJORAS PRIORITARIAS**
-
-### **INMEDIATAS (1-2 días):**
-- **🖨️ Sistema de impresión real**: Tickets cocina/cliente con impresoras térmicas
-- **🔔 Notificaciones sonoras**: Alertas cocina cuando llegan pedidos
-- **👨‍🍳 Vista cocina dedicada**: Pantalla sin distracciones para preparación
-
-### **CORTO PLAZO (1 semana):**
-- **📊 Reportes avanzados**: Análisis productos, turnos, empleados
-- **⚡ Dashboard cocina**: Tiempos preparación + productos más vendidos
-- **📱 Modo offline**: Funcionamiento sin internet
-
-### **MEDIO PLAZO (2-4 semanas):**
-- **👥 Gestión empleados**: Roles, permisos, horarios
-- **📈 Analytics avanzados**: Machine learning para predicciones
-- **🔄 Backup automático**: Datos críticos + sincronización
-
----
-
-## 🛠️ **PAUTAS DE DESARROLLO OBLIGATORIAS**
-
-### **🎯 FILOSOFÍA:**
-- **Planificación primero**: Analizar impacto completo antes de cambios
-- **Código limpio**: Legibilidad > soluciones rápidas
-- **Arquitectura modular**: Componentes reutilizables, hooks específicos
-- **Testing mental**: Validación exhaustiva de edge cases
-
-### **🏗️ ESTRUCTURA REQUERIDA:**
+**Datos a Persistir**:
 ```javascript
-// ✅ CORRECTO: Componente bien estructurado
-const Component = ({ props }) => {
-  // Estados agrupados lógicamente
-  const [state, setState] = useState(initialValue);
+{
+  fecha: "2025-01-25",
+  turno: "mediodia", 
+  mozos: {
+    mozo1: { nombre: "Mateo", activo: true },
+    mozo2: { nombre: "Biancu", activo: true },
+    mozo3: { nombre: "Sofia", activo: false },
+    mozo4: { nombre: "", activo: false }
+  }
+}
+```
+
+#### 🍽️ **7.2 Asignación de Mozo a Mesa**
+**Objetivo**: Control de responsabilidades por mesa
+
+**Funcionalidades**:
+- Dropdown de mozo al abrir mesa en Pedidos
+- Solo mozos activos del turno visible
+- Asignación automática/manual configurable
+- Vista "Mesas por Mozo" en dashboard
+- Estadísticas de performance por mozo
+
+**Integración con Pedidos**:
+- Campo `mozosAsignado` en cada pedido
+- Filtros por mozo en vista de cocina
+- Estadísticas de tiempo de atención por mozo
+
+---
+
+### **FASE 8: ANALYTICS Y ESTADÍSTICAS AVANZADAS**
+*Prioridad: MEDIA - Optimización de negocio*
+
+#### 📊 **8.1 Dashboard Analítico**
+- Métricas por mozo: tiempo promedio, pedidos atendidos, propinas
+- Análisis de mesas unidas: eventos especiales, frecuencia de uso
+- Ocupación walk-in vs reservas: optimización de cupos
+- Predicciones de demanda usando ML básico
+
+#### 📈 **8.2 Reportes Avanzados**
+- Exports PDF/Excel por período
+- Comparativas mes anterior, mismo día semana pasada
+- Análisis de productos más vendidos por mozo
+- ROI de estrategias (mesas unidas, walk-ins)
+
+---
+
+### **FASE 9: SISTEMA DE IMPRESIÓN Y HARDWARE**
+*Prioridad: MEDIA - Integración física*
+
+#### 🖨️ **9.1 Integración con Impresoras Térmicas**
+- Tickets de cocina automáticos con mozo asignado
+- Facturas de cliente con desglose de propinas
+- Impresión de reportes de turno y arqueo
+
+#### 📱 **9.2 Optimización Tablet/Touch**
+- Gestos para unir mesas (drag & drop)
+- Interface de mozos simplificada
+- Modo kiosko para dispositivos dedicados
+
+---
+
+## 🏗️ **ARQUITECTURA DE DESARROLLO**
+
+## 🏗️ **ARQUITECTURA UNIFICADA - SIN NUEVAS COLECCIONES**
+
+### **📋 FILOSOFÍA: USAR COLECCIONES EXISTENTES**
+**Todas las funcionalidades nuevas se implementan extendiendo las colecciones actuales, NO creando nuevas:**
+
+### **🪑 SISTEMA DE UNIR MESAS** 
+**Usando colección `reservas` existente**:
+
+```javascript
+// Esquema extendido para reservas unidas:
+{
+  // ... campos existentes ...
+  mesaAsignada: "2+3+4",           // Mesas unidas temporalmente
+  esGrupoMesas: true,              // Flag: es grupo de mesas
+  mesasIndividuales: [2, 3, 4],   // Array de mesas que componen el grupo
+  capacidadTotal: 12,              // Suma de capacidades individuales
+  tipoReserva: "grupo_mesas",      // Para filtros y estadísticas
+  mesaLider: 2                     // Mesa principal (muestra la info)
+}
+```
+
+### **👨‍🍳 SISTEMA DE MOZOS POR TURNO**
+**Usando colección `reservas` existente**:
+
+```javascript
+// Campos adicionales en reservas:
+{
+  // ... campos existentes ...
+  mozosAsignado: "Mateo",          // Nombre del mozo asignado
+  mozosId: "mozo1",                // ID interno del mozo (mozo1, mozo2, etc.)
   
-  // Cálculos memoizados
-  const computed = useMemo(() => calculation(), [deps]);
+  // Configuración de mozos se guarda una sola vez por día:
+  fecha: "2025-01-25",
+  turno: "mediodia",
+  configMozos: {                   // Solo en una reserva "especial" del día
+    mozo1: { nombre: "Mateo", activo: true },
+    mozo2: { nombre: "Biancu", activo: true },
+    mozo3: { nombre: "", activo: false }
+  }
+}
+```
+
+### **🚶‍♂️ SISTEMA WALK-IN DIRECTO**
+**Usando colección `reservas` existente**:
+
+```javascript
+// Walk-in se crea como reserva normal:
+{
+  // ... campos normales de reserva ...
+  cliente: {
+    nombre: "Walk-in Mesa 5",      // Nombre temporal
+    telefono: "000-000-0000",      // Placeholder
+    email: null
+  },
+  esWalkIn: true,                  // Flag identificador
+  horaLlegada: new Date(),         // Timestamp de llegada directa
+  estadoCheckIn: "confirmado",     // Confirmado automáticamente
+  mesaReal: 5,                     // Mesa asignada directamente
+  mesaAsignada: null               // No hay preasignación
+}
+```
+
+### **🛠️ SERVICIOS OPTIMIZADOS**:
+```
+src/shared/services/
+├── tableGroupService.js     → Gestión de unión de mesas (extiende reservas)
+├── staffManagementService.js → Gestión de mozos (extiende reservas) 
+├── walkInService.js         → Walk-in directo (extiende reservas)
+└── analyticsService.js      → Métricas usando datos existentes
+```
+
+### **🎨 COMPONENTES UI NUEVOS**:
+```
+src/shared/components/
+├── TableGroupManager/       → Interface para unir/separar mesas
+├── StaffSelector/          → Configuración de mozos del turno
+├── WalkInButton/           → Botón de walk-in directo
+└── AnalyticsDashboard/     → Métricas usando reservas + pedidos
+```
+
+### **🗃️ COLECCIONES FIREBASE - CERO NUEVAS**:
+```
+Firestore Collections (SIN CAMBIOS):
+├── reservas                 → Extiende campos para todas las funcionalidades
+├── pedidos                 → Sistema de pedidos (existente)
+├── mesas                   → Estados temporales (existente)
+├── clientes                → Base de clientes (existente)
+└── lista_espera            → Lista de espera (existente)
+```
+
+### **🔄 VENTAJAS DE LA ARQUITECTURA UNIFICADA**:
+1. **Cero nuevas colecciones** → Menos complejidad de Firebase
+2. **Menos consultas** → Mejor performance
+3. **Datos centralizados** → Más fácil de mantener
+4. **Costos reducidos** → Menos reads/writes de Firestore
+5. **Funcionalidad completa** → Sin perder características
+
+---
+
+## 🎯 **PRIORIDADES DE IMPLEMENTACIÓN**
+
+### **INMEDIATO (1-2 semanas)**:
+1. ✅ Sistema de Unir Mesas (Flexibilidad operativa crítica)
+2. ✅ Walk-in Directo (Gestión de ocupación real)
+3. ✅ Selección Mozos por Turno (Control de personal)
+
+### **CORTO PLAZO (3-4 semanas)**:
+4. ✅ Asignación Mozo a Mesa (Responsabilidades claras)
+5. ✅ Dashboard Analítico (Optimización de operaciones)
+6. ✅ Sistema de Impresión (Integración con hardware)
+
+### **MEDIO PLAZO (1-2 meses)**:
+7. ✅ Reportes Avanzados (Business Intelligence)
+8. ✅ Optimización Hardware (Tablets dedicados)
+9. ✅ Machine Learning (Predicciones de demanda)
+
+---
+
+## 🔧 **PAUTAS DE DESARROLLO OBLIGATORIAS**
+
+### **🎯 FILOSOFÍA DEL SISTEMA**:
+- **Flexibilidad Operativa**: El sistema se adapta al restaurante, no al revés
+- **Datos en Tiempo Real**: Toda decisión basada en información actualizada
+- **Interface Intuitiva**: Mozos y managers sin capacitación técnica
+- **Escalabilidad**: Desde 1 turno hasta múltiples sucursales
+
+### **📐 STANDARDS TÉCNICOS**:
+```javascript
+// ✅ COMPONENTE BIEN ESTRUCTURADO
+const TableGroupManager = ({ mesas, onGroupCreate, onGroupDisband }) => {
+  const [selectedTables, setSelectedTables] = useState(new Set());
+  const [groupMode, setGroupMode] = useState(false);
   
-  // Funciones con responsabilidades específicas
-  const handleAction = useCallback(async () => {
-    // Implementación limpia con manejo de errores
-  }, [deps]);
+  const handleTableSelection = useCallback((tableId) => {
+    setSelectedTables(prev => {
+      const newSet = new Set(prev);
+      newSet.has(tableId) ? newSet.delete(tableId) : newSet.add(tableId);
+      return newSet;
+    });
+  }, []);
+  
+  const handleCreateGroup = useCallback(async () => {
+    const result = await createTableGroup(Array.from(selectedTables));
+    if (result.success) {
+      onGroupCreate(result.groupId);
+      setSelectedTables(new Set());
+      setGroupMode(false);
+    }
+  }, [selectedTables, onGroupCreate]);
   
   return <JSX />;
 };
 ```
 
-### **🎨 CSS STANDARDS:**
-```css
-/* ✅ CORRECTO: BEM-like con módulos */
-.componentName { }
-.componentName__element { }
-.componentName--modifier { }
-
-/* Mobile-first responsive */
-@media (min-width: 768px) { }
-```
+### **🎨 UI/UX PRINCIPLES**:
+- **Feedback Visual Inmediato**: Toda acción confirmada visualmente
+- **Estados Claros**: Mesa normal/agrupada/walk-in diferenciados
+- **Accesos Rápidos**: Máximo 2 clicks para operaciones frecuentes
+- **Responsive Design**: Tablets landscape como prioridad
 
 ---
 
-## 📊 **TRACKING DE TIEMPOS - ANÁLISIS OPERATIVO**
+## 📋 **TESTING Y VALIDACIÓN**
 
-### **✅ DATOS AUTOMÁTICOS GUARDADOS:**
-```javascript
-// Timestamps por estado (automático)
-'cocina' → fechaEnviadoCocina
-'listo' → fechaListo  
-'entregado' → fechaEntregado
-'pendiente_pago' → fechaCerradoMesa
-'cerrado' → fechaCobrado
-```
+### **🧪 CASOS DE USO CRÍTICOS**:
+1. **Unir Mesas**: Mesa 1 (4p) + Mesa 2 (6p) = 10p capacidad total
+2. **Walk-in Rush**: 5 grupos llegando simultáneamente sin reserva
+3. **Cambio Mozos**: Mozo se va a mitad de turno, reasignación automática
+4. **Eventos Especiales**: Mesa de 12 personas usando 3 mesas unidas
 
-### **📈 ANÁLISIS DISPONIBLES:**
-- **Tiempo preparación**: fechaEntregado - fechaEnviadoCocina
-- **Tiempo total**: fechaCobrado - fechaCreacion
-- **Productos por turno**: Mediodía vs Noche
-- **Métodos de pago**: Distribución exacta con descuentos
+### **📊 MÉTRICAS DE ÉXITO**:
+- **Tiempo Promedio Unión Mesa**: < 15 segundos
+- **Precisión Walk-in**: 100% de ocupación registrada
+- **Adoption Rate Mozos**: 90% del staff usando sistema en 1 semana
+- **Error Rate**: < 1% en operaciones críticas
 
 ---
 
-## 🎯 **COMANDO PARA NUEVO CHAT**
+## 🚀 **COMANDO PARA NUEVO CHAT**
 
 ```
-Continúa mejorando el Sistema de Gestión Integral de Rosaura.
+Continúa implementando el Sistema de Gestión Integral de Rosaura - FASE 6.
 
 ESTADO ACTUAL:
-- ✅ Sistema 100% funcional en localhost:5173
-- ✅ Arquitectura modular completada (6 componentes extraídos)  
-- ✅ Flujo descuentos y pagos corregido (datos exactos en arqueo)
-- ✅ Check-in profesional con reasignación automática
-- ✅ Estados de mesa unificados en tiempo real
-- ✅ Refactorización modular completada (40% reducción código)
+✅ Sistema 100% funcional (Fases 1-5 completadas)
+✅ Error de crear reserva corregido en AdminRouter.jsx  
+✅ Arquitectura modular establecida
 
-FUNCIONALIDADES OPERATIVAS:
-- Sistema de reservas con check-in visual
-- Pedidos por mesa con modificadores
-- Descuentos y pagos con métodos reales  
-- Arqueo de caja con desglose exacto
-- Notificaciones inteligentes categorizadas
-- 21 ingredientes configurables para ensaladas
+PRÓXIMA IMPLEMENTACIÓN:
+🎯 FASE 6.1: Sistema de Unir Mesas
+- Botón "Unir Mesas" en mapa interactivo
+- Selección múltiple con capacidades sumadas
+- Estados de mesa extendidos (grouped/group-leader/group-member)
+- Nuevo servicio: tableGroupService.js
 
-PRÓXIMAS PRIORIDADES:
-1. Sistema de impresión real (tickets cocina/cliente)
-2. Vista cocina dedicada (pantalla sin distracciones)  
-3. Notificaciones sonoras para cocina
-4. Reportes de ventas avanzados
-5. Dashboard cocina con tiempos
+🎯 FASE 6.2: Walk-in Directo desde Reservas  
+- Botón "Agregar Walk-in" en vista reservas
+- Check-in automático sin reserva previa
+- Cliente temporal con timestamp
 
-PAUTAS: Planificación previa + código modular + arquitectura profesional
-VER: MIGRATION_PLAN.md sección "PAUTAS DE DESARROLLO OBLIGATORIAS"
-
+DOCUMENTACIÓN: Ver MIGRATION_PLAN.md para arquitectura completa
 SERVIDOR: localhost:5173 (npm run dev)
+
+ENFOQUE: Flexibilidad operativa total para distribución de mesas.
 ```
 
 ---
 
-*Plan actualizado: 23/1/2025*
-*Versión: 10.0 - Modular y Simplificado*
-*Estado: Sistema operativo completo con arquitectura modular profesional*
+*Plan actualizado: 25/1/2025*  
+*Versión: 11.0 - Innovación Operativa*  
+*Estado: Listo para implementar Fase 6 - Sistema de Gestión de Mesas Avanzado*

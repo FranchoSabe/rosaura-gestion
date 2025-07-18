@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { ChevronDown, ThumbsDown, MessageCircle, Check, Edit2, Trash2, CheckCircle, X, XCircle, AlertTriangle, Sun, Moon, Clock, Printer, ChevronLeft, ChevronRight, Calendar, Users, Phone, Lock, Unlock, MapPin, Plus, Zap, UserCheck } from 'lucide-react';
+import { ChevronDown, ThumbsDown, MessageCircle, Check, Edit2, Trash2, CheckCircle, X, XCircle, AlertTriangle, Sun, Moon, Clock, Printer, ChevronLeft, ChevronRight, Calendar, Users, Phone, Lock, Unlock, MapPin, Plus, Zap, UserCheck, Save, RotateCcw } from 'lucide-react';
 
 // Componentes modularizados
 import { ConfirmationModal } from '../../../../shared/components/ui';
@@ -18,12 +18,15 @@ import "../../../../datepicker-custom.css";
 
 import { formatPhoneForWhatsApp } from '../../../../utils/phoneUtils';
 import { formatDateToString } from '../../../../utils';
+import { calculateAvailableSlots } from '../../../../shared/services/reservationLogic';
 import InteractiveMapController from '../../../../shared/components/InteractiveMap/InteractiveMapController';
 import CreateReservationModal from '../../../../shared/components/modals/CreateReservationModal';
 import EditReservationModal from '../../../../shared/components/modals/EditReservationModal';
 import { UNIFIED_TABLES_LAYOUT } from '../../../../utils/tablesLayout';
 import { useTableStates } from '../../../../shared/hooks/useTableStates';
+import { DEFAULT_RESERVATION_BLOCKED } from '../../../../shared/services/tableManagementService';
 import { isDayClosed, isTurnoClosed } from '../../../../shared/constants/operatingDays';
+import { saveTableBlocksForDateTurno, loadTableBlocksForDateTurno } from '../../../../firebase';
 
 import styles from './Reservas.module.css';
 import mapStyles from '../../../../shared/components/InteractiveMap/InteractiveMapController.module.css';
@@ -41,39 +44,96 @@ const Reservas = ({
   showNotification,
   onCreateReservation
 }) => {
-  // Estados principales
+  // ============== ESTADOS PRINCIPALES ==============
+  const [orders] = useState([]); // Sin pedidos en sistema de reservas
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTurno, setSelectedTurno] = useState(() => {
-    const currentHour = new Date().getHours();
-    return currentHour < 16 ? 'mediodia' : 'noche';
-  });
-
-  // Estados de la interfaz
-  const [showCreateReservationModal, setShowCreateReservationModal] = useState(false);
+  const [selectedTurno, setSelectedTurno] = useState('mediodia');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
-  const [checkInMode, setCheckInMode] = useState(false);
+  const [checkInMode, setCheckInMode] = useState(false); // Modo check-in activo
   const [selectedReservationForCheckIn, setSelectedReservationForCheckIn] = useState(null);
+  
+  // 🆕 ESTADOS PARA ASIGNACIÓN MANUAL DE MESAS
+  const [assignmentMode, setAssignmentMode] = useState(false); // Modo asignación activo
+  const [selectedReservationForAssignment, setSelectedReservationForAssignment] = useState(null); // Reserva seleccionada para asignar
+  const [walkinOverrideConfirmation, setWalkinOverrideConfirmation] = useState(null); // Confirmación para sobreescribir mesas walk-in
+  
+  const [tableManagementMode, setTableManagementMode] = useState(false); // Modo gestión de mesas
+  const [reservationPopup, setReservationPopup] = useState(null); // Popup de información
+  const [confirmation, setConfirmation] = useState(null); // Estado para modales de confirmación
+  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
 
-  // Estados de modales y confirmaciones
-  const [confirmation, setConfirmation] = useState(null);
-  const [conflict, setConflict] = useState(null);
-  const [reservationPopup, setReservationPopup] = useState(null); // Nuevo estado para popup de reserva
-
-  // Estados para gestión de mesas
-  const [blockedTables, setBlockedTables] = useState(new Set());
-  const [cuposMode, setCuposMode] = useState(false);
-
+  // 🆕 NUEVOS ESTADOS para gestión dinámica de mesas
+  const [blockedTables, setBlockedTables] = useState(new Set()); // Mesas bloqueadas dinámicamente
+  const [temporaryBlocks, setTemporaryBlocks] = useState(new Set()); // 🆕 Bloqueos temporales para feedback inmediato
+  const [temporaryExceptions, setTemporaryExceptions] = useState(new Set()); // 🆕 Excepciones temporales para anular bloqueos predeterminados
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Indicador de cambios pendientes
+  
+  // 🆕 Estados para gestión por FECHA Y TURNO específico
+  const [dailyTurnoBlocks, setDailyTurnoBlocks] = useState({}); // Configuración por fecha específica
+  
   // Memoizar dependencias para evitar recálculos innecesarios
   const formattedDate = useMemo(() => formatDateToString(selectedDate), [selectedDate]);
+  
+  // Generar clave única para fecha + turno
+  const currentDateTurnoKey = `${formattedDate}-${selectedTurno}`;
+  
+  // Obtener configuración actual (específica para esta fecha y turno)
+  const getCurrentConfig = useCallback(() => {
+    return dailyTurnoBlocks[currentDateTurnoKey] || { blocks: new Set(), exceptions: new Set() };
+  }, [dailyTurnoBlocks, currentDateTurnoKey]);
+
+  // 🆕 Función para cargar configuración desde Firebase
+  const loadTableConfigFromFirebase = useCallback(async () => {
+    try {
+      const fechaString = formatDateToString(selectedDate);
+      const config = await loadTableBlocksForDateTurno(fechaString, selectedTurno);
+      
+      // Actualizar estado local con configuración de Firebase
+      setDailyTurnoBlocks(prev => ({
+        ...prev,
+        [currentDateTurnoKey]: {
+          blocks: config.blockedTables,
+          exceptions: config.exceptions
+        }
+      }));
+      
+      // Si estamos en modo gestión, actualizar estados temporales también
+      if (tableManagementMode) {
+        setTemporaryBlocks(new Set(config.blockedTables));
+        setTemporaryExceptions(new Set(config.exceptions));
+        setHasUnsavedChanges(false);
+      }
+      
+      // Configuración cargada correctamente desde Firebase
+    } catch (error) {
+      console.error('❌ Error al cargar configuración desde Firebase:', error);
+      // En caso de error, usar configuración vacía
+      setDailyTurnoBlocks(prev => ({
+        ...prev,
+        [currentDateTurnoKey]: {
+          blocks: new Set(),
+          exceptions: new Set()
+        }
+      }));
+    }
+  }, [selectedDate, selectedTurno, currentDateTurnoKey, tableManagementMode]);
   const emptyOrders = useMemo(() => [], []); // Array vacío memoizado
 
-  // Hook para estados de mesa UNIFICADOS
+  // Hook para estados de mesa UNIFICADOS (usar cambios temporales en modo gestión)
+  const currentConfig = getCurrentConfig();
+  const effectiveBlocks = tableManagementMode && hasUnsavedChanges ? temporaryBlocks : currentConfig.blocks;
+  const effectiveExceptions = tableManagementMode && hasUnsavedChanges ? temporaryExceptions : currentConfig.exceptions;
+  
   const { tableStates, occupiedTables, reservedTables, availableTables, tableAssignments, findOccupantByTable, getTableState, isTableOccupied, stats } = useTableStates(
     reservations, 
     emptyOrders, // Sin pedidos en sistema de reservas - memoizado
-    blockedTables, 
+    effectiveBlocks, // 🆕 Usar bloqueos efectivos (temporales o del turno actual)
     formattedDate,
-    selectedTurno
+    selectedTurno,
+    effectiveExceptions // 🆕 Pasar excepciones para anular bloqueos predeterminados
   );
 
   // Función para obtener reservas del turno seleccionado
@@ -113,10 +173,8 @@ const Reservas = ({
       if (result.success) {
         showNotification?.(`Reserva creada exitosamente${result.mesaAsignada ? ` - Mesa ${result.mesaAsignada}` : ''}`, 'success');
         
-        // Actualizar datos
-        if (onCreateReservation) {
-          await onCreateReservation(reservationData);
-        }
+        // ✅ NO llamar onCreateReservation - el servicio unificado ya guardó la reserva
+        // La reserva ya está creada en Firebase, solo mostrar notificación
       }
 
       return result;
@@ -129,7 +187,7 @@ const Reservas = ({
 
   // Función para abrir modal de crear reserva
   const handleOpenCreateReservationModal = useCallback(() => {
-    setShowCreateReservationModal(true);
+    setIsCreateModalOpen(true);
   }, []);
 
   // Función para verificar si una reserva tiene check-in
@@ -244,10 +302,21 @@ const Reservas = ({
       return;
     }
     
-    // Aquí podrías implementar un modal de asignación de mesa si lo necesitas
-    console.log('Cambiar mesa para:', reserva.cliente?.nombre);
-    showNotification('Funcionalidad de asignación de mesa en desarrollo', 'info');
-  }, [hasCheckedIn, showNotification]);
+    // Activar/desactivar modo asignación de mesa
+    if (assignmentMode && selectedReservationForAssignment?.id === reserva.id) {
+      // Si ya está en modo asignación para esta reserva, cancelar
+      setAssignmentMode(false);
+      setSelectedReservationForAssignment(null);
+      showNotification('Modo asignación de mesa cancelado', 'info');
+    } else {
+      // Activar modo asignación para esta reserva
+      setAssignmentMode(true);
+      setSelectedReservationForAssignment(reserva);
+      setCheckInMode(false); // Desactivar check-in si estaba activo
+      setTableManagementMode(false); // Desactivar gestión de mesas si estaba activo
+      showNotification(`Selecciona una mesa libre para ${reserva.cliente?.nombre}`, 'info');
+    }
+  }, [hasCheckedIn, showNotification, assignmentMode, selectedReservationForAssignment]);
 
   // ============== FUNCIONES PARA LISTA DE ESPERA ==============
 
@@ -392,26 +461,256 @@ const Reservas = ({
     }
   }, [reservations, selectedDate, selectedTurno, onUpdateReservation, showNotification]);
 
-  const handleToggleCuposMode = useCallback(() => {
-    setCuposMode(prev => !prev);
-  }, []);
-
-  // Función para manejar click en mesa
-  const handleTableClick = useCallback((tableId, tableInfo) => {
-    if (checkInMode && selectedReservationForCheckIn) {
-      // Modo check-in
-      handleCheckIn(selectedReservationForCheckIn);
-    } else if (cuposMode) {
-      // ✅ NUEVA LÓGICA: Usar el servicio unificado para gestión de cupos
+  // Función para manejar cambios de bloqueo desde el mapa
+  const handleToggleTableBlock = useCallback((tableId) => {
+    if (tableManagementMode) {
+      // 🆕 MODO GESTIÓN DE MESAS: Alternar entre disponible y solo-walkin
+      const currentState = tableStates.get(tableId);
+      
+      if (!currentState) {
+        showNotification?.('Estado de mesa no encontrado', 'error');
+        return;
+      }
+      
+      // Solo permitir cambios en mesas libres (sin reserva)
+      if (currentState.state === 'reserved' || currentState.state === 'occupied') {
+        showNotification?.('No se puede cambiar el estado de una mesa ocupada o reservada', 'warning');
+        return;
+      }
+      
+      // 🆕 LÓGICA MEJORADA: Manejar tanto bloqueos manuales como excepciones a predeterminados
+      if (currentState.state === 'available') {
+        // Mesa disponible → Cambiar a solo walk-in
+        setTemporaryBlocks(prev => new Set([...prev, tableId]));
+        // Remover de excepciones si existía (por si estaba anulando un bloqueo predeterminado)
+        setTemporaryExceptions(prev => {
+          const newExceptions = new Set(prev);
+          newExceptions.delete(tableId);
+          return newExceptions;
+        });
+        setHasUnsavedChanges(true);
+        showNotification?.(`Mesa ${tableId} configurada temporalmente para walk-ins - Presiona GUARDAR para confirmar`, 'info');
+        
+      } else if (currentState.state === 'available-walkin') {
+        // Mesa solo walk-in → Cambiar a disponible para reservas
+        
+        // Verificar si es una mesa predeterminada para walk-in
+        const isPredetermined = DEFAULT_RESERVATION_BLOCKED[selectedTurno]?.includes(tableId);
+        
+        // 🔍 DEBUG: Verificar detección de mesas predeterminadas
+        console.log(`🔍 Mesa ${tableId} - Turno: ${selectedTurno}`, {
+          isPredetermined,
+          predeterminedList: DEFAULT_RESERVATION_BLOCKED[selectedTurno],
+          currentState: currentState.state,
+          currentType: currentState.type
+        });
+        
+        if (isPredetermined) {
+          // Es predeterminada: agregar excepción para anular el bloqueo predeterminado
+          setTemporaryExceptions(prev => new Set([...prev, tableId]));
+          showNotification?.(`Mesa ${tableId} liberada temporalmente de configuración predeterminada - Presiona GUARDAR para confirmar`, 'success');
+        } else {
+          // Es bloqueo manual: quitar del bloqueo
+          setTemporaryBlocks(prev => {
+            const newBlocks = new Set(prev);
+            newBlocks.delete(tableId);
+            return newBlocks;
+          });
+          showNotification?.(`Mesa ${tableId} disponible temporalmente para reservas - Presiona GUARDAR para confirmar`, 'success');
+        }
+        
+        setHasUnsavedChanges(true);
+      }
+    } else {
+      // 🔄 MODO NORMAL: Funcionalidad original de bloqueo/desbloqueo
       const { toggleTableBlock } = require('../../../shared/services/tableManagementService');
       const result = toggleTableBlock(tableId, blockedTables, tableStates);
       
       if (result.success) {
         setBlockedTables(result.blocks);
         showNotification?.(result.message, 'info');
-        } else {
+      } else {
         showNotification?.(result.message, 'warning');
+      }
+    }
+  }, [blockedTables, tableStates, showNotification, tableManagementMode]);
+
+  // 🆕 Función para guardar cambios temporales (POR FECHA Y TURNO ESPECÍFICO) - CON PERSISTENCIA EN FIREBASE
+  const handleSaveTableChanges = useCallback(async () => {
+    try {
+      const fechaString = formatDateToString(selectedDate);
+      
+      console.log('🔄 INICIANDO GUARDADO DE CUPOS:', {
+        fecha: fechaString,
+        turno: selectedTurno,
+        temporaryBlocks: Array.from(temporaryBlocks),
+        temporaryExceptions: Array.from(temporaryExceptions),
+        currentDateTurnoKey
+      });
+      
+      // ✅ GUARDAR EN FIREBASE PRIMERA (persistencia real)
+      console.log('📤 Llamando a saveTableBlocksForDateTurno...');
+      const result = await saveTableBlocksForDateTurno(
+        fechaString,
+        selectedTurno,
+        Array.from(temporaryBlocks),
+        Array.from(temporaryExceptions)
+      );
+      // Operación de Firebase completada
+      
+      // Aplicar cambios temporales SOLO a la fecha y turno específico actual
+      setDailyTurnoBlocks(prev => ({
+        ...prev,
+        [currentDateTurnoKey]: {
+          blocks: new Set(temporaryBlocks),
+          exceptions: new Set(temporaryExceptions)
         }
+      }));
+      
+      setHasUnsavedChanges(false);
+      const formattedDateForDisplay = new Date(selectedDate).toLocaleDateString('es-AR');
+      showNotification?.(`✅ Configuración de mesas para ${formattedDateForDisplay} - ${selectedTurno} guardada exitosamente en base de datos`, 'success');
+      
+      // Cambios guardados exitosamente en Firebase
+    } catch (error) {
+      console.error('❌ Error COMPLETO al guardar cambios de mesas en Firebase:', error);
+      console.error('❌ Stack trace:', error.stack);
+      showNotification?.(`❌ Error al guardar en la base de datos: ${error.message}`, 'error');
+    }
+  }, [temporaryBlocks, temporaryExceptions, currentDateTurnoKey, selectedDate, selectedTurno, showNotification]);
+
+  // 🆕 Función para cancelar cambios temporales
+  const handleCancelTableChanges = useCallback(() => {
+    const currentConfig = getCurrentConfig();
+    setTemporaryBlocks(new Set(currentConfig.blocks)); // Volver al estado de esta fecha y turno específico
+    setTemporaryExceptions(new Set(currentConfig.exceptions)); // Volver a excepciones de esta fecha y turno específico
+    setHasUnsavedChanges(false);
+    showNotification?.('Cambios cancelados', 'info');
+  }, [getCurrentConfig, showNotification]);
+
+  // 🆕 Función para activar/desactivar modo gestión de mesas
+  const handleToggleTableManagement = useCallback(() => {
+    const newMode = !tableManagementMode;
+    
+    if (!newMode && hasUnsavedChanges) {
+      // Al salir del modo gestión con cambios pendientes, preguntar qué hacer
+      const shouldSave = window.confirm('Tienes cambios sin guardar. ¿Quieres guardarlos antes de salir?');
+      if (shouldSave) {
+        handleSaveTableChanges();
+      } else {
+        handleCancelTableChanges();
+      }
+    }
+    
+    setTableManagementMode(newMode);
+    
+    if (newMode) {
+      // Al entrar, inicializar cambios temporales con el estado de esta fecha y turno específico
+      const currentConfig = getCurrentConfig();
+      setTemporaryBlocks(new Set(currentConfig.blocks));
+      setTemporaryExceptions(new Set(currentConfig.exceptions));
+      setHasUnsavedChanges(false);
+      const formattedDateForDisplay = new Date(selectedDate).toLocaleDateString('es-AR');
+      showNotification?.(`🎯 Modo Gestión Activado para ${formattedDateForDisplay} - ${selectedTurno} - Click en mesas para cambiar estados`, 'info');
+    } else {
+      showNotification?.('👁️ Modo Vista Activado', 'info');
+    }
+  }, [tableManagementMode, hasUnsavedChanges, getCurrentConfig, selectedDate, selectedTurno, handleSaveTableChanges, handleCancelTableChanges, showNotification]);
+
+  // 🆕 Efecto para actualizar estados temporales al cambiar fecha/turno (solo en modo gestión)
+  useEffect(() => {
+    if (tableManagementMode) {
+      const currentConfig = getCurrentConfig();
+      setTemporaryBlocks(new Set(currentConfig.blocks));
+      setTemporaryExceptions(new Set(currentConfig.exceptions));
+      setHasUnsavedChanges(false);
+    }
+  }, [currentDateTurnoKey, tableManagementMode, getCurrentConfig]);
+
+  // 🆕 Efecto para cargar configuración desde Firebase al cambiar fecha/turno
+  useEffect(() => {
+    // Solo cargar si no existe ya configuración para esta fecha-turno
+    if (!dailyTurnoBlocks[currentDateTurnoKey]) {
+      loadTableConfigFromFirebase();
+    }
+  }, [currentDateTurnoKey, loadTableConfigFromFirebase, dailyTurnoBlocks]);
+
+  // ============== FUNCIÓN DE ASIGNACIÓN MANUAL DE MESA ==============
+  
+  const handleAssignTable = useCallback(async (tableId, tableInfo) => {
+    if (!selectedReservationForAssignment) return;
+    
+    const tableState = tableStates.get(tableId);
+    if (!tableState) {
+      showNotification('Estado de mesa no encontrado', 'error');
+      return;
+    }
+    
+    // Verificar si la mesa ya está ocupada o reservada
+    if (tableState.state === 'occupied') {
+      showNotification('Esta mesa está ocupada y no puede ser asignada', 'warning');
+      return;
+    }
+    
+    if (tableState.state === 'reserved') {
+      showNotification('Esta mesa ya tiene una reserva asignada', 'warning');
+      return;
+    }
+    
+    // Si la mesa está completamente bloqueada
+    if (tableState.state === 'blocked') {
+      showNotification('Esta mesa está bloqueada y no puede ser asignada', 'warning');
+      return;
+    }
+    
+    // Función para realizar la asignación
+    const performAssignment = async () => {
+      try {
+        await onUpdateReservation(selectedReservationForAssignment.id, { 
+          mesaAsignada: tableId.toString() 
+        }, true);
+        
+        showNotification(`Mesa ${tableId} asignada a ${selectedReservationForAssignment.cliente?.nombre}`, 'success');
+        
+        // Desactivar modo asignación
+        setAssignmentMode(false);
+        setSelectedReservationForAssignment(null);
+      } catch (error) {
+        console.error('Error al asignar mesa:', error);
+        showNotification('Error al asignar la mesa', 'error');
+      }
+    };
+    
+    // Si la mesa está disponible completamente, asignar directamente
+    if (tableState.state === 'available') {
+      await performAssignment();
+      return;
+    }
+    
+    // Si la mesa es solo para walk-in, mostrar confirmación
+    if (tableState.state === 'available-walkin') {
+      setWalkinOverrideConfirmation({
+        tableId,
+        reserva: selectedReservationForAssignment,
+        onConfirm: async () => {
+          await performAssignment();
+          setWalkinOverrideConfirmation(null);
+        },
+        onCancel: () => {
+          setWalkinOverrideConfirmation(null);
+        }
+      });
+    }
+  }, [selectedReservationForAssignment, tableStates, onUpdateReservation, showNotification]);
+
+  // Función para manejar click en mesa
+  const handleTableClick = useCallback((tableId, tableInfo) => {
+    if (checkInMode && selectedReservationForCheckIn) {
+      // Modo check-in
+      handleCheckIn(selectedReservationForCheckIn);
+    } else if (assignmentMode && selectedReservationForAssignment) {
+      // Modo asignación de mesa
+      handleAssignTable(tableId, tableInfo);
     } else {
       // Modo normal - verificar si la mesa tiene una reserva usando el estado unificado
       if (tableInfo && tableInfo.type === 'reservation') {
@@ -442,7 +741,7 @@ const Reservas = ({
         console.log('🪑 Mesa libre clickeada:', tableId);
       }
     }
-  }, [checkInMode, selectedReservationForCheckIn, handleCheckIn, cuposMode, showNotification, blockedTables, tableStates, handleShowReservationPopup]);
+  }, [checkInMode, selectedReservationForCheckIn, assignmentMode, selectedReservationForAssignment, handleCheckIn, handleAssignTable, showNotification, tableStates, handleShowReservationPopup]);
 
   // ============== FUNCIONES AUXILIARES ==============
 
@@ -531,6 +830,29 @@ const Reservas = ({
               </button>
             </div>
 
+            {/* Indicador visual del modo asignación activo */}
+            {assignmentMode && selectedReservationForAssignment && (
+              <div className={styles.assignmentModeIndicator}>
+                <div className={styles.assignmentModeIcon}>
+                  <Users size={16} />
+                </div>
+                <span>
+                  Asignando mesa a: <strong>{selectedReservationForAssignment.cliente?.nombre}</strong> ({selectedReservationForAssignment.personas} personas)
+                </span>
+                <button 
+                  onClick={() => {
+                    setAssignmentMode(false);
+                    setSelectedReservationForAssignment(null);
+                    showNotification('Modo asignación cancelado', 'info');
+                  }}
+                  className={styles.assignmentCancelButton}
+                  title="Cancelar asignación de mesa"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
             {/* Botón para nueva reserva */}
             <button
               onClick={handleOpenCreateReservationModal}
@@ -553,6 +875,15 @@ const Reservas = ({
               </button>
               
               <button
+                onClick={handleToggleTableManagement}
+                className={`${styles.secondaryButton} ${tableManagementMode ? styles.activeModeButton : ''}`}
+                title={tableManagementMode ? "Salir del modo gestión de mesas" : "Activar modo gestión de mesas"}
+              >
+                <UserCheck size={16} />
+                {tableManagementMode ? 'Salir Gestión' : 'Gestionar Mesas'}
+              </button>
+              
+              <button
                 onClick={handleClearAssignments}
                 className={styles.secondaryButton}
                 title="Limpiar todas las asignaciones de mesa"
@@ -560,19 +891,52 @@ const Reservas = ({
                 <X size={16} />
                 Limpiar
               </button>
-              
-              <button
-                onClick={handleToggleCuposMode}
-                className={`${styles.secondaryButton} ${cuposMode ? styles.activeMode : ''}`}
-                title={cuposMode ? "Salir del modo cupos" : "Activar modo cupos para bloquear/desbloquear mesas"}
-              >
-                <Users size={16} />
-                {cuposMode ? 'Salir Cupos' : 'Modificar Cupos'}
-              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Indicador visual del modo gestión activo */}
+      {tableManagementMode && (
+        <div className={styles.contextualHelpBar}>
+          <span className={styles.helpIcon}>🎯</span>
+          <span className={styles.helpMessage}>
+            <strong>Modo Gestión de Mesas Activo:</strong> Click en mesas libres para alternar entre "Disponible para reservas" y "Solo walk-in"
+            {hasUnsavedChanges && (
+              <span className={styles.unsavedIndicator}> • Cambios pendientes</span>
+            )}
+          </span>
+          <div className={styles.helpActions}>
+            {hasUnsavedChanges && (
+              <>
+                <button 
+                  className={styles.helpSaveButton}
+                  onClick={handleSaveTableChanges}
+                  title="Guardar cambios en base de datos"
+                >
+                  <Save size={14} />
+                  Guardar
+                </button>
+                <button 
+                  className={styles.helpCancelChangesButton}
+                  onClick={handleCancelTableChanges}
+                  title="Cancelar cambios"
+                >
+                  <RotateCcw size={14} />
+                  Cancelar
+                </button>
+              </>
+            )}
+            <button 
+              className={styles.helpCancelButton}
+              onClick={handleToggleTableManagement}
+            >
+              <X size={14} />
+              Salir
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Contenido principal */}
       <div className={styles.todayContent}>
@@ -585,8 +949,9 @@ const Reservas = ({
             tableStates={tableStates} // ✅ NUEVO: Estados unificados
             tableAssignments={tableAssignments}
             occupiedTables={occupiedTables}
-            mode={cuposMode ? 'cupos' : (checkInMode ? 'checkin' : 'view')}
+            mode={checkInMode ? 'checkin' : (assignmentMode ? 'assignment' : (tableManagementMode ? 'table-management' : 'view'))}
             onTableClick={handleTableClick}
+            onToggleTableBlock={handleToggleTableBlock}
             findOccupantByTable={findOccupantByTable}
             selectedReservationId={editingReservation?.id}
             reservationPopup={reservationPopup}
@@ -595,6 +960,9 @@ const Reservas = ({
             onDeleteReservation={handleDeleteReservation}
             onContactClient={handleContactClient}
             showNotification={showNotification}
+            tableManagementMode={tableManagementMode} // 🆕 Pasar estado del modo
+            assignmentMode={assignmentMode} // 🆕 Pasar modo de asignación
+            selectedReservationForAssignment={selectedReservationForAssignment} // 🆕 Reserva seleccionada para asignar
           />
         </div>
 
@@ -614,8 +982,18 @@ const Reservas = ({
                 setCheckInMode(true);
               }}
               handleTableButtonClick={handleTableButtonClick}
-              getAssignmentButtonText={(reserva) => reserva.mesaAsignada ? `Mesa ${reserva.mesaAsignada}` : 'Asignar Mesa'}
-              getAssignmentButtonClass={() => styles.tableButton}
+              getAssignmentButtonText={(reserva) => {
+                if (assignmentMode && selectedReservationForAssignment?.id === reserva.id) {
+                  return 'Cancelar asignación';
+                }
+                return reserva.mesaAsignada ? `Mesa ${reserva.mesaAsignada}` : 'Asignar Mesa';
+              }}
+              getAssignmentButtonClass={(reserva) => {
+                if (assignmentMode && selectedReservationForAssignment?.id === reserva.id) {
+                  return `${styles.tableButton} ${styles.tableButtonActive}`;
+                }
+                return reserva.mesaAsignada ? `${styles.tableButton} ${styles.tableButtonAssigned}` : `${styles.tableButton} ${styles.tableButtonUnassigned}`;
+              }}
               getUnassignmentButtonClass={() => styles.tableButton}
             />
           </div>
@@ -838,14 +1216,51 @@ const Reservas = ({
         </div>
       )}
 
+      {/* Modal de confirmación para sobreescribir mesa walk-in */}
+      {walkinOverrideConfirmation && (
+        <div className={styles.confirmationOverlay}>
+          <div className={styles.confirmationModal}>
+            <div className={styles.confirmationHeader}>
+              <div className={styles.confirmationIcon}>
+                <AlertTriangle size={24} style={{ color: '#f59e0b' }} />
+              </div>
+              <div className={styles.confirmationContent}>
+                <h3 className={styles.confirmationTitle}>Sobreescribir Estado de Mesa</h3>
+                <p className={styles.confirmationMessage}>
+                  La mesa {walkinOverrideConfirmation.tableId} está configurada solo para walk-ins. 
+                  ¿Deseas asignarla a la reserva de {walkinOverrideConfirmation.reserva.cliente?.nombre} y cambiar su estado a "reservada"?
+                </p>
+              </div>
+            </div>
+            <div className={styles.confirmationActions}>
+              <button 
+                onClick={() => {
+                  if (walkinOverrideConfirmation.onCancel) walkinOverrideConfirmation.onCancel();
+                  setWalkinOverrideConfirmation(null);
+                }}
+                className={styles.confirmationButtonCancel}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  if (walkinOverrideConfirmation.onConfirm) walkinOverrideConfirmation.onConfirm();
+                  setWalkinOverrideConfirmation(null);
+                }}
+                className={styles.confirmationButton}
+              >
+                Sí, asignar mesa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal para crear nueva reserva */}
-      {showCreateReservationModal && (
+      {isCreateModalOpen && (
         <CreateReservationModal
-          onClose={() => setShowCreateReservationModal(false)}
-          onSave={onCreateReservation || (() => {
-            console.error('onCreateReservation function not provided');
-            showNotification?.('error', 'No se pudo crear la reserva - función no disponible');
-          })}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={handleCreateReservation}
           getAvailableSlots={getAvailableSlots}
           isValidDate={isValidDate}
           HORARIOS={HORARIOS}

@@ -69,8 +69,8 @@ export const addClient = async (clientData) => {
     const docRef = await addDoc(collection(db, "clientes"), {
       ...clientData,
       createdAt: new Date(),
-      listaNegra: false,
-      totalReservas: 1
+      listaNegra: false
+      // ❌ REMOVIDO: totalReservas - se calculará dinámicamente cuando se necesite
     });
     return docRef.id;
   } catch (error) {
@@ -1772,6 +1772,124 @@ export const getCashRegistersByDateRange = async (fechaInicio, fechaFin) => {
     return cashRegisters;
   } catch (error) {
     console.error("Error al obtener arqueos por rango de fechas:", error);
+    throw error;
+  }
+};
+
+// ==========================================
+// SISTEMA DE CUPOS DE MESAS POR FECHA-TURNO
+// ==========================================
+
+/**
+ * Guardar configuración de mesas bloqueadas por fecha y turno específico
+ * @param {string} fecha - Fecha en formato YYYY-MM-DD
+ * @param {string} turno - Turno ('mediodia' | 'noche')
+ * @param {Array} blockedTables - Array de IDs de mesas bloqueadas
+ * @param {Array} exceptions - Array de IDs de mesas que son excepciones a bloqueos predeterminados
+ */
+export const saveTableBlocksForDateTurno = async (fecha, turno, blockedTables = [], exceptions = []) => {
+  try {
+    console.log('🔥 FIREBASE saveTableBlocksForDateTurno INICIADA:', {
+      fecha,
+      turno,
+      blockedTables,
+      exceptions,
+      blockedTablesType: typeof blockedTables,
+      exceptionsType: typeof exceptions
+    });
+    
+    const docId = `${fecha}-${turno}`;
+    console.log('📄 DocID generado:', docId);
+    
+    const tableConfigRef = doc(db, 'mesas_cupos', docId);
+    console.log('📝 Referencia de documento creada');
+    
+    const configData = {
+      fecha,
+      turno,
+      blockedTables: Array.from(blockedTables), // Convertir Set a Array si es necesario
+      exceptions: Array.from(exceptions), // Convertir Set a Array si es necesario
+      updatedAt: new Date(),
+      createdBy: 'admin' // TODO: Agregar usuario actual cuando tengamos auth
+    };
+    
+    console.log('📋 Datos a guardar:', configData);
+    console.log('🔥 Intentando escribir en Firestore...');
+    
+    await setDoc(tableConfigRef, configData, { merge: true });
+    
+    console.log(`✅ Configuración de mesas guardada EXITOSAMENTE para ${fecha}-${turno}:`, {
+      blockedTables: configData.blockedTables,
+      exceptions: configData.exceptions
+    });
+    
+    return { success: true, docId, savedData: configData };
+  } catch (error) {
+    console.error("❌ Error DETALLADO al guardar configuración de mesas:", error);
+    console.error("❌ Error message:", error.message);
+    console.error("❌ Error code:", error.code);
+    console.error("❌ Error stack:", error.stack);
+    throw error;
+  }
+};
+
+/**
+ * Cargar configuración de mesas bloqueadas por fecha y turno específico
+ * @param {string} fecha - Fecha en formato YYYY-MM-DD
+ * @param {string} turno - Turno ('mediodia' | 'noche')
+ * @returns {Object} - {blockedTables: Set, exceptions: Set}
+ */
+export const loadTableBlocksForDateTurno = async (fecha, turno) => {
+  try {
+    const docId = `${fecha}-${turno}`;
+    const tableConfigRef = doc(db, 'mesas_cupos', docId);
+    const docSnapshot = await getDoc(tableConfigRef);
+    
+    if (docSnapshot.exists()) {
+      const data = docSnapshot.data();
+      console.log(`📋 Configuración de mesas cargada para ${fecha}-${turno}:`, {
+        blockedTables: data.blockedTables || [],
+        exceptions: data.exceptions || []
+      });
+      
+      return {
+        blockedTables: new Set(data.blockedTables || []),
+        exceptions: new Set(data.exceptions || []),
+        lastUpdated: data.updatedAt?.toDate() || null
+      };
+    } else {
+      console.log(`📋 No hay configuración personalizada para ${fecha}-${turno}, usando predeterminada`);
+      return {
+        blockedTables: new Set(),
+        exceptions: new Set(),
+        lastUpdated: null
+      };
+    }
+  } catch (error) {
+    console.error("❌ Error al cargar configuración de mesas:", error);
+    // En caso de error, devolver configuración vacía para no romper la app
+    return {
+      blockedTables: new Set(),
+      exceptions: new Set(),
+      lastUpdated: null
+    };
+  }
+};
+
+/**
+ * Eliminar configuración de mesas para una fecha-turno específico
+ * @param {string} fecha - Fecha en formato YYYY-MM-DD
+ * @param {string} turno - Turno ('mediodia' | 'noche')
+ */
+export const deleteTableBlocksForDateTurno = async (fecha, turno) => {
+  try {
+    const docId = `${fecha}-${turno}`;
+    const tableConfigRef = doc(db, 'mesas_cupos', docId);
+    await deleteDoc(tableConfigRef);
+    console.log(`🗑️ Configuración de mesas eliminada para ${fecha}-${turno}`);
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Error al eliminar configuración de mesas:", error);
     throw error;
   }
 };

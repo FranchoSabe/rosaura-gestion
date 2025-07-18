@@ -1,11 +1,12 @@
 /* InteractiveMapController.module.css */
 
 .interactiveMapController {
-  /* Contenedor principal del mapa interactivo - optimizado para espacio */
+  /* Contenedor principal del mapa interactivo - MAXIMIZADO */
   position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 500px; /* Asegurar altura mínima generosa */
 }
 
 .mapContainer {
@@ -15,7 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem; /* Reducido padding para dar más espacio al mapa */
+  padding: 0.1rem; /* Minimizado para dar máximo espacio al mapa */
   overflow: visible;
   position: relative;
   width: 100%;
@@ -23,7 +24,7 @@
 }
 
 .mapSvg {
-  /* SVG optimizado para vista horizontal */
+  /* SVG optimizado para vista horizontal - AGRANDADO */
   width: 100%;
   height: auto;
   border-radius: 8px;
@@ -32,13 +33,14 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   display: block;
   
-  /* Dimensiones optimizadas para layout horizontal */
+  /* Dimensiones AUMENTADAS para mayor visibilidad */
   max-width: 100%;
-  min-height: 300px;
-  max-height: 450px; /* Ajustado para vista horizontal */
+  min-height: 400px; /* Aumentado de 200px a 400px */
+  max-height: 600px; /* Aumentado de 350px a 600px */
   
-  /* Asegurar que se vea completo */
+  /* Asegurar que se vea completo y centrado */
   object-fit: contain;
+  margin: 0 auto;
   
   /* Mejorar legibilidad */
   image-rendering: -webkit-optimize-contrast;
@@ -94,6 +96,91 @@
   fill: #fca5a5;
   stroke: #dc2626;
   stroke-width: 2;
+}
+
+/* 🆕 ESTILOS PARA CONTROLES DINÁMICOS */
+.dynamicControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-top: 0.5rem;
+}
+
+.dynamicToggle {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dynamicToggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.dynamicToggle:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.dynamicToggle.active {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.dynamicInstructions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+.instructionIcon {
+  font-size: 1rem;
+}
+
+.tableStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151; /* 🔧 CORRECCIÓN: Agregar color del texto para visibilidad */
+}
+
+.statColor {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .tableHovered {

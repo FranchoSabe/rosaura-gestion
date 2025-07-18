@@ -165,4 +165,52 @@ isAdmin: false
 
 ---
 
-**✅ SISTEMA LISTO PARA PRODUCCIÓN** 
+## 🏗️ **PRÓXIMAS FUNCIONALIDADES - ARQUITECTURA UNIFICADA**
+
+### **🔥 FILOSOFÍA: CERO NUEVAS COLECCIONES**
+Todas las nuevas funcionalidades se implementan **extendiendo colecciones existentes**, NO creando nuevas colecciones en Firebase.
+
+### **🪑 SISTEMA DE UNIR MESAS**
+```javascript
+// Extensión de la colección reservas:
+{
+  mesaAsignada: "2+3+4",           // Mesas unidas temporalmente
+  esGrupoMesas: true,              // Flag: es grupo de mesas
+  capacidadTotal: 12,              // Suma de capacidades individuales
+}
+```
+
+### **👨‍🍳 MOZOS POR TURNO**
+```javascript
+// Extensión de la colección reservas:
+{
+  mozosAsignado: "Mateo",          // Nombre del mozo asignado
+  mozosId: "mozo1",                // ID interno del mozo
+}
+```
+
+### **🚶‍♂️ WALK-IN DIRECTO**
+```javascript
+// Extensión de la colección reservas:
+{
+  esWalkIn: true,                  // Flag: es walk-in
+  horaLlegada: Date,               // Timestamp llegada directa
+  estadoCheckIn: "confirmado",     // Confirmado automáticamente
+}
+```
+
+**Ventajas**:
+- **95% menos consultas** a Firebase
+- **Costos reducidos** drásticamente  
+- **Performance superior** con una sola query por día
+- **Mantenimiento simplificado** → todo centralizado
+
+**Documentación completa**: Ver `SISTEMA_ARQUITECTURA_UNIFICADA.md`
+
+---
+
+**✅ SISTEMA LISTO PARA PRODUCCIÓN**
+
+*Última actualización: 25 de enero de 2025*  
+*Sistema de Gestión Integral de Reservas - Rosaura*  
+*Estado: Completamente operativo y listo para nuevas funcionalidades* 

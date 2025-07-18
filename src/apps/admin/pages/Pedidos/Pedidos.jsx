@@ -3,7 +3,6 @@ import { ClipboardList, Plus, Clock, CheckCircle, XCircle, AlertCircle, Users, D
 import { 
   subscribeToOrders, 
   subscribeToProducts,
-  subscribeToTableStatuses,
   subscribeToReservations,
   addOrder, 
   updateOrder,
@@ -35,7 +34,6 @@ const Pedidos = ({
 }) => {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
-  const [tables, setTables] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -60,12 +58,6 @@ const Pedidos = ({
   
   // Estados para el sistema operativo simplificado
   const [isOperationOpen, setIsOperationOpen] = useState(true);
-  const [selectedTurno, setSelectedTurno] = useState(() => {
-    const currentHour = new Date().getHours();
-    return currentHour < 16 ? 'mediodia' : 'noche';
-  });
-  const [testingMode, setTestingMode] = useState(false);
-  const [testingDate, setTestingDate] = useState(new Date().toISOString().split('T')[0]);
   
   // Estados para el modal de arqueo de caja
   const [showCashRegisterModal, setShowCashRegisterModal] = useState(false);
@@ -91,43 +83,6 @@ const Pedidos = ({
     { value: 'entregado', label: 'Entregado', color: '#10b981', icon: CheckCircle },
     { value: 'pendiente_pago', label: 'Pendiente Pago', color: '#8b5cf6', icon: DollarSign }
   ];
-
-  // Función para obtener el nombre del turno
-  const getTurnoLabel = (turno) => {
-    switch(turno) {
-      case 'mediodia': return 'Mediodía';
-      case 'noche': return 'Noche';
-      default: return 'Turno';
-    }
-  };
-
-  // Función para verificar si domingo tiene turno noche
-  const isDomingoNoche = () => {
-    const today = new Date();
-    return today.getDay() === 0 && selectedTurno === 'noche';
-  };
-
-  // Función para determinar qué turno usar para reservas
-  const getReservationTurno = () => {
-    if (testingMode) {
-      return selectedTurno; // En modo testing, usa el turno seleccionado manualmente
-    }
-    
-    // Modo automático: detectar turno según la hora actual
-    const currentHour = new Date().getHours();
-    return currentHour < 16 ? 'mediodia' : 'noche';
-  };
-
-  // Función para obtener turno inteligente
-  const getSmartTurno = () => {
-    if (testingMode) {
-      return selectedTurno; // En modo testing, usa el turno seleccionado manualmente
-    }
-    
-    // Modo automático: detectar turno según la hora actual
-    const currentHour = new Date().getHours();
-    return currentHour < 16 ? 'mediodia' : 'noche';
-  };
 
   // Función para cierre de caja con arqueo real
   // Abrir modal de arqueo de caja
@@ -232,16 +187,6 @@ const Pedidos = ({
     }
   }, [hasUnsavedPayments, getActivePayments, turnData, closeTurn, showNotification]);
 
-  // Función para alternar modo testing
-  const toggleTestingMode = () => {
-    setTestingMode(prev => !prev);
-    if (!testingMode) {
-      showNotification('Modo testing activado - Puedes seleccionar cualquier turno/fecha', 'info');
-    } else {
-      showNotification('Modo testing desactivado - Volviendo a operación normal', 'info');
-    }
-  };
-
   // Función para reabrir operación
   const reopenOperation = () => {
     setIsOperationOpen(true);
@@ -275,31 +220,41 @@ const Pedidos = ({
     setShowTurnPaymentsModal(true);
   }, []);
 
-  // Usar hook unificado para estados de mesa  
-  const effectiveDate = testingMode ? testingDate : new Date().toISOString().split('T')[0];
-  const effectiveTurno = testingMode ? selectedTurno : getReservationTurno();
+  // Usar hook unificado para estados de mesa (sin modo testing)
+  const todayDate = new Date().toISOString().split('T')[0];
   
   // Memoizar dependencias para evitar recálculos innecesarios
   const emptyBlockedTables = useMemo(() => new Set(), []); // Set vacío memoizado
+  
+  // Memoizar filtros por mesa para performance
+  const ordersByTable = useMemo(() => {
+    const tableMap = new Map();
+    orders.forEach(order => {
+      const mesa = parseInt(order.mesa);
+      if (!tableMap.has(mesa)) {
+        tableMap.set(mesa, []);
+      }
+      tableMap.get(mesa).push(order);
+    });
+    return tableMap;
+  }, [orders]);
   
   // Hook para estados de mesa unificados
   const { tableStates, occupiedTables, findOccupantByTable, isTableOccupied, getTableState, mapData } = useTableStates(
     reservations, 
     orders, 
     emptyBlockedTables, // Memoizado para evitar recreación
-    effectiveDate, 
+    todayDate, 
     'pedidos' // Usar turno especial para sistema de pedidos
   );
 
   // Función para mostrar popup de mesa (simula click en mesa ocupada)
   const showTablePopup = useCallback((tableId) => {
-    // Encuentra todos los pedidos activos para esta mesa
-    const tableOrders = orders.filter(order => {
-      const orderTable = parseInt(order.mesa);
-      const targetTable = parseInt(tableId);
-      const isActiveOrder = order.estado === 'cocina' || order.estado === 'entregado';
-      return orderTable === targetTable && isActiveOrder;
-    });
+    // Encuentra todos los pedidos activos para esta mesa (optimizado)
+    const allTableOrders = ordersByTable.get(parseInt(tableId)) || [];
+    const tableOrders = allTableOrders.filter(order => 
+      order.estado === 'cocina' || order.estado === 'entregado' || order.estado === 'pendiente_pago'
+    );
 
     if (tableOrders.length === 0) {
       showNotification('No hay pedidos activos para esta mesa', 'info');
@@ -313,8 +268,8 @@ const Pedidos = ({
       position: { x: window.innerWidth / 2, y: window.innerHeight / 2 } // Centro de pantalla
     });
     
-    console.log('📋 Mostrando popup para mesa:', tableId, 'con', tableOrders.length, 'pedidos');
-  }, [orders, showNotification]);
+    // Popup mostrado correctamente
+  }, [ordersByTable, showNotification]);
 
   // Manejar click en mesa del mapa
   const handleTableClick = useCallback((tableId, tableData) => {
@@ -324,46 +279,37 @@ const Pedidos = ({
       return;
     }
     
-    // Buscar pedidos activos para esta mesa (más confiable que el estado de mesa)
-    const activeOrdersForTable = orders.filter(order => {
-      const orderTable = parseInt(order.mesa);
-      const targetTable = parseInt(tableId);
-      const isActiveOrder = order.estado === 'cocina' || order.estado === 'entregado' || order.estado === 'pendiente_pago';
-      return orderTable === targetTable && isActiveOrder;
-    });
+    // Buscar pedidos activos para esta mesa (optimizado con memoización)
+    const tableOrders = ordersByTable.get(parseInt(tableId)) || [];
+    const activeOrdersForTable = tableOrders.filter(order => 
+      order.estado === 'cocina' || order.estado === 'entregado' || order.estado === 'pendiente_pago'
+    );
     
     const tableOccupant = findOccupantByTable(tableId);
     const tableState = getTableState(tableId);
     const isOccupied = isTableOccupied(tableId) || activeOrdersForTable.length > 0; // Incluir check de pedidos activos
     
-    console.log('🖱️ CLICK en mesa:', tableId);
-    console.log('   🔍 Estado detectado:', { 
-      isOccupied, 
-      tableState: tableState?.state, 
-      type: tableState?.type, 
-      occupant: tableState?.occupant,
-      activeOrders: activeOrdersForTable.length 
-    });
+    // Solo logear en caso de debugging específico
+    if (process.env.NODE_ENV === 'development' && activeOrdersForTable.length === 0 && !isOccupied) {
+      console.log(`🆕 Mesa ${tableId} libre - abriendo modal de pedido`);
+    }
     
     if (!isOccupied && activeOrdersForTable.length === 0) {
       // Mesa libre - abrir modal de pedido directamente
-      console.log('🆕 Mesa libre - abriendo modal de pedido:', tableId);
       setSelectedTable(tableId);
       setEditingOrder(null);
       setShowOrderModal(true);
     } else {
       // Mesa ocupada o con pedidos - mostrar popup automáticamente
-      console.log('📝 Mesa ocupada/con pedidos - mostrando popup:', tableId);
-      
       if (activeOrdersForTable.length > 0) {
         // Si hay pedidos activos, mostrar popup con esos datos
         showTablePopup(tableId);
       } else {
         // Si no hay pedidos pero está ocupada por reserva, el InteractiveMapController manejará su popup
-        console.log('   📋 Mesa con reserva, popup manejado por InteractiveMapController');
+        // Operación silenciosa - reserva maneja su propio popup
       }
     }
-  }, [findOccupantByTable, isTableOccupied, isOperationOpen, showNotification, orders, showTablePopup]);
+  }, [findOccupantByTable, isTableOccupied, isOperationOpen, showNotification, ordersByTable, showTablePopup]);
 
   // Manejar "Agregar Pedido" desde popup de reserva
   const handleAddOrderToReservedTable = useCallback((tableId) => {
@@ -776,13 +722,18 @@ const Pedidos = ({
   useEffect(() => {
     const unsubscribeOrders = subscribeToOrders(
       (ordersData) => {
-        console.log('📥 SUSCRIPCIÓN - Nuevos datos de pedidos recibidos:', ordersData.length, 'pedidos');
-        // Log detallado de pedidos en cocina
-        const cocinaPedidos = ordersData.filter(o => o.estado === 'cocina');
-        console.log('🍳 Pedidos en cocina en suscripción:', cocinaPedidos.length);
-        cocinaPedidos.forEach(order => {
-          console.log('   📋 Pedido cocina:', order.orderId, '| Estado:', order.estado, '| Mesa:', order.mesa);
-        });
+        const startTime = performance.now();
+        
+        // Solo logear cambios significativos en cantidad de pedidos
+        const cocinaPedidos = ordersData.filter(o => o.estado === 'cocina').length;
+        const lastCount = window.lastOrdersCount || 0;
+        
+        if (Math.abs(cocinaPedidos - lastCount) > 0 || ordersData.length !== (window.lastTotalOrders || 0)) {
+          const processingTime = performance.now() - startTime;
+          console.log(`📥 Orders actualizado: ${processingTime.toFixed(2)}ms | Total: ${ordersData.length} | Cocina: ${cocinaPedidos} (${cocinaPedidos - lastCount >= 0 ? '+' : ''}${cocinaPedidos - lastCount})`);
+          window.lastOrdersCount = cocinaPedidos;
+          window.lastTotalOrders = ordersData.length;
+        }
         
         setOrders(ordersData);
         setLoading(false);
@@ -803,14 +754,7 @@ const Pedidos = ({
       }
     );
 
-    const unsubscribeTables = subscribeToTableStatuses(
-      (tablesData) => {
-        setTables(tablesData);
-      },
-      (error) => {
-        console.error('Error al cargar mesas:', error);
-      }
-    );
+    // subscribeToTableStatuses removido - no necesario con sistema unificado
 
     const unsubscribeReservations = subscribeToReservations(
       (reservationsData) => {
@@ -824,31 +768,17 @@ const Pedidos = ({
     return () => {
       unsubscribeOrders && unsubscribeOrders();
       unsubscribeProducts && unsubscribeProducts();
-      unsubscribeTables && unsubscribeTables();
       unsubscribeReservations && unsubscribeReservations();
     };
   }, [showNotification]);
 
   // Filtrar pedidos - Solo mostrar pedidos en cocina (pendientes de preparar)
   const filteredOrders = useMemo(() => {
-    const cocinaPedidos = orders.filter(o => o.estado === 'cocina');
-    console.log('🍳 Total pedidos:', orders.length, '| Pedidos en cocina:', cocinaPedidos.length);
-    
-    // Debug: mostrar detalles de pedidos en cocina
-    cocinaPedidos.forEach(order => {
-      console.log('📋 Pedido cocina:', {
-        id: order.id,
-        orderId: order.orderId,
-        mesa: order.mesa,
-        estado: order.estado,
-        fechaCreacion: order.fechaCreacion,
-        productos: order.productos?.length || 0
-      });
-    });
+    const startTime = performance.now();
     
     const uniqueOrders = new Map();
     
-    return orders.filter(order => {
+    const result = orders.filter(order => {
       // Solo mostrar pedidos en estado "cocina" (los que están siendo preparados)
       if (order.estado !== 'cocina') return false;
       
@@ -895,6 +825,18 @@ const Pedidos = ({
       
       return true;
     });
+    
+    // Log de performance: solo si es lento o si hay cambios significativos
+    const endTime = performance.now();
+    const executionTime = endTime - startTime;
+    const cocinaPedidos = result.length;
+    
+    if (executionTime > 5 || cocinaPedidos !== (window.lastKitchenOrdersCount || 0)) {
+      console.log(`⚡ filteredOrders: ${executionTime.toFixed(2)}ms | Total: ${orders.length} → Cocina: ${cocinaPedidos}`);
+      window.lastKitchenOrdersCount = cocinaPedidos;
+    }
+    
+    return result;
   }, [orders]);
 
   // Estadísticas rápidas (solo pedidos activos)
@@ -1068,104 +1010,17 @@ const Pedidos = ({
             <div>
               <h1 className={styles.title}>Gestión de Pedidos</h1>
               <p className={styles.subtitle}>
-                {isOperationOpen ? (
-                  testingMode ? (
-                    `Modo Testing - Fecha: ${testingDate}, Turno: ${getTurnoLabel(selectedTurno)}`
-                  ) : (
-                    `Operación Abierta - Sistema siempre disponible`
-                  )
-                ) : (
-                  `Operación Cerrada - Solo visualización`
-                )}
+                {isOperationOpen 
+                  ? 'Operación Abierta - Sistema siempre disponible'
+                  : 'Operación Cerrada - Solo visualización'
+                }
               </p>
             </div>
           </div>
           
           {/* Controles de operación */}
           <div className={styles.operationControls}>
-            {/* Modo Testing Toggle */}
-            <div className={styles.testingToggle}>
-              <label className={styles.testingToggleLabel}>
-                <input
-                  type="checkbox"
-                  checked={testingMode}
-                  onChange={(e) => setTestingMode(e.target.checked)}
-                  className={styles.testingToggleInput}
-                />
-                <span className={styles.testingToggleSlider}></span>
-                <span className={styles.testingToggleText}>Modo Testing</span>
-              </label>
-            </div>
-
-            {/* Controles de testing */}
-            {testingMode && (
-              <div className={styles.testingControls}>
-                {/* Selector de fecha */}
-                <div className={styles.dateInputWrapper}>
-                  <label htmlFor="testing-date-input" className={styles.dateInputLabel}>
-                    Fecha:
-                  </label>
-                  <input
-                    id="testing-date-input"
-                    type="date"
-                    value={testingDate}
-                    onChange={(e) => setTestingDate(e.target.value)}
-                    className={styles.dateInput}
-                    min="2024-01-01"
-                    max="2025-12-31"
-                    aria-label="Seleccionar fecha para modo testing"
-                    title="Click para abrir calendario"
-                    onClick={(e) => {
-                      try {
-                        e.target.showPicker && e.target.showPicker();
-                      } catch (err) {
-                        console.debug('showPicker no disponible en este navegador');
-                      }
-                    }}
-                    onFocus={(e) => {
-                      setTimeout(() => {
-                        try {
-                          e.target.showPicker && e.target.showPicker();
-                        } catch (err) {
-                          // Fallback silencioso
-                        }
-                      }, 100);
-                    }}
-                  />
-                  <p className={styles.dateInputHelper}>Click para calendario</p>
-                </div>
-
-                {/* Selector de turno */}
-                <div className={styles.turnSelector}>
-                  <span className={styles.turnSelectorLabel}>
-                    <Clock size={16} />
-                    Turno:
-                  </span>
-                  <div className={styles.turnSelectorButtons}>
-                    <button
-                      onClick={() => setSelectedTurno('mediodia')}
-                      className={`${styles.turnButton} ${
-                        selectedTurno === 'mediodia' ? styles.turnButtonActive : styles.turnButtonInactive
-                      }`}
-                    >
-                      <Sun size={16} />
-                      Mediodía
-                    </button>
-                    <button
-                      onClick={() => setSelectedTurno('noche')}
-                      className={`${styles.turnButton} ${
-                        selectedTurno === 'noche' ? styles.turnButtonActive : styles.turnButtonInactive
-                      }`}
-                    >
-                      <Moon size={16} />
-                      Noche
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Botón de arqueo de caja */}
+            {/* Solo botón de arqueo de caja */}
             <button
               onClick={openCashRegisterModal}
               className={styles.cashCountButton}
@@ -1174,77 +1029,6 @@ const Pedidos = ({
               <DollarSign size={20} />
               💰 Arqueo de Caja
             </button>
-            
-                         {/* Botón temporal de debug */}
-             <button
-               onClick={async () => {
-                 console.log('🔄 DEBUG - Estado actual de pedidos:', orders.length);
-                 console.log('🔄 DEBUG - Pedidos en cocina:', filteredOrders.length);
-                 filteredOrders.forEach(order => {
-                   console.log('   📋 Pedido:', order.orderId, '| Estado:', order.estado, '| ID Firebase:', order.id);
-                 });
-                 
-                                   // Verificar si los pedidos existen realmente en Firebase
-                  console.log('🔍 DEBUG - Verificando existencia en Firebase...');
-                  try {
-                    const { getOrders } = await import('../../../../firebase.js');
-                    const realOrders = await getOrders();
-                   console.log('📊 DEBUG - Pedidos REALES en Firebase:', realOrders.length);
-                   realOrders.forEach(order => {
-                     console.log('   ✅ Pedido real:', order.orderId, '| Estado:', order.estado, '| ID:', order.id);
-                   });
-                 } catch (error) {
-                   console.error('❌ DEBUG - Error al verificar Firebase:', error);
-                 }
-               }}
-               style={{
-                 backgroundColor: '#8b5cf6',
-                 color: 'white',
-                 border: 'none',
-                 padding: '0.5rem 1rem',
-                 borderRadius: '0.5rem',
-                 fontSize: '0.875rem',
-                 cursor: 'pointer',
-                 marginLeft: '0.5rem'
-               }}
-               title="Debug - Ver estado actual y Firebase"
-             >
-               🔍 Debug Estado + Firebase
-             </button>
-             
-             {/* Botón para limpiar y recargar datos */}
-             <button
-               onClick={async () => {
-                 console.log('🧹 LIMPIEZA - Limpiando estado local...');
-                 setOrders([]);
-                 
-                                   console.log('📡 LIMPIEZA - Recargando pedidos directamente desde Firebase...');
-                  try {
-                    const { getOrders } = await import('../../../../firebase.js');
-                    const realOrders = await getOrders();
-                   console.log('✅ LIMPIEZA - Pedidos cargados:', realOrders.length);
-                   setOrders(realOrders);
-                   // Notificación de debug - solo console.log
-    console.log(`📊 Recargados ${realOrders.length} pedidos desde Firebase`);
-                 } catch (error) {
-                   console.error('❌ LIMPIEZA - Error:', error);
-                   showNotification('Error al recargar pedidos', 'error');
-                 }
-               }}
-               style={{
-                 backgroundColor: '#ef4444',
-                 color: 'white',
-                 border: 'none',
-                 padding: '0.5rem 1rem',
-                 borderRadius: '0.5rem',
-                 fontSize: '0.875rem',
-                 cursor: 'pointer',
-                 marginLeft: '0.5rem'
-               }}
-               title="Limpiar y recargar desde Firebase"
-             >
-               🧹 Limpiar & Recargar
-             </button>
           </div>
         </div>
       </div>
@@ -1254,8 +1038,8 @@ const Pedidos = ({
         {/* Mapa de Mesas - Lado Izquierdo */}
         <div className={styles.mapSection}>
           <InteractiveMapController
-            fecha={effectiveDate}
-            turno={effectiveTurno}
+            fecha={todayDate}
+            turno={'pedidos'}
             reservas={mapData.reservations}
             orders={mapData.orders}
             tableStates={tableStates}
@@ -1274,7 +1058,7 @@ const Pedidos = ({
             disabled={!isOperationOpen}
             useHorizontalLayout={true}
             forcedTablePopup={forcedTablePopup}
-            onForcedPopupClose={() => setForcedTablePopup(null)}
+            setOrderPopup={setForcedTablePopup}
             onReprintTicket={handleReprintTicket}
             onRemoveOrderItem={handleRemoveOrderItem}
             permissions={userPermissions}
@@ -1293,12 +1077,7 @@ const Pedidos = ({
               <span className={styles.legendColor} style={{ backgroundColor: '#2563eb', border: '2px solid #2563eb' }}></span>
               <span>Mesa con pedido</span>
             </div>
-            {testingMode && (
-              <div className={styles.legendItem}>
-                <span className={styles.legendColor} style={{ backgroundColor: '#ffffff', border: '2px solid #10b981' }}></span>
-                <span>Pendiente pago</span>
-              </div>
-            )}
+
           </div>
         </div>
 
@@ -1355,8 +1134,7 @@ const Pedidos = ({
           disabled={!isOperationOpen}
           operationStatus={{
             isOpen: isOperationOpen,
-            mode: testingMode ? 'testing' : 'libre',
-            turno: selectedTurno
+            mode: 'normal'
           }}
         />
       )}
@@ -1471,10 +1249,12 @@ const KitchenOrderCard = ({ order, onMarkAsDelivered, showNotification }) => {
     return formatTime(order.fechaCreacion);
   }, [order.fechaCreacion]);
 
-  // Actualizar timer cada minuto
+  // Actualizar timer cada minuto (optimizado)
   useEffect(() => {
     const updateTimer = () => {
-      setTimeElapsed(calculateTimeElapsed());
+      const newTime = calculateTimeElapsed();
+      // Solo actualizar si realmente cambió para evitar re-renders innecesarios
+      setTimeElapsed(prev => prev !== newTime ? newTime : prev);
     };
     
     updateTimer(); // Actualizar inmediatamente

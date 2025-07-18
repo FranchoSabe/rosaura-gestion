@@ -135,5 +135,12 @@ service cloud.firestore {
       // Solo staff puede acceder a datos de ventas
       allow read, write: if isStaff();
     }
+
+    // Reglas para configuración de cupos de mesas por fecha-turno
+    match /mesas_cupos/{configId} {
+      // Permitir todas las operaciones temporalmente para desarrollo
+      // TODO: Cambiar a isStaff() una vez implementada la autenticación
+      allow read, write: if true;
+    }
   }
 } 

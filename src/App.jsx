@@ -67,7 +67,7 @@ function App() {
     // Obtener fecha actual en formato YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0];
     
-    console.log(`🎯 Cargando reservas del día: ${today}`);
+    // Reservas del día se cargan automáticamente
     const unsubscribeReservations = subscribeToReservationsByDate((reservas) => {
       setData(prev => ({ ...prev, reservas }));
     }, today);
@@ -142,7 +142,7 @@ function App() {
       });
     }
     
-    const id = Date.now();
+    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const notification = { 
       id, 
       type, 

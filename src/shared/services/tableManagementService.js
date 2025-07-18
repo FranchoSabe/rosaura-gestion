@@ -34,7 +34,7 @@ export const TABLE_STATES = {
 // =================== CONFIGURACIÓN ===================
 
 // Mesas bloqueadas para reservas (preservar para walk-ins)
-const DEFAULT_RESERVATION_BLOCKED = {
+export const DEFAULT_RESERVATION_BLOCKED = {
   mediodia: [1, 8, 9, 10],
   noche: [1, 8, 9, 10]
 };
@@ -45,7 +45,7 @@ const DEFAULT_RESERVATION_BLOCKED = {
  * FUNCIÓN CENTRAL: Calcular estado real de todas las mesas
  * Esta es la ÚNICA fuente de verdad para el estado de las mesas
  */
-export const calculateRealTableStates = (reservations = [], orders = [], manualBlocks = new Set(), selectedDate = null, selectedTurno = null) => {
+export const calculateRealTableStates = (reservations = [], orders = [], manualBlocks = new Set(), selectedDate = null, selectedTurno = null, exceptions = new Set()) => {
   const tableStates = new Map();
   
   // 1. Inicializar todas las mesas como disponibles
@@ -64,23 +64,25 @@ export const calculateRealTableStates = (reservations = [], orders = [], manualB
   });
   
   // 2. Aplicar bloqueos manuales (del botón "Modificar Cupos")
+  // 🔧 CORRECCIÓN: En modo gestión, los bloqueos manuales son solo para reservas (walk-in disponible)
   manualBlocks.forEach(tableId => {
     if (tableStates.has(tableId)) {
       tableStates.set(tableId, {
         ...tableStates.get(tableId),
-        state: TABLE_STATES.BLOCKED,
+        state: TABLE_STATES.AVAILABLE_WALKIN, // 🔧 Cambio: walk-in disponible en lugar de completamente bloqueada
         canReceiveReservations: false,
-        canReceiveWalkins: false,
-        availableFor: [],
+        canReceiveWalkins: true, // 🔧 Cambio: Permitir walk-ins
+        availableFor: ['walkins'], // 🔧 Cambio: Solo walk-ins
         type: 'manual_block'
       });
     }
   });
   
-  // 3. Aplicar bloqueos para reservas (preservar para walk-ins)
-  if (selectedTurno && DEFAULT_RESERVATION_BLOCKED[selectedTurno]) {
+  // 3. Aplicar bloqueos para reservas (preservar para walk-ins) - CON EXCEPCIONES
+  if (selectedTurno && DEFAULT_RESERVATION_BLOCKED[selectedTurno]) {    
     DEFAULT_RESERVATION_BLOCKED[selectedTurno].forEach(tableId => {
-      if (tableStates.has(tableId) && !manualBlocks.has(tableId)) {
+      // 🆕 LÓGICA DE EXCEPCIONES: No aplicar bloqueo si está en excepciones
+      if (tableStates.has(tableId) && !manualBlocks.has(tableId) && !exceptions.has(tableId)) {
         tableStates.set(tableId, {
           ...tableStates.get(tableId),
           state: TABLE_STATES.AVAILABLE_WALKIN,
@@ -173,6 +175,19 @@ export const calculateRealTableStates = (reservations = [], orders = [], manualB
       }
     }
   });
+  
+  // 🔍 DEBUG: Log deshabilitado para evitar spam en consola
+  // Solo se habilitará para debugging específico cambiando false a true
+  if (false && process.env.NODE_ENV === 'development' && selectedDate && selectedTurno) {
+    const summary = {
+      available: Array.from(tableStates.values()).filter(s => s.state === 'available').length,
+      reserved: Array.from(tableStates.values()).filter(s => s.state === 'reserved').length,
+      occupied: Array.from(tableStates.values()).filter(s => s.state === 'occupied').length,
+      walkinOnly: Array.from(tableStates.values()).filter(s => s.state === 'available-walkin').length,
+      blocked: Array.from(tableStates.values()).filter(s => s.state === 'blocked').length
+    };
+    console.log(`📊 Mesas: ${summary.available} libres | ${summary.walkinOnly} walk-in | ${summary.reserved} reservadas | ${summary.occupied} ocupadas | ${summary.blocked} bloqueadas`);
+  }
   
   return tableStates;
 };
@@ -441,6 +456,228 @@ export const getTableAvailabilityStats = (tableStates) => {
   });
   
   return stats;
+};
+
+/**
+ * 🎯 FUNCIÓN MASTER: Chequeo unificado de disponibilidad de mesas
+ * Esta es la ÚNICA fuente de verdad para verificar disponibilidad
+ * Centraliza TODA la lógica de estados, reservas, pedidos y bloqueos
+ * 
+ * @param {string} fecha - Fecha a consultar (YYYY-MM-DD)
+ * @param {string} turno - Turno a consultar ('mediodia' | 'noche' | 'pedidos')
+ * @param {Array} reservations - Reservas actuales
+ * @param {Array} orders - Pedidos activos
+ * @param {Set} manualBlocks - Mesas bloqueadas manualmente
+ * @param {Object} options - Opciones adicionales
+ * @returns {Map} Mapa con disponibilidad detallada por mesa
+ */
+export const checkTableAvailability = (fecha, turno, reservations = [], orders = [], manualBlocks = new Set(), options = {}) => {
+  const {
+    requireCapacity = null,         // Capacidad mínima requerida
+    excludeTableIds = [],          // Mesas a excluir del análisis
+    includeMetadata = true,        // Incluir metadatos detallados
+    onlyAvailable = false          // Solo devolver mesas disponibles
+  } = options;
+
+  console.log('🎯 checkTableAvailability - Master function ejecutándose:', {
+    fecha, turno, 
+    totalReservations: reservations.length,
+    totalOrders: orders.length,
+    manualBlocks: Array.from(manualBlocks),
+    requireCapacity,
+    excludeTableIds
+  });
+
+  // 1. Obtener estados reales de todas las mesas
+  const tableStates = calculateRealTableStates(reservations, orders, manualBlocks, fecha, turno);
+  
+  // 2. Crear mapa de disponibilidad detallado
+  const availability = new Map();
+  
+  UNIFIED_TABLES_LAYOUT.forEach(table => {
+    const tableId = table.id;
+    
+    // Excluir mesas si se especifica
+    if (excludeTableIds.includes(tableId)) {
+      return;
+    }
+    
+    // Obtener estado actual
+    const currentState = tableStates.get(tableId);
+    if (!currentState) {
+      console.warn(`🚨 Mesa ${tableId} no tiene estado definido`);
+      return;
+    }
+    
+    // Verificar capacidad mínima si se requiere
+    const meetsCapacity = !requireCapacity || table.capacity >= requireCapacity;
+    
+    // Determinar disponibilidad real
+    const isAvailableForReservations = currentState.canReceiveReservations && meetsCapacity;
+    const isAvailableForWalkins = currentState.canReceiveWalkins && meetsCapacity;
+    const isCompletelyAvailable = isAvailableForReservations && isAvailableForWalkins;
+    
+    // Crear objeto de disponibilidad
+    const availabilityInfo = {
+      tableId,
+      capacity: table.capacity,
+      isAvailable: isCompletelyAvailable,
+      isAvailableForReservations,
+      isAvailableForWalkins,
+      currentState: currentState.state,
+      meetsCapacityRequirement: meetsCapacity,
+      
+      // Razones de no disponibilidad
+      unavailableReasons: getUnavailableReasons(currentState, meetsCapacity),
+      
+      // Ocupante actual (si existe)
+      currentOccupant: getCurrentOccupantInfo(currentState),
+      
+      // Estimaciones de disponibilidad
+      estimatedAvailableAt: getEstimatedAvailability(currentState, turno),
+      
+      // Metadatos (si se requieren)
+      ...(includeMetadata && {
+        metadata: {
+          position: { x: table.x, y: table.y },
+          dimensions: { width: table.width, height: table.height },
+          stateType: currentState.type,
+          canModifyState: !['occupied', 'reserved'].includes(currentState.state),
+          lastStateChange: new Date(),
+          availabilityScore: calculateAvailabilityScore(currentState, table.capacity, requireCapacity)
+        }
+      })
+    };
+    
+    // Filtrar solo disponibles si se especifica
+    if (onlyAvailable && !isCompletelyAvailable) {
+      return;
+    }
+    
+    availability.set(tableId, availabilityInfo);
+  });
+  
+  console.log('✅ checkTableAvailability completado:', {
+    totalTables: availability.size,
+    available: Array.from(availability.values()).filter(a => a.isAvailable).length,
+    onlyReservations: Array.from(availability.values()).filter(a => a.isAvailableForReservations && !a.isAvailableForWalkins).length,
+    onlyWalkins: Array.from(availability.values()).filter(a => !a.isAvailableForReservations && a.isAvailableForWalkins).length,
+    unavailable: Array.from(availability.values()).filter(a => !a.isAvailable).length
+  });
+  
+  return availability;
+};
+
+/**
+ * Obtener razones detalladas de no disponibilidad
+ */
+const getUnavailableReasons = (currentState, meetsCapacity) => {
+  const reasons = [];
+  
+  if (!meetsCapacity) {
+    reasons.push('CAPACITY_INSUFFICIENT');
+  }
+  
+  switch (currentState.state) {
+    case 'occupied':
+      reasons.push(currentState.type === 'reservation' ? 'OCCUPIED_BY_RESERVATION' : 'OCCUPIED_BY_ORDER');
+      break;
+    case 'reserved':
+      reasons.push('RESERVED_PENDING_CHECKIN');
+      break;
+    case 'blocked':
+      reasons.push(currentState.type === 'manual_block' ? 'MANUALLY_BLOCKED' : 'SYSTEM_BLOCKED');
+      break;
+    case 'available-walkin':
+      reasons.push('BLOCKED_FOR_RESERVATIONS');
+      break;
+  }
+  
+  return reasons;
+};
+
+/**
+ * Obtener información del ocupante actual
+ */
+const getCurrentOccupantInfo = (currentState) => {
+  if (!currentState.occupant) return null;
+  
+  if (currentState.type === 'reservation') {
+    return {
+      type: 'reservation',
+      id: currentState.details?.reservationId,
+      clientName: currentState.details?.clientName,
+      people: currentState.details?.people,
+      time: currentState.details?.time,
+      checkInStatus: currentState.details?.checkInStatus
+    };
+  }
+  
+  if (currentState.type === 'order') {
+    return {
+      type: 'order',
+      id: currentState.details?.orderId,
+      status: currentState.details?.status,
+      total: currentState.details?.total,
+      products: currentState.details?.products
+    };
+  }
+  
+  return null;
+};
+
+/**
+ * Estimar cuándo estará disponible la mesa
+ */
+const getEstimatedAvailability = (currentState, turno) => {
+  if (['available', 'available-walkin'].includes(currentState.state)) {
+    return 'now';
+  }
+  
+  if (currentState.state === 'blocked') {
+    return 'manual_unblock_required';
+  }
+  
+  if (currentState.state === 'reserved') {
+    // Las reservas sin check-in pueden cancelarse
+    return 'cancellation_possible';
+  }
+  
+  if (currentState.state === 'occupied') {
+    // Estimar basado en promedio de estadía
+    const avgDuration = turno === 'mediodia' ? 90 : 120; // minutos
+    return `~${avgDuration} minutes`;
+  }
+  
+  return 'unknown';
+};
+
+/**
+ * Calcular score de disponibilidad (0-100)
+ */
+const calculateAvailabilityScore = (currentState, tableCapacity, requiredCapacity) => {
+  let score = 0;
+  
+  // Puntos por estado
+  switch (currentState.state) {
+    case 'available': score += 100; break;
+    case 'available-walkin': score += 70; break;
+    case 'reserved': score += 30; break;
+    case 'occupied': score += 0; break;
+    case 'blocked': score += 0; break;
+  }
+  
+  // Bonus por capacidad adecuada
+  if (requiredCapacity && tableCapacity >= requiredCapacity) {
+    score += 10;
+  }
+  
+  // Penalty por capacidad excesiva (optimizar ocupación)
+  if (requiredCapacity && tableCapacity > requiredCapacity * 2) {
+    score -= 20;
+  }
+  
+  return Math.max(0, Math.min(100, score));
 };
 
 // =================== EXPORTS ===================
