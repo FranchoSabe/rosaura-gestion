@@ -4,16 +4,16 @@
 .touchOptimizedModal {
   width: 95% !important;
   max-width: 900px !important;
-  height: 85vh !important;
-  max-height: 85vh !important;
+  height: 95vh !important;
+  max-height: 95vh !important;
 }
 
 @media (max-width: 1024px) {
   .touchOptimizedModal {
     width: 98% !important;
     max-width: 95vw !important;
-    height: 90vh !important;
-    max-height: 90vh !important;
+    height: 95vh !important;
+    max-height: 95vh !important;
   }
 }
 
@@ -21,8 +21,8 @@
   .touchOptimizedModal {
     width: 100% !important;
     max-width: 100vw !important;
-    height: 95vh !important;
-    max-height: 95vh !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
     margin: 0 !important;
     border-radius: 1rem 1rem 0 0 !important;
   }
@@ -31,8 +31,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  height: 85vh; /* Altura fija para evitar scroll */
-  max-height: 85vh;
+  height: 100%;
+  max-height: none;
   overflow: hidden;
 }
 
@@ -218,8 +218,8 @@
 /* Responsive design - Tablets y móviles */
 @media (max-width: 1024px) {
   .modifiersModal {
-    height: 90vh;
-    max-height: 90vh;
+    height: 100%;
+    max-height: none;
   }
   
   .productHeader {
@@ -233,8 +233,8 @@
 
 @media (max-width: 768px) {
   .modifiersModal {
-    height: 95vh;
-    max-height: 95vh;
+    height: 100%;
+    max-height: none;
     gap: 0.75rem;
   }
   

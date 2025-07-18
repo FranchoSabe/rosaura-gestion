@@ -128,7 +128,7 @@ const EnsaladaModal = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Personalizar Ensalada"
-      size="large"
+      variant="fullscreen"
       closeOnOverlayClick={false}
       className={styles.touchOptimizedEnsaladaModal}
     >
