@@ -1,25 +1,27 @@
 /* ModifiersModal.module.css - Optimizado para pantallas táctiles */
 
 /* Modal optimizado para pantallas táctiles */
+
+/* Modal fullscreen para evitar scroll horizontal */
 .touchOptimizedModal {
-  width: 95% !important;
-  max-width: 900px !important;
-  height: 95vh !important;
-  max-height: 95vh !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
 }
 
 @media (max-width: 1024px) {
   .touchOptimizedModal {
-    width: 98% !important;
-    max-width: 95vw !important;
-    height: 95vh !important;
-    max-height: 95vh !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
   }
 }
 
 @media (max-width: 768px) {
   .touchOptimizedModal {
-    width: 100% !important;
+    width: 100vw !important;
     max-width: 100vw !important;
     height: 100vh !important;
     max-height: 100vh !important;

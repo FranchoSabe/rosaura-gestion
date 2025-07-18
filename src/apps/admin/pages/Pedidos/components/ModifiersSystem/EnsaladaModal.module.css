@@ -1,25 +1,26 @@
 /* EnsaladaModal.module.css - Optimizado para pantallas táctiles */
 
 /* Modal optimizado para pantallas táctiles */
+/* Modal fullscreen para evitar scroll horizontal */
 .touchOptimizedEnsaladaModal {
-  width: 90% !important;
-  max-width: 700px !important;
-  height: 95vh !important;
-  max-height: 95vh !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
 }
 
 @media (max-width: 1024px) {
   .touchOptimizedEnsaladaModal {
-    width: 95% !important;
-    max-width: 90vw !important;
-    height: 95vh !important;
-    max-height: 95vh !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
   }
 }
 
 @media (max-width: 768px) {
   .touchOptimizedEnsaladaModal {
-    width: 100% !important;
+    width: 100vw !important;
     max-width: 100vw !important;
     height: 100vh !important;
     max-height: 100vh !important;

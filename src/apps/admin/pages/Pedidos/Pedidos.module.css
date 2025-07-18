@@ -884,6 +884,7 @@
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100vw;
   background: #f8fafc;
   z-index: 1000;
   display: flex;
