@@ -22,10 +22,7 @@ import { calculateAvailableSlots } from '../../../../shared/services/reservation
 import InteractiveMapController from '../../../../shared/components/InteractiveMap/InteractiveMapController';
 import CreateReservationModal from '../../../../shared/components/modals/CreateReservationModal';
 import EditReservationModal from '../../../../shared/components/modals/EditReservationModal';
-import { UNIFIED_TABLES_LAYOUT } from '../../../../utils/tablesLayout';
 import { useTableStates } from '../../../../shared/hooks/useTableStates';
-import { DEFAULT_RESERVATION_BLOCKED } from '../../../../shared/services/tableManagementService';
-import { isDayClosed, isTurnoClosed } from '../../../../shared/constants/operatingDays';
 import { saveTableBlocksForDateTurno, loadTableBlocksForDateTurno } from '../../../../firebase';
 
 import styles from './Reservas.module.css';
@@ -65,75 +62,38 @@ const Reservas = ({
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
 
-  // 🆕 NUEVOS ESTADOS para gestión dinámica de mesas
-  const [blockedTables, setBlockedTables] = useState(new Set()); // Mesas bloqueadas dinámicamente
-  const [temporaryBlocks, setTemporaryBlocks] = useState(new Set()); // 🆕 Bloqueos temporales para feedback inmediato
-  const [temporaryExceptions, setTemporaryExceptions] = useState(new Set()); // 🆕 Excepciones temporales para anular bloqueos predeterminados
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Indicador de cambios pendientes
-  
-  // 🆕 Estados para gestión por FECHA Y TURNO específico
-  const [dailyTurnoBlocks, setDailyTurnoBlocks] = useState({}); // Configuración por fecha específica
+  // 🆕 ESTADOS PARA BLOQUEO DE MESAS POR FECHA Y TURNO
+  const [blockedTables, setBlockedTables] = useState(new Set()); // Mesas bloqueadas para la fecha/turno actual
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false); // Indicador de cambios sin guardar
   
   // Memoizar dependencias para evitar recálculos innecesarios
   const formattedDate = useMemo(() => formatDateToString(selectedDate), [selectedDate]);
   
-  // Generar clave única para fecha + turno
-  const currentDateTurnoKey = `${formattedDate}-${selectedTurno}`;
-  
-  // Obtener configuración actual (específica para esta fecha y turno)
-  const getCurrentConfig = useCallback(() => {
-    return dailyTurnoBlocks[currentDateTurnoKey] || { blocks: new Set(), exceptions: new Set() };
-  }, [dailyTurnoBlocks, currentDateTurnoKey]);
-
-  // 🆕 Función para cargar configuración desde Firebase
-  const loadTableConfigFromFirebase = useCallback(async () => {
+  // Función para cargar configuración de mesas bloqueadas desde Firebase
+  const loadBlockedTables = useCallback(async () => {
     try {
       const fechaString = formatDateToString(selectedDate);
       const config = await loadTableBlocksForDateTurno(fechaString, selectedTurno);
-      
-      // Actualizar estado local con configuración de Firebase
-      setDailyTurnoBlocks(prev => ({
-        ...prev,
-        [currentDateTurnoKey]: {
-          blocks: config.blockedTables,
-          exceptions: config.exceptions
-        }
-      }));
-      
-      // Si estamos en modo gestión, actualizar estados temporales también
-      if (tableManagementMode) {
-        setTemporaryBlocks(new Set(config.blockedTables));
-        setTemporaryExceptions(new Set(config.exceptions));
-        setHasUnsavedChanges(false);
-      }
-      
-      // Configuración cargada correctamente desde Firebase
+      setBlockedTables(new Set(config.blockedTables));
+      setHasUnsavedChanges(false);
     } catch (error) {
-      console.error('❌ Error al cargar configuración desde Firebase:', error);
-      // En caso de error, usar configuración vacía
-      setDailyTurnoBlocks(prev => ({
-        ...prev,
-        [currentDateTurnoKey]: {
-          blocks: new Set(),
-          exceptions: new Set()
-        }
-      }));
+      console.error('❌ Error al cargar configuración de mesas:', error);
+      setBlockedTables(new Set());
     }
-  }, [selectedDate, selectedTurno, currentDateTurnoKey, tableManagementMode]);
+  }, [selectedDate, selectedTurno]);
+
+  useEffect(() => {
+    loadBlockedTables();
+  }, [loadBlockedTables]);
+
   const emptyOrders = useMemo(() => [], []); // Array vacío memoizado
 
-  // Hook para estados de mesa UNIFICADOS (usar cambios temporales en modo gestión)
-  const currentConfig = getCurrentConfig();
-  const effectiveBlocks = tableManagementMode && hasUnsavedChanges ? temporaryBlocks : currentConfig.blocks;
-  const effectiveExceptions = tableManagementMode && hasUnsavedChanges ? temporaryExceptions : currentConfig.exceptions;
-  
   const { tableStates, occupiedTables, reservedTables, availableTables, tableAssignments, findOccupantByTable, getTableState, isTableOccupied, stats } = useTableStates(
-    reservations, 
-    emptyOrders, // Sin pedidos en sistema de reservas - memoizado
-    effectiveBlocks, // 🆕 Usar bloqueos efectivos (temporales o del turno actual)
+    reservations,
+    emptyOrders,
+    blockedTables,
     formattedDate,
-    selectedTurno,
-    effectiveExceptions // 🆕 Pasar excepciones para anular bloqueos predeterminados
+    selectedTurno
   );
 
   // Función para obtener reservas del turno seleccionado
@@ -472,55 +432,19 @@ const Reservas = ({
         return;
       }
       
-      // Solo permitir cambios en mesas libres (sin reserva)
+      // Solo permitir cambios en mesas libres (sin reserva ni ocupadas)
       if (currentState.state === 'reserved' || currentState.state === 'occupied') {
         showNotification?.('No se puede cambiar el estado de una mesa ocupada o reservada', 'warning');
         return;
       }
-      
-      // 🆕 LÓGICA MEJORADA: Manejar tanto bloqueos manuales como excepciones a predeterminados
-      if (currentState.state === 'available') {
-        // Mesa disponible → Cambiar a solo walk-in
-        setTemporaryBlocks(prev => new Set([...prev, tableId]));
-        // Remover de excepciones si existía (por si estaba anulando un bloqueo predeterminado)
-        setTemporaryExceptions(prev => {
-          const newExceptions = new Set(prev);
-          newExceptions.delete(tableId);
-          return newExceptions;
-        });
-        setHasUnsavedChanges(true);
-        showNotification?.(`Mesa ${tableId} configurada temporalmente para walk-ins - Presiona GUARDAR para confirmar`, 'info');
-        
-      } else if (currentState.state === 'available-walkin') {
-        // Mesa solo walk-in → Cambiar a disponible para reservas
-        
-        // Verificar si es una mesa predeterminada para walk-in
-        const isPredetermined = DEFAULT_RESERVATION_BLOCKED[selectedTurno]?.includes(tableId);
-        
-        // 🔍 DEBUG: Verificar detección de mesas predeterminadas
-        console.log(`🔍 Mesa ${tableId} - Turno: ${selectedTurno}`, {
-          isPredetermined,
-          predeterminedList: DEFAULT_RESERVATION_BLOCKED[selectedTurno],
-          currentState: currentState.state,
-          currentType: currentState.type
-        });
-        
-        if (isPredetermined) {
-          // Es predeterminada: agregar excepción para anular el bloqueo predeterminado
-          setTemporaryExceptions(prev => new Set([...prev, tableId]));
-          showNotification?.(`Mesa ${tableId} liberada temporalmente de configuración predeterminada - Presiona GUARDAR para confirmar`, 'success');
-        } else {
-          // Es bloqueo manual: quitar del bloqueo
-          setTemporaryBlocks(prev => {
-            const newBlocks = new Set(prev);
-            newBlocks.delete(tableId);
-            return newBlocks;
-          });
-          showNotification?.(`Mesa ${tableId} disponible temporalmente para reservas - Presiona GUARDAR para confirmar`, 'success');
-        }
-        
-        setHasUnsavedChanges(true);
-      }
+
+      setBlockedTables(prev => {
+        const newBlocks = new Set(prev);
+        if (newBlocks.has(tableId)) newBlocks.delete(tableId);
+        else newBlocks.add(tableId);
+        return newBlocks;
+      });
+      setHasUnsavedChanges(true);
     } else {
       // 🔄 MODO NORMAL: Funcionalidad original de bloqueo/desbloqueo
       const { toggleTableBlock } = require('../../../shared/services/tableManagementService');
@@ -535,58 +459,30 @@ const Reservas = ({
     }
   }, [blockedTables, tableStates, showNotification, tableManagementMode]);
 
-  // 🆕 Función para guardar cambios temporales (POR FECHA Y TURNO ESPECÍFICO) - CON PERSISTENCIA EN FIREBASE
+  // Guardar cambios de bloqueo en Firebase
   const handleSaveTableChanges = useCallback(async () => {
     try {
       const fechaString = formatDateToString(selectedDate);
-      
-      console.log('🔄 INICIANDO GUARDADO DE CUPOS:', {
-        fecha: fechaString,
-        turno: selectedTurno,
-        temporaryBlocks: Array.from(temporaryBlocks),
-        temporaryExceptions: Array.from(temporaryExceptions),
-        currentDateTurnoKey
-      });
-      
-      // ✅ GUARDAR EN FIREBASE PRIMERA (persistencia real)
-      console.log('📤 Llamando a saveTableBlocksForDateTurno...');
-      const result = await saveTableBlocksForDateTurno(
+      await saveTableBlocksForDateTurno(
         fechaString,
         selectedTurno,
-        Array.from(temporaryBlocks),
-        Array.from(temporaryExceptions)
+        Array.from(blockedTables)
       );
-      // Operación de Firebase completada
-      
-      // Aplicar cambios temporales SOLO a la fecha y turno específico actual
-      setDailyTurnoBlocks(prev => ({
-        ...prev,
-        [currentDateTurnoKey]: {
-          blocks: new Set(temporaryBlocks),
-          exceptions: new Set(temporaryExceptions)
-        }
-      }));
-      
       setHasUnsavedChanges(false);
       const formattedDateForDisplay = new Date(selectedDate).toLocaleDateString('es-AR');
-      showNotification?.(`✅ Configuración de mesas para ${formattedDateForDisplay} - ${selectedTurno} guardada exitosamente en base de datos`, 'success');
-      
-      // Cambios guardados exitosamente en Firebase
+      showNotification?.(`✅ Configuración de mesas para ${formattedDateForDisplay} - ${selectedTurno} guardada`, 'success');
     } catch (error) {
-      console.error('❌ Error COMPLETO al guardar cambios de mesas en Firebase:', error);
-      console.error('❌ Stack trace:', error.stack);
-      showNotification?.(`❌ Error al guardar en la base de datos: ${error.message}`, 'error');
+      console.error('❌ Error al guardar cambios de mesas:', error);
+      showNotification?.('❌ Error al guardar en la base de datos', 'error');
     }
-  }, [temporaryBlocks, temporaryExceptions, currentDateTurnoKey, selectedDate, selectedTurno, showNotification]);
+  }, [blockedTables, selectedDate, selectedTurno, showNotification]);
 
-  // 🆕 Función para cancelar cambios temporales
+  // Cancelar cambios y recargar configuración
   const handleCancelTableChanges = useCallback(() => {
-    const currentConfig = getCurrentConfig();
-    setTemporaryBlocks(new Set(currentConfig.blocks)); // Volver al estado de esta fecha y turno específico
-    setTemporaryExceptions(new Set(currentConfig.exceptions)); // Volver a excepciones de esta fecha y turno específico
+    loadBlockedTables();
     setHasUnsavedChanges(false);
     showNotification?.('Cambios cancelados', 'info');
-  }, [getCurrentConfig, showNotification]);
+  }, [loadBlockedTables, showNotification]);
 
   // 🆕 Función para activar/desactivar modo gestión de mesas
   const handleToggleTableManagement = useCallback(() => {
@@ -603,37 +499,14 @@ const Reservas = ({
     }
     
     setTableManagementMode(newMode);
-    
+
     if (newMode) {
-      // Al entrar, inicializar cambios temporales con el estado de esta fecha y turno específico
-      const currentConfig = getCurrentConfig();
-      setTemporaryBlocks(new Set(currentConfig.blocks));
-      setTemporaryExceptions(new Set(currentConfig.exceptions));
-      setHasUnsavedChanges(false);
       const formattedDateForDisplay = new Date(selectedDate).toLocaleDateString('es-AR');
       showNotification?.(`🎯 Modo Gestión Activado para ${formattedDateForDisplay} - ${selectedTurno} - Click en mesas para cambiar estados`, 'info');
     } else {
       showNotification?.('👁️ Modo Vista Activado', 'info');
     }
-  }, [tableManagementMode, hasUnsavedChanges, getCurrentConfig, selectedDate, selectedTurno, handleSaveTableChanges, handleCancelTableChanges, showNotification]);
-
-  // 🆕 Efecto para actualizar estados temporales al cambiar fecha/turno (solo en modo gestión)
-  useEffect(() => {
-    if (tableManagementMode) {
-      const currentConfig = getCurrentConfig();
-      setTemporaryBlocks(new Set(currentConfig.blocks));
-      setTemporaryExceptions(new Set(currentConfig.exceptions));
-      setHasUnsavedChanges(false);
-    }
-  }, [currentDateTurnoKey, tableManagementMode, getCurrentConfig]);
-
-  // 🆕 Efecto para cargar configuración desde Firebase al cambiar fecha/turno
-  useEffect(() => {
-    // Solo cargar si no existe ya configuración para esta fecha-turno
-    if (!dailyTurnoBlocks[currentDateTurnoKey]) {
-      loadTableConfigFromFirebase();
-    }
-  }, [currentDateTurnoKey, loadTableConfigFromFirebase, dailyTurnoBlocks]);
+  }, [tableManagementMode, hasUnsavedChanges, handleSaveTableChanges, handleCancelTableChanges, selectedDate, selectedTurno, showNotification]);
 
   // ============== FUNCIÓN DE ASIGNACIÓN MANUAL DE MESA ==============
   
