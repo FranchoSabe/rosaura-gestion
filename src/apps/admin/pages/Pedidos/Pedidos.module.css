@@ -888,7 +888,9 @@
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* Permitir scroll global dentro del modal */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .orderHeader {
@@ -1032,7 +1034,6 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
   padding: 1rem;
-  overflow-y: auto;
   flex: 1;
 }
 
@@ -1153,10 +1154,7 @@
 /* Lista de items del pedido con altura dinámica */
 .orderItems {
   flex: 1;
-  overflow-y: auto;
   padding: 1rem 1.5rem;
-  min-height: 350px; /* Mínimo para 5-6 items */
-  max-height: calc(100vh - 300px); /* Dinámico según pantalla - menos espacio perdido */
 }
 
 .orderItem {
