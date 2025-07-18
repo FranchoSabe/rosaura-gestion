@@ -58,11 +58,11 @@ const ProviderModal = ({
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
+    <Modal
+      isOpen={isOpen}
       onClose={handleClose}
       title={isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'}
-      size="large"
+      variant="large"
       className={styles.providerModal}
       closeOnOverlayClick={false}
     >

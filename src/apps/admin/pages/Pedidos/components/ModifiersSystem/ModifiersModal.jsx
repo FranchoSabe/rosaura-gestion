@@ -82,7 +82,7 @@ const ModifiersModal = ({
         isOpen={isOpen}
         onClose={onClose}
         title={product.nombre}
-        size="large"
+        variant="fullscreen"
         closeOnOverlayClick={false}
         className={styles.touchOptimizedModal}
       >
