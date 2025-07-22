@@ -105,7 +105,7 @@ const CashRegisterModal = ({
     setProcessing(true);
     
     try {
-      console.log('🔒 Iniciando proceso de cierre de caja...');
+      // console.log('🔒 Iniciando proceso de cierre de caja...');
       
       // Datos del arqueo basados en datos temporales
       const cashRegisterData = {

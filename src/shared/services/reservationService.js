@@ -54,8 +54,8 @@ export const createReservation = async (reservationData, options = {}) => {
     const clientId = await addClient(clientData);
 
     // PASO 4: Verificar disponibilidad con el sistema unificado
-    const fechaString = typeof reservationData.fecha === 'string' 
-      ? reservationData.fecha 
+    const dateString = typeof reservationData.fecha === 'string'
+      ? reservationData.fecha
       : formatDateToString(reservationData.fecha);
 
     // PASO 4.1: Calcular estado real de las mesas
@@ -63,16 +63,19 @@ export const createReservation = async (reservationData, options = {}) => {
       existingReservations,
       existingOrders,
       manualBlocks,
-      fechaString,
+      dateString,
       reservationData.turno
     );
 
     // PASO 4.2: Validar disponibilidad antes de crear la reserva
-    const availability = validateTableAvailability({
-      personas: reservationData.personas,
-      fecha: fechaString,
-      turno: reservationData.turno
-    }, realTableStates);
+    const availability = validateTableAvailability(
+      {
+        personas: reservationData.personas,
+        fecha: dateString,
+        turno: reservationData.turno
+      },
+      realTableStates
+    );
 
     // Validación de disponibilidad realizada
 
@@ -84,7 +87,7 @@ export const createReservation = async (reservationData, options = {}) => {
 
     if (shouldGoToWaitingList) {
       return await createWaitingReservation({
-        reservationData: { ...reservationData, fecha: fechaString },
+        reservationData: { ...reservationData, fecha: dateString },
         clientId,
         clientData
       });
@@ -93,14 +96,17 @@ export const createReservation = async (reservationData, options = {}) => {
     // PASO 6: Asignar mesa automáticamente usando el sistema unificado
     const tempReservation = {
       ...reservationData,
-      fecha: fechaString,
+      fecha: dateString,
       clienteId: clientId,
       cliente: clientData
     };
 
-    const mesaAsignada = assignTableAutomatically(tempReservation, realTableStates);
+    const assignedTable = assignTableAutomatically(
+      tempReservation,
+      realTableStates
+    );
 
-    if (!mesaAsignada && !isAdmin) {
+    if (!assignedTable && !isAdmin) {
       throw new Error('No hay mesas disponibles para esta reserva.');
     }
 
@@ -108,11 +114,11 @@ export const createReservation = async (reservationData, options = {}) => {
     const finalReservationData = {
       clienteId: clientId,
       cliente: clientData,
-      fecha: fechaString,
+      fecha: dateString,
       turno: reservationData.turno,
       horario: reservationData.horario,
       personas: reservationData.personas,
-      mesaAsignada: mesaAsignada || 'Sin asignar',
+      mesaAsignada: assignedTable || 'Sin asignar',
       status: 'active',
       estadoCheckIn: null,
       createdAt: new Date(),
@@ -125,10 +131,10 @@ export const createReservation = async (reservationData, options = {}) => {
       success: true,
       type: 'confirmed',
       reservationId: reservationId,
-      mesaAsignada: mesaAsignada,
+      mesaAsignada: assignedTable,
       clientId: clientId,
-      message: mesaAsignada 
-        ? `Reserva confirmada para la mesa ${mesaAsignada}` 
+      message: assignedTable
+        ? `Reserva confirmada para la mesa ${assignedTable}`
         : 'Reserva confirmada sin asignación de mesa'
     };
 
@@ -229,27 +235,27 @@ const validateReservationData = async (reservationData, getAvailableSlots, isAdm
 /**
  * Preparar datos del cliente
  */
-const prepareClientData = async (clienteData) => {
+const prepareClientData = async (clientInfo) => {
   // Mantener el teléfono tal como viene desde el formulario
   // ya que el modal se encarga del formato correcto
-  let formattedPhone = clienteData.telefono.trim();
+  let formattedPhone = clientInfo.telefono.trim();
   
   // Solo intentar formatear si realmente es necesario
   try {
-    const phoneNumber = parsePhoneNumber(clienteData.telefono);
+    const phoneNumber = parsePhoneNumber(clientInfo.telefono);
     if (phoneNumber && phoneNumber.isValid()) {
       formattedPhone = phoneNumber.formatInternational();
     }
   } catch (error) {
     // Si falla el formateo, usar el teléfono original
-    console.info('Usando teléfono sin formatear:', clienteData.telefono);
+    console.info('Usando teléfono sin formatear:', clientInfo.telefono);
   }
 
   return {
-    nombre: clienteData.nombre.trim(),
+    nombre: clientInfo.nombre.trim(),
     telefono: formattedPhone,
-    email: clienteData.email?.trim() || null,
-    comentarios: clienteData.comentarios?.trim() || null,
+    email: clientInfo.email?.trim() || null,
+    comentarios: clientInfo.comentarios?.trim() || null,
     createdAt: new Date(),
     updatedAt: new Date()
   };

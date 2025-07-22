@@ -18,14 +18,14 @@ const useTurnData = () => {
         const currentTurn = currentHour < 16 ? 'mediodia' : 'noche';
         
         if (parsed.fecha === currentDate && parsed.turno === currentTurn) {
-          console.log('📂 Recuperando datos del turno desde sessionStorage:', {
-            fecha: parsed.fecha,
-            turno: parsed.turno,
-            pagos: parsed.pagosProcesados?.length || 0
-          });
+          // console.log('📂 Recuperando datos del turno desde sessionStorage:', {
+          //   fecha: parsed.fecha,
+          //   turno: parsed.turno,
+          //   pagos: parsed.pagosProcesados?.length || 0
+          // });
           return parsed;
         } else {
-          console.log('🔄 Datos de turno anterior encontrados, iniciando nuevo turno');
+          // console.log('🔄 Datos de turno anterior encontrados, iniciando nuevo turno');
           sessionStorage.removeItem('currentTurnData');
         }
       }
@@ -59,10 +59,10 @@ const useTurnData = () => {
       estadoCaja: 'abierta'
     };
 
-    console.log('🆕 Iniciando nuevo turno:', {
-      fecha: newTurnData.fecha,
-      turno: newTurnData.turno
-    });
+    // console.log('🆕 Iniciando nuevo turno:', {
+    //   fecha: newTurnData.fecha,
+    //   turno: newTurnData.turno
+    // });
 
     return newTurnData;
   });
@@ -99,13 +99,13 @@ const useTurnData = () => {
           prev.contadores[`pedidos${paymentData.metodoPago.charAt(0).toUpperCase() + paymentData.metodoPago.slice(1)}`] + 1
       };
 
-      console.log('💰 Pago agregado al turno:', {
-        id: nuevoPago.id,
-        mesa: paymentData.mesa,
-        metodo: paymentData.metodoPago,
-        total: paymentData.total,
-        nuevoTotal: nuevosTotales.total
-      });
+      // console.log('💰 Pago agregado al turno:', {
+      //   id: nuevoPago.id,
+      //   mesa: paymentData.mesa,
+      //   metodo: paymentData.metodoPago,
+      //   total: paymentData.total,
+      //   nuevoTotal: nuevosTotales.total
+      // });
 
       return {
         ...prev,
@@ -156,11 +156,11 @@ const useTurnData = () => {
       const nuevosPagosProcesados = [...prev.pagosProcesados];
       nuevosPagosProcesados[pagoIndex] = pagoCorregido;
 
-      console.log('✏️ Pago corregido:', {
-        id: pagoId,
-        original: `${pagoOriginal.metodoPago} $${pagoOriginal.total}`,
-        corregido: `${nuevosData.metodoPago} $${nuevosData.total}`
-      });
+      // console.log('✏️ Pago corregido:', {
+      //   id: pagoId,
+      //   original: `${pagoOriginal.metodoPago} $${pagoOriginal.total}`,
+      //   corregido: `${nuevosData.metodoPago} $${nuevosData.total}`
+      // });
 
       return {
         ...prev,
@@ -205,12 +205,12 @@ const useTurnData = () => {
       const nuevosPagosProcesados = [...prev.pagosProcesados];
       nuevosPagosProcesados[pagoIndex] = pagoAnulado;
 
-      console.log('❌ Pago anulado:', {
-        id: pagoId,
-        metodo: pagoOriginal.metodoPago,
-        total: pagoOriginal.total,
-        razon
-      });
+      // console.log('❌ Pago anulado:', {
+      //   id: pagoId,
+      //   metodo: pagoOriginal.metodoPago,
+      //   total: pagoOriginal.total,
+      //   razon
+      // });
 
       return {
         ...prev,
@@ -223,7 +223,7 @@ const useTurnData = () => {
 
   // Cerrar turno y limpiar datos temporales
   const closeTurn = useCallback(() => {
-    console.log('🔒 Cerrando turno y limpiando datos temporales');
+    // console.log('🔒 Cerrando turno y limpiando datos temporales');
     sessionStorage.removeItem('currentTurnData');
     
     // Reiniciar datos para el próximo turno

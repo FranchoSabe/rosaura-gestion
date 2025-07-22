@@ -114,7 +114,7 @@ export const useTableStates = (reservations = [], orders = [], manualBlocks = ne
       
       // Solo mostrar log si han pasado 5 segundos desde el último
       if (now - lastLogTime.current > 5000) {
-        console.log(`📊 RESUMEN useTableStates (#${logCounter.current}): ${stats.available} libres | ${stats.availableWalkin} walk-in | ${stats.reserved} reservadas | ${stats.occupied} ocupadas`);
+        // console.log(`📊 RESUMEN useTableStates (#${logCounter.current}): ${stats.available} libres | ${stats.availableWalkin} walk-in | ${stats.reserved} reservadas | ${stats.occupied} ocupadas`);
         lastLogTime.current = now;
       }
     }

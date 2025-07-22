@@ -114,22 +114,23 @@ export const calculateRealTableStates = (reservations = [], orders = [], manualB
     );
     
     dayReservations.forEach(reservation => {
-      // Determinar qué mesa usar según el estado del check-in
-      let mesaParaUsar;
+      // Determine which table to use based on check-in state
+      let tableToUse;
       
       if (reservation.estadoCheckIn === 'confirmado') {
         // Check-in confirmado: usar mesaReal
-        mesaParaUsar = reservation.mesaReal;
+        tableToUse = reservation.mesaReal;
       } else {
         // Sin check-in: usar mesaAsignada
-        mesaParaUsar = reservation.mesaAsignada;
+        tableToUse = reservation.mesaAsignada;
       }
       
-      if (mesaParaUsar) {
+      if (tableToUse) {
         // Manejar combinaciones de mesas (ej: "11+21")
-        const tableIds = typeof mesaParaUsar === 'string' && mesaParaUsar.includes('+')
-          ? mesaParaUsar.split('+').map(id => parseInt(id))
-          : [parseInt(mesaParaUsar)];
+        const tableIds =
+          typeof tableToUse === 'string' && tableToUse.includes('+')
+            ? tableToUse.split('+').map(id => parseInt(id))
+            : [parseInt(tableToUse)];
         
         tableIds.forEach(tableId => {
           if (tableStates.has(tableId)) {
@@ -196,7 +197,9 @@ export const calculateRealTableStates = (reservations = [], orders = [], manualB
       walkinOnly: Array.from(tableStates.values()).filter(s => s.state === 'available-walkin').length,
       blocked: Array.from(tableStates.values()).filter(s => s.state === 'blocked').length
     };
-    console.log(`📊 Mesas: ${summary.available} libres | ${summary.walkinOnly} walk-in | ${summary.reserved} reservadas | ${summary.occupied} ocupadas | ${summary.blocked} bloqueadas`);
+    // console.log(
+    //   `📊 Mesas: ${summary.available} libres | ${summary.walkinOnly} walk-in | ${summary.reserved} reservadas | ${summary.occupied} ocupadas | ${summary.blocked} bloqueadas`
+    // );
   }
   
   return tableStates;
@@ -245,14 +248,18 @@ export const getAvailableTablesForAssignment = (tableStates, requiredCapacity, e
  * FUNCIÓN CENTRAL: Asignación automática unificada
  * Reemplaza assignTableToNewReservation y usa el estado real
  */
-export const assignTableAutomatically = (newReservation, tableStates, excludeReservationId = null) => {
-  // Asignación automática iniciada
-  
-  // 1. Determinar capacidad objetivo
-  let capacidadObjetivo = newReservation.personas === 5 ? 6 : newReservation.personas;
-  
-  // 2. Obtener mesas disponibles usando el estado real
-  const availableTables = getAvailableTablesForAssignment(tableStates, capacidadObjetivo);
+export const assignTableAutomatically = (
+  newReservation,
+  tableStates,
+  excludeReservationId = null
+) => {
+  // Automatic assignment started
+
+  // 1. Determine target capacity
+  let targetCapacity = newReservation.personas === 5 ? 6 : newReservation.personas;
+
+  // 2. Get available tables using real state
+  const availableTables = getAvailableTablesForAssignment(tableStates, targetCapacity);
   
   // 3. Asignar primera mesa disponible (ya ordenada por prioridad)
   if (availableTables.length > 0) {
@@ -261,7 +268,7 @@ export const assignTableAutomatically = (newReservation, tableStates, excludeRes
   }
   
   // 4. Si no hay mesas individuales, intentar combinaciones para capacidad 4
-  if (capacidadObjetivo === 4) {
+  if (targetCapacity === 4) {
     const combination = findAvailableTableCombination(tableStates, 4);
     if (combination) {
       return combination;
@@ -269,11 +276,11 @@ export const assignTableAutomatically = (newReservation, tableStates, excludeRes
   }
   
     // 5. Para capacidad 6, intentar combinación específica 2+3
-  if (capacidadObjetivo === 6) {
-    const mesa2 = tableStates.get(2);
-    const mesa3 = tableStates.get(3);
-    
-    if (mesa2?.canReceiveReservations && mesa3?.canReceiveReservations) {
+  if (targetCapacity === 6) {
+    const table2 = tableStates.get(2);
+    const table3 = tableStates.get(3);
+
+    if (table2?.canReceiveReservations && table3?.canReceiveReservations) {
       return '2+3';
     }
   }
@@ -489,14 +496,15 @@ export const checkTableAvailability = (fecha, turno, reservations = [], orders =
     onlyAvailable = false          // Solo devolver mesas disponibles
   } = options;
 
-  console.log('🎯 checkTableAvailability - Master function ejecutándose:', {
-    fecha, turno, 
-    totalReservations: reservations.length,
-    totalOrders: orders.length,
-    manualBlocks: Array.from(manualBlocks),
-    requireCapacity,
-    excludeTableIds
-  });
+  // console.log('🎯 checkTableAvailability - Master function ejecutándose:', {
+  //   fecha,
+  //   turno,
+  //   totalReservations: reservations.length,
+  //   totalOrders: orders.length,
+  //   manualBlocks: Array.from(manualBlocks),
+  //   requireCapacity,
+  //   excludeTableIds
+  // });
 
   // 1. Obtener estados reales de todas las mesas
   const tableStates = calculateRealTableStates(reservations, orders, manualBlocks, fecha, turno);
@@ -567,13 +575,13 @@ export const checkTableAvailability = (fecha, turno, reservations = [], orders =
     availability.set(tableId, availabilityInfo);
   });
   
-  console.log('✅ checkTableAvailability completado:', {
-    totalTables: availability.size,
-    available: Array.from(availability.values()).filter(a => a.isAvailable).length,
-    onlyReservations: Array.from(availability.values()).filter(a => a.isAvailableForReservations && !a.isAvailableForWalkins).length,
-    onlyWalkins: Array.from(availability.values()).filter(a => !a.isAvailableForReservations && a.isAvailableForWalkins).length,
-    unavailable: Array.from(availability.values()).filter(a => !a.isAvailable).length
-  });
+  // console.log('✅ checkTableAvailability completado:', {
+  //   totalTables: availability.size,
+  //   available: Array.from(availability.values()).filter(a => a.isAvailable).length,
+  //   onlyReservations: Array.from(availability.values()).filter(a => a.isAvailableForReservations && !a.isAvailableForWalkins).length,
+  //   onlyWalkins: Array.from(availability.values()).filter(a => !a.isAvailableForReservations && a.isAvailableForWalkins).length,
+  //   unavailable: Array.from(availability.values()).filter(a => !a.isAvailable).length
+  // });
   
   return availability;
 };

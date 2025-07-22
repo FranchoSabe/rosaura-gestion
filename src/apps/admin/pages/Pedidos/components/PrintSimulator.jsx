@@ -37,7 +37,7 @@ const PrintSimulator = ({
 
   const handlePrint = () => {
     // Simular impresión
-    console.log('🖨️ SIMULANDO IMPRESIÓN:', ticketData);
+    // console.log('🖨️ SIMULANDO IMPRESIÓN:', ticketData);
     onConfirmPrint();
   };
 

@@ -197,9 +197,9 @@ const Reservas = ({
       onConfirm: async () => {
         try {
           // Debugging completo del objeto reserva
-          console.log('🔍 DEBUG - Reserva completa:', reserva);
-          console.log('🔍 DEBUG - Tipo de reserva:', typeof reserva);
-          console.log('🔍 DEBUG - Propiedades:', Object.keys(reserva));
+          // console.log('🔍 DEBUG - Reserva completa:', reserva);
+          // console.log('🔍 DEBUG - Tipo de reserva:', typeof reserva);
+          // console.log('🔍 DEBUG - Propiedades:', Object.keys(reserva));
           
           // Verificar si la reserva está anidada dentro de otro objeto
           const reservaData = reserva.reserva || reserva;
@@ -209,7 +209,7 @@ const Reservas = ({
             throw new Error('ID de reserva no encontrado');
           }
           
-          console.log('🗑️ Eliminando reserva con ID:', reservaData.id);
+          // console.log('🗑️ Eliminando reserva con ID:', reservaData.id);
           await onDeleteReservation(reservaData.id);
           showNotification('Reserva cancelada correctamente', 'success');
           setReservationPopup(null); // Cerrar popup
@@ -326,7 +326,7 @@ const Reservas = ({
       onConfirm: async () => {
         try {
           // Aquí necesitarías implementar la lógica para convertir waiting a reserva
-          console.log('Convirtiendo waiting a reserva:', waiting);
+          // console.log('Convirtiendo waiting a reserva:', waiting);
           showNotification('Funcionalidad en desarrollo: Convertir a reserva', 'info');
         } catch (error) {
           console.error('Error al confirmar desde lista de espera:', error);
@@ -345,7 +345,7 @@ const Reservas = ({
       onConfirm: async () => {
         try {
           // Aquí necesitarías implementar la lógica para rechazar waiting
-          console.log('Rechazando solicitud:', waiting);
+          // console.log('Rechazando solicitud:', waiting);
           showNotification('Funcionalidad en desarrollo: Rechazar solicitud', 'info');
         } catch (error) {
           console.error('Error al rechazar solicitud:', error);
@@ -588,7 +588,7 @@ const Reservas = ({
       // Modo normal - verificar si la mesa tiene una reserva usando el estado unificado
       if (tableInfo && tableInfo.type === 'reservation') {
         // Mesa tiene reserva - mostrar popup de información
-        console.log('🪑 Mesa reservada clickeada:', tableId, 'Reserva:', tableInfo.details?.clientName);
+        // console.log('🪑 Mesa reservada clickeada:', tableId, 'Reserva:', tableInfo.details?.clientName);
         
         // Reconstruir objeto de reserva desde tableInfo
         const reservaFromTable = {
@@ -611,7 +611,7 @@ const Reservas = ({
         handleShowReservationPopup(reservaFromTable);
       } else {
         // Mesa libre - comportamiento normal
-        console.log('🪑 Mesa libre clickeada:', tableId);
+        // console.log('🪑 Mesa libre clickeada:', tableId);
       }
     }
   }, [checkInMode, selectedReservationForCheckIn, assignmentMode, selectedReservationForAssignment, handleCheckIn, handleAssignTable, showNotification, tableStates, handleShowReservationPopup]);
