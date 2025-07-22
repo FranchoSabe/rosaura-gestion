@@ -121,15 +121,15 @@ const Pedidos = ({
         firebase: 'en progreso',
         timestamp: new Date().toISOString()
       });
-      
+
       // Guardar arqueo completo en Firebase
       await addCashRegister(arqueoCompleto);
-      
+
       console.log('✅ ARQUEO GUARDADO EXITOSAMENTE EN FIREBASE');
-      
+
       // RESETEO GARANTIZADO: Ejecutar todas las limpiezas
       console.log('🧹 EJECUTANDO RESETEO COMPLETO...');
-      
+
       // 1. Limpiar datos temporales del turno (CRÍTICO)
       closeTurn();
       console.log('✅ Datos temporales del turno limpiados');
@@ -166,20 +166,9 @@ const Pedidos = ({
         timestamp: new Date().toISOString()
       });
       
-      // RESETEO DE EMERGENCIA: Incluso con error, intentar limpiar datos temporales
-      console.log('🚨 EJECUTANDO RESETEO DE EMERGENCIA...');
-      
-      try {
-        closeTurn();
-        setAppliedDiscounts(new Map());
-        console.log('✅ Reseteo de emergencia ejecutado');
-      } catch (emergencyError) {
-        console.error('💥 Error en reseteo de emergencia:', emergencyError);
-      }
-      
       // Mostrar error detallado al usuario
       const errorMessage = error.message || 'Error desconocido al cerrar la caja';
-      showNotification(`❌ Error al cerrar caja: ${errorMessage}`, 'error');
+      showNotification(`❌ Error al cerrar caja: ${errorMessage}. Intenta nuevamente.`, 'error');
       
       // Re-lanzar error para que el modal no se cierre automáticamente
       throw error;
