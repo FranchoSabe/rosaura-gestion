@@ -53,18 +53,15 @@ export const createReservation = async (reservationData, options = {}) => {
       throw new Error(validation.error);
     }
 
-    // PASO 2: Preparar datos del cliente
+    // PASO 2: Preparar datos del cliente (aún sin crearlo en la base)
     const clientData = await prepareClientData(reservationData.cliente);
-    
-    // PASO 3: Crear cliente en la base de datos
-    const clientId = await addClient(clientData);
 
-    // PASO 4: Verificar disponibilidad con el sistema unificado
-    const fechaString = typeof reservationData.fecha === 'string' 
-      ? reservationData.fecha 
+    // PASO 3: Verificar disponibilidad con el sistema unificado
+    const fechaString = typeof reservationData.fecha === 'string'
+      ? reservationData.fecha
       : formatDateToString(reservationData.fecha);
 
-    // PASO 4.1: Calcular estado real de las mesas
+    // PASO 3.1: Calcular estado real de las mesas
     const realTableStates = calculateRealTableStates(
       existingReservations,
       existingOrders,
@@ -73,7 +70,7 @@ export const createReservation = async (reservationData, options = {}) => {
       reservationData.turno
     );
 
-    // PASO 4.2: Validar disponibilidad antes de crear la reserva
+    // PASO 3.2: Validar disponibilidad antes de crear la reserva
     const availability = validateTableAvailability({
       personas: reservationData.personas,
       fecha: fechaString,
@@ -82,13 +79,15 @@ export const createReservation = async (reservationData, options = {}) => {
 
     // Validación de disponibilidad realizada
 
-    // PASO 5: Decidir entre reserva confirmada o lista de espera
+    // PASO 4: Decidir entre reserva confirmada o lista de espera
     const shouldGoToWaitingList = !isAdmin && (
       reservationData.willGoToWaitingList || 
       !availability.hasAvailability
     );
 
     if (shouldGoToWaitingList) {
+      // Crear cliente solo si realmente se almacenará la solicitud
+      const clientId = await addClient(clientData);
       return await createWaitingReservation({
         reservationData: { ...reservationData, fecha: fechaString },
         clientId,
@@ -96,19 +95,21 @@ export const createReservation = async (reservationData, options = {}) => {
       });
     }
 
-    // PASO 6: Asignar mesa automáticamente usando el sistema unificado
+    // PASO 5: Asignar mesa automáticamente usando el sistema unificado
     const tempReservation = {
       ...reservationData,
-      fecha: fechaString,
-      clienteId: clientId,
-      cliente: clientData
+      fecha: fechaString
     };
 
     const mesaAsignada = assignTableAutomatically(tempReservation, realTableStates);
 
     if (!mesaAsignada && !isAdmin) {
+      // No crear cliente si no hay disponibilidad real
       throw new Error('No hay mesas disponibles para esta reserva.');
     }
+
+    // PASO 6: Crear cliente en la base de datos
+    const clientId = await addClient(clientData);
 
     // PASO 7: Crear la reserva final
     const finalReservationData = {

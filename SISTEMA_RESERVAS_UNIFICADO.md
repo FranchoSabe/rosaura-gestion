@@ -142,6 +142,8 @@ isAdmin: false
 2. Seleccionar fecha y horario
 3. Llenar datos de contacto
 4. Verificar reserva o lista de espera
+5. Comprobar en la base de datos que el cliente solo se crea si se almacena la
+   reserva o la entrada en lista de espera
 
 ---
 
