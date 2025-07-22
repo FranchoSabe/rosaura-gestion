@@ -249,7 +249,9 @@ const prepareClientData = async (clienteData) => {
     }
   } catch (error) {
     // Si falla el formateo, usar el teléfono original
-    console.info('Usando teléfono sin formatear:', clienteData.telefono);
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('Usando teléfono sin formatear:', clienteData.telefono);
+    }
   }
 
   return {
