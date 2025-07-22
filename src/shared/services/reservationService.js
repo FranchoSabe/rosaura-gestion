@@ -29,11 +29,6 @@ import { formatDateToString } from '../../utils';
 
 // =================== CONFIGURACIÓN ===================
 
-const DEFAULT_BLOCKED_TABLES = {
-  mediodia: [1, 8, 9, 10],
-  noche: [1, 8, 9, 10]
-};
-
 // =================== FUNCIÓN PRINCIPAL ===================
 
 /**
