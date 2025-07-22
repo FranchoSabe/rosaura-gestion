@@ -346,3 +346,12 @@ ENFOQUE: Flexibilidad operativa total para distribución de mesas.
 *Plan actualizado: 25/1/2025*  
 *Versión: 11.0 - Innovación Operativa*  
 *Estado: Listo para implementar Fase 6 - Sistema de Gestión de Mesas Avanzado*
+## 🗑️ Migración de campo `id` en pedidos
+Para evitar conflictos con el ID nativo de Firestore, se ejecutó un script de una sola vez que elimina el campo `id` en todos los documentos de la colección `pedidos`.
+
+El script está disponible en `scripts/removeOrderIdField.js` y puede ejecutarse con:
+
+```bash
+node scripts/removeOrderIdField.js path/to/serviceAccount.json
+```
+
