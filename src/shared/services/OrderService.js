@@ -23,8 +23,8 @@ export const createOrder = async (orderData) => {
 /**
  * Cambiar el estado de un pedido
  */
-export const changeOrderStatus = async (orderId, newStatus) => {
-  await updateOrderStatus(orderId, newStatus);
+export const changeOrderStatus = async (orderId, newStatus, additionalData = {}) => {
+  await updateOrderStatus(orderId, newStatus, additionalData);
 };
 
 /**
