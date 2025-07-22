@@ -88,10 +88,10 @@ Este es el **centro de control** del sistema de reservas. Maneja:
 - Determina disponibilidad para asignación automática
 - Manejo de cupos mínimos para walk-ins
 
-#### Lógica de Mesas
-**Archivo**: `src/utils/mesaLogic.js`
+#### Servicio de Gestión de Mesas
+**Archivo**: `src/shared/services/tableManagementService.js`
 
-**Algoritmos**:
+**Responsabilidades**:
 - Asignación automática inteligente
 - Verificación de disponibilidad
 - Cálculo de capacidad vs personas
