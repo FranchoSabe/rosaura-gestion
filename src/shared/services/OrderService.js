@@ -4,20 +4,16 @@ import { addOrder, updateOrderStatus, updateTableStatus, updateReservation } fro
  * Crear un nuevo pedido y marcar la mesa como ocupada
  */
 export const createOrder = async (orderData) => {
-  const orderId = `PED-${Date.now()}`;
-  const completeOrder = {
-    ...orderData,
-    id: orderId,
-    orderId,
-    fechaCreacion: new Date(),
-    fechaActualizacion: new Date(),
-    notas: orderData.notas || '',
-  };
-  await addOrder(completeOrder);
+  const cleanData = { ...orderData };
+  delete cleanData.id;
+
+  const { docId } = await addOrder(cleanData);
+
   if (orderData.mesa) {
     await updateTableStatus(orderData.mesa, 'ocupada');
   }
-  return orderId;
+
+  return docId;
 };
 
 /**

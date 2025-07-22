@@ -867,8 +867,8 @@ export const addOrder = async (orderData) => {
     };
 
     const docRef = await addDoc(collection(db, 'pedidos'), dataToSave);
-    console.log('✅ Pedido guardado:', { id: docRef.id, estado: dataToSave.estado, mesa: dataToSave.mesa });
-    return docRef.id;
+    console.log('✅ Pedido guardado:', { id: docRef.id, orderId: dataToSave.orderId, mesa: dataToSave.mesa, estado: dataToSave.estado });
+    return { docId: docRef.id, orderId: dataToSave.orderId };
   } catch (error) {
     console.error("Error al agregar pedido:", error);
     throw error;
@@ -879,17 +879,10 @@ export const addOrder = async (orderData) => {
 export const getOrders = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, 'pedidos'));
-    const orders = querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      // Remover el campo 'id' de los datos para evitar conflicto
-      const { id: dataId, ...restData } = data;
-      return {
-        id: doc.id,                    // Document ID real de Firebase (NUNCA sobrescribir)
-        firebaseDocId: doc.id,         // Backup del ID real
-        legacyId: dataId,              // Campo id del documento original (si existe)
-        ...restData                    // Resto de datos sin el campo 'id' conflictivo
-      };
-    });
+    const orders = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     return orders;
   } catch (error) {
     console.error("Error al obtener pedidos:", error);

@@ -844,7 +844,7 @@ const Pedidos = ({
   // Manejar creación de pedido
   const handleCreateOrder = async (orderData) => {
     try {
-      const orderId = await OrderService.createOrder(orderData);
+      await OrderService.createOrder(orderData);
 
       setShowOrderModal(false);
       setSelectedTable(null);
