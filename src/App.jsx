@@ -4,7 +4,6 @@ import { LoginView } from './apps/client/pages/Login/LoginView';
 import AppRouter from './router/AppRouter';
 import { NotificationContainer, ConfirmationModal } from './shared/components/ui';
 import { 
-  addReservation, 
   addClient, 
   updateClientBlacklist, 
   updateClientNotes,
