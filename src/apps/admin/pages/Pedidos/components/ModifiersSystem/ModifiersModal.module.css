@@ -1,4 +1,4 @@
-/* ModifiersModal.module.css - Optimizado para pantallas táctiles */
+/* ModifiersModal.module.css - Optimizado para eliminar scroll + Mejor legibilidad */
 
 /* Modal optimizado para pantallas táctiles */
 .touchOptimizedModal {
@@ -27,26 +27,27 @@
     border-radius: 1rem 1rem 0 0 !important;
   }
 }
+
 .modifiersModal {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
   height: 100%;
   max-height: none;
   overflow: hidden;
 }
 
-/* Header con información del producto - Más compacto */
+/* Header con información del producto - Más compacto pero legible */
 .productHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
-  flex-shrink: 0; /* No se comprime */
+  flex-shrink: 0;
 }
 
 .productInfo {
@@ -54,8 +55,8 @@
 }
 
 .productInfo h3 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.25rem;
+  margin: 0 0 0.2rem 0;
+  font-size: 1.25rem; /* Aumentado de 1.125rem para mejor legibilidad */
   font-weight: 700;
   color: #1f2937;
   line-height: 1.2;
@@ -64,10 +65,10 @@
 .productDescription {
   margin: 0;
   color: #6b7280;
-  font-size: 0.875rem;
+  font-size: 0.875rem; /* Aumentado de 0.8rem para mejor legibilidad */
   line-height: 1.3;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -75,46 +76,64 @@
 .productPrice {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
   align-items: flex-end;
   flex-shrink: 0;
 }
 
 .basePrice {
-  font-size: 0.875rem;
+  font-size: 0.875rem; /* Aumentado de 0.8rem para mejor legibilidad */
   color: #6b7280;
 }
 
 .totalPrice {
-  font-size: 1.25rem;
+  font-size: 1.25rem; /* Aumentado de 1.125rem para mejor legibilidad */
   font-weight: 700;
   color: #dc2626;
 }
 
-/* Sección de modificadores - Área principal sin scroll */
+/* Sección de modificadores - Área principal optimizada */
 .modifiersSection {
   flex: 1;
   overflow-y: auto;
-  padding: 0 0.25rem;
-  min-height: 0; /* Permite flex shrink */
+  padding: 0 0.125rem;
+  min-height: 0;
+  
+  /* Scroll más sutil */
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb #f9fafb;
 }
 
-/* Preview del producto - Más compacto */
+.modifiersSection::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modifiersSection::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+.modifiersSection::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 2px;
+}
+
+/* Preview del producto - Más compacto pero legible */
 .productPreview {
   background: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
-  padding: 1rem 1.5rem;
-  flex-shrink: 0; /* No se comprime */
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  flex-shrink: 0;
 }
 
 .previewHeader {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   color: #374151;
   font-weight: 600;
+  font-size: 1rem; /* Aumentado de 0.9rem para mejor legibilidad */
 }
 
 .previewContent {
@@ -126,9 +145,9 @@
 
 .previewText {
   flex: 1;
-  font-size: 1rem;
+  font-size: 1rem; /* Aumentado de 0.9rem para mejor legibilidad */
   color: #1f2937;
-  line-height: 1.4;
+  line-height: 1.3;
   font-weight: 500;
 }
 
@@ -136,30 +155,30 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.5rem;
+  font-size: 1.375rem; /* Aumentado de 1.25rem para mejor legibilidad */
   font-weight: 700;
   color: #dc2626;
 }
 
-/* Botones de acción - Optimizados para pantallas táctiles */
+/* Botones de acción - Optimizados y más compactos */
 .modalActions {
   display: flex;
-  gap: 1rem;
-  padding-top: 1rem;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
   border-top: 1px solid #e5e7eb;
-  flex-shrink: 0; /* No se comprime */
+  flex-shrink: 0;
 }
 
 .cancelButton {
   flex: 1;
-  padding: 1rem 1.5rem; /* Más grande para touch */
-  min-height: 54px; /* Mínimo recomendado para touch */
+  padding: 0.75rem 1rem;
+  min-height: 48px;
   border: 2px solid #d1d5db;
   background: white;
   color: #374151;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1rem; /* Aumentado de 0.9rem para mejor legibilidad */
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -176,14 +195,14 @@
 
 .confirmButton {
   flex: 2;
-  padding: 1rem 1.5rem; /* Más grande para touch */
-  min-height: 54px; /* Mínimo recomendado para touch */
+  padding: 0.75rem 1rem;
+  min-height: 48px;
   border: 2px solid #dc2626;
   background: #dc2626;
   color: white;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1rem; /* Aumentado de 0.9rem para mejor legibilidad */
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -220,14 +239,27 @@
   .modifiersModal {
     height: 100%;
     max-height: none;
+    gap: 0.5rem;
   }
   
   .productHeader {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
   }
   
   .productInfo h3 {
-    font-size: 1.125rem;
+    font-size: 1.125rem; /* Mantenido más legible en tablets */
+  }
+  
+  .productDescription {
+    font-size: 0.8rem; /* Ligeramente más grande que antes */
+  }
+  
+  .previewHeader {
+    font-size: 0.9rem; /* Ligeramente más grande */
+  }
+  
+  .previewText {
+    font-size: 0.9rem; /* Ligeramente más grande */
   }
 }
 
@@ -235,14 +267,14 @@
   .modifiersModal {
     height: 100%;
     max-height: none;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
   
   .productHeader {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
     align-items: flex-start;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 0.75rem;
   }
   
   .productPrice {
@@ -255,43 +287,57 @@
   .previewContent {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
   
   .previewText {
-    font-size: 0.875rem;
+    font-size: 0.875rem; /* Más legible en móvil */
   }
   
   .previewPrice {
-    font-size: 1.25rem;
+    font-size: 1.25rem; /* Más legible en móvil */
   }
   
   .modalActions {
     flex-direction: column;
+    gap: 0.5rem;
   }
   
   .cancelButton,
   .confirmButton {
-    min-height: 48px;
-    font-size: 0.875rem;
+    min-height: 44px;
+    font-size: 0.9rem; /* Más legible en móvil */
   }
 }
 
 /* Optimizaciones para pantallas muy pequeñas */
 @media (max-width: 480px) {
   .productDescription {
-    -webkit-line-clamp: 1;
+    display: none; /* Ocultar descripción en pantallas muy pequeñas */
   }
   
   .productPrice {
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
   
   .basePrice {
-    font-size: 0.75rem;
+    font-size: 0.8rem; /* Ligeramente más grande */
   }
   
   .totalPrice {
-    font-size: 1.125rem;
+    font-size: 1.125rem; /* Más legible */
+  }
+  
+  .previewHeader {
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem; /* Más legible */
+  }
+  
+  .previewText {
+    font-size: 0.8rem; /* Más legible */
+  }
+  
+  .previewPrice {
+    font-size: 1.125rem; /* Más legible */
   }
 } 

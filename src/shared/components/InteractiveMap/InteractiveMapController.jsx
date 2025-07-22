@@ -28,6 +28,7 @@ const InteractiveMapController = ({
   onEditReservation = null,
   onDeleteReservation = null,
   onContactClient = null,
+  onAddOrderToReservedTable = null, // ✅ AGREGADO: función para agregar pedidos a mesas ocupadas
   isOperationOpen = true,
   showNotification = null,
   tableManagementMode = false, // 🆕 Nuevo prop para el modo gestión
@@ -117,7 +118,8 @@ const InteractiveMapController = ({
         textColor: feedback.textColor,
         description: isDynamic ? detailedState?.actionHint : feedback.description,
         cursor: isDynamic ? 'pointer' : feedback.cursor || 'default',
-        opacity: (!isOperationOpen && !isDynamic) ? 0.6 : 1 // Opacidad reducida si está cerrado
+        opacity: (!isOperationOpen && !isDynamic) ? 0.6 : 1, // Opacidad reducida si está cerrado
+        textSuffix: feedback.textSuffix // 🆕 Agregado para mostrar asterisco en mesas walk-in
       };
     }
 
@@ -257,6 +259,42 @@ const InteractiveMapController = ({
     }
   }, [setOrderPopup, forcedTablePopup, orderPopup]);
 
+  // ✅ NUEVA FUNCIÓN: Unificar productos de todos los pedidos
+  const getUnifiedProducts = useCallback((orders) => {
+    if (!orders || orders.length === 0) return [];
+
+    const productMap = {};
+    
+    orders.forEach(order => {
+      order.productos?.forEach(producto => {
+        // Crear clave única basada en nombre y precio para agrupar productos iguales
+        const key = `${producto.nombre}-${producto.precio}`;
+        
+        if (productMap[key]) {
+          // Si ya existe, sumar cantidad y subtotal
+          productMap[key].cantidad += producto.cantidad;
+          productMap[key].subtotal += (producto.subtotal || producto.precio * producto.cantidad);
+          productMap[key].orderIds.push(order.id);
+          productMap[key].orderNumbers.push(order.orderId);
+        } else {
+          // Crear nueva entrada
+          productMap[key] = {
+            nombre: producto.nombre,
+            precio: producto.precio,
+            cantidad: producto.cantidad,
+            subtotal: producto.subtotal || producto.precio * producto.cantidad,
+            notas: producto.notas || '',
+            orderIds: [order.id],
+            orderNumbers: [order.orderId]
+          };
+        }
+      });
+    });
+
+    // Convertir a array y ordenar por nombre para consistencia
+    return Object.values(productMap).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, []);
+
   // Renderizar mesa individual (memoizado por mesa)
   const renderTable = useCallback((table) => {
     const { fill, stroke, strokeWidth, textColor, description } = getTableVisualStyles(table.id);
@@ -299,7 +337,7 @@ const InteractiveMapController = ({
           fontWeight="bold"
           pointerEvents="none"
         >
-          {table.id}
+          {table.id}{getTableVisualStyles(table.id).textSuffix || ''}
         </text>
 
         {/* Capacidad de mesa o personas de reserva */}
@@ -398,31 +436,32 @@ const InteractiveMapController = ({
       )}
 
       {/* Popup de pedidos */}
-       {activeOrderPopup && (
+      {activeOrderPopup && (
         <div className={styles.popupOverlay} onClick={handleCloseOrderPopup}>
-           <div
-             className={styles.orderPopup}
-             onClick={(e) => e.stopPropagation()}
-           >
-             <div className={styles.popupHeader}>
-               <div className={styles.popupTitle}>
+          <div
+            className={styles.orderPopup}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.popupHeader}>
+              <div className={styles.popupTitle}>
                 <span>🍽️</span>
                 Mesa {activeOrderPopup.tableId}
-               </div>
+              </div>
               <button
                 className={styles.popupCloseButton}
                 onClick={handleCloseOrderPopup}
               >
                 ✕
-               </button>
-             </div>
+              </button>
+            </div>
 
-             <div className={styles.popupContent}>
+            <div className={styles.popupContent}>
               {/* Información de pedidos de la mesa */}
               {activeOrderPopup.orders && activeOrderPopup.orders.length > 0 ? (
-                <div className={styles.orderInfo}>
+                <div>
+                  {/* Header compacto con resumen de pedidos */}
                   <div className={styles.tableOrdersHeader}>
-                    <h3>Pedidos Activos ({activeOrderPopup.orders.length})</h3>
+                    <h3>Mesa {activeOrderPopup.tableId} - {activeOrderPopup.orders.length} {activeOrderPopup.orders.length === 1 ? 'Pedido' : 'Pedidos'}</h3>
                     <div className={styles.tableOrdersStatus}>
                       {activeOrderPopup.orders.map(order => (
                         <span
@@ -434,133 +473,158 @@ const InteractiveMapController = ({
                             styles.cookingStatus
                           }
                         >
-                          {order.orderId} - {order.estado}
+                          #{order.orderId}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className={styles.allOrdersList}>
-                    {activeOrderPopup.orders.map(order => (
-                      <div key={order.id} className={styles.singleOrderCard}>
-                        <div className={styles.orderCardHeader}>
-                          <span className={styles.orderNumber}>Pedido #{order.orderId}</span>
-                          <span className={styles.orderTime}>
-                            {order.fechaCreacion && order.fechaCreacion.seconds 
-                              ? new Date(order.fechaCreacion.seconds * 1000).toLocaleTimeString('es-AR', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })
-                              : 'Hora no disponible'
-                            }
-                          </span>
-                        </div>
-                        
-                        <div className={styles.productsList}>
-                          {order.productos && order.productos.map((producto, idx) => (
-                            <div key={idx} className={styles.productItem}>
-                              <span className={styles.productQuantity}>{producto.cantidad}x</span>
-                              <span className={styles.productName}>{producto.nombre}</span>
-                              <span className={styles.productPrice}>
-                                ${(producto.precio * producto.cantidad).toLocaleString('es-AR')}
+                  {/* Lista unificada de productos - SIN SCROLL */}
+                  <div className={styles.unifiedProductsList}>
+                    <h4>📋 Productos de la Mesa</h4>
+                    <div className={styles.productsList}>
+                      {getUnifiedProducts(activeOrderPopup.orders).map((producto, idx) => (
+                        <div key={idx} className={styles.productItem}>
+                          <span className={styles.productQuantity}>{producto.cantidad}x</span>
+                          <div className={styles.productInfo}>
+                            <span className={styles.productName}>{producto.nombre}</span>
+                            {producto.orderNumbers.length > 1 && (
+                              <span className={styles.productOrders}>
+                                (Pedidos: {producto.orderNumbers.join(', ')})
                               </span>
-                              {/* Botón eliminar item - solo para estados que permiten edición */}
-                              {onRemoveOrderItem && permissions.canEdit && (order.estado === 'cocina' || order.estado === 'entregado') && (
-                                <button
-                                  className={styles.removeItemButton}
-                                  onClick={() => {
-                                    onRemoveOrderItem(order.id, producto);
-                                  }}
-                                  title={`Eliminar ${producto.nombre}`}
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </div>
-                          ))}
+                            )}
+                            {producto.notas && (
+                              <span className={styles.productNotes}>{producto.notas}</span>
+                            )}
+                          </div>
+                          <span className={styles.productPrice}>
+                            ${producto.subtotal.toLocaleString('es-AR')}
+                          </span>
+                          {/* Botón eliminar item - solo para estados que permiten edición */}
+                          {onRemoveOrderItem && permissions.canEdit && activeOrderPopup.orders.some(order => 
+                            producto.orderIds.includes(order.id) && (order.estado === 'cocina' || order.estado === 'entregado')
+                          ) && (
+                            <button
+                              className={styles.removeItemButton}
+                              onClick={() => {
+                                // Encontrar el primer pedido que contenga este producto
+                                const targetOrder = activeOrderPopup.orders.find(order => 
+                                  producto.orderIds.includes(order.id) && 
+                                  (order.estado === 'cocina' || order.estado === 'entregado')
+                                );
+                                if (targetOrder) {
+                                  const originalProduct = targetOrder.productos.find(p => 
+                                    p.nombre === producto.nombre && p.precio === producto.precio
+                                  );
+                                  if (originalProduct) {
+                                    onRemoveOrderItem(targetOrder.id, originalProduct);
+                                  }
+                                }
+                              }}
+                              title={`Eliminar ${producto.nombre}`}
+                            >
+                              ✕
+                            </button>
+                          )}
                         </div>
-                        
-                        <div className={styles.orderSubtotal}>
-                          Subtotal: ${(order.totales?.total || 0).toLocaleString('es-AR')}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
+                  {/* Total de la mesa - Más prominente */}
                   <div className={styles.tableTotal}>
                     <strong>Total Mesa: ${activeOrderPopup.orders.reduce((total, order) => 
                       total + (order.totales?.total || 0), 0).toLocaleString('es-AR')}</strong>
                   </div>
 
-                  {/* Botones de acción */}
+                  {/* Botones de acción - Layout profesional reorganizado */}
                   <div className={styles.popupActions}>
-                    {/* Botón Agregar al Pedido - solo si hay pedidos activos en cocina */}
-                    {onTableClick && permissions.canEdit && activeOrderPopup.orders.some(order => order.estado === 'cocina') && (
-                      <button
-                        className={styles.addOrderButton}
-                        onClick={() => {
-                          onTableClick(activeOrderPopup.tableId, null);
-                          handleCloseOrderPopup();
-                        }}
-                      >
-                        ➕ Agregar al Pedido
-                      </button>
-                    )}
+                    {/* Primera fila: Botones principales */}
+                    <div className={styles.primaryActions}>
+                      {/* Botón Agregar más pedidos */}
+                      {onAddOrderToReservedTable && permissions.canEdit && activeOrderPopup.orders.some(order => 
+                        order.estado === 'cocina' || order.estado === 'entregado'
+                      ) && (
+                        <button
+                          className={styles.addOrderButton}
+                          onClick={() => {
+                            onAddOrderToReservedTable(activeOrderPopup.tableId);
+                            handleCloseOrderPopup();
+                          }}
+                        >
+                          {(() => {
+                            const hasKitchenOrders = activeOrderPopup.orders.some(order => order.estado === 'cocina');
+                            const hasDeliveredOrders = activeOrderPopup.orders.some(order => order.estado === 'entregado');
+                            
+                            if (hasKitchenOrders && hasDeliveredOrders) {
+                              return "➕ Agregar Productos";
+                            } else if (hasKitchenOrders) {
+                              return "➕ Agregar al Pedido";
+                            } else {
+                              return "➕ Nuevo Pedido";
+                            }
+                          })()}
+                        </button>
+                      )}
 
-                    {/* Botón Reimprimir Ticket */}
-                    {onReprintTicket && permissions.canReprint && activeOrderPopup.orders.length > 0 && (
-                      <button
-                        className={styles.reprintButton}
-                        onClick={() => {
-                          onReprintTicket(activeOrderPopup.tableId, activeOrderPopup.orders);
-                          handleCloseOrderPopup();
-                        }}
-                      >
-                        🖨️ Reimprimir
-                      </button>
-                    )}
+                      {/* Botón Procesar Pago - prominente si hay pedidos para cobrar */}
+                      {onViewTable && permissions.canProcessPayment && activeOrderPopup.orders.some(order => order.estado === 'pendiente_pago') && (
+                        <button
+                          className={styles.processPaymentButton}
+                          onClick={() => {
+                            const payableOrders = activeOrderPopup.orders.filter(order => order.estado === 'pendiente_pago');
+                            onViewTable(activeOrderPopup.tableId, payableOrders);
+                            handleCloseOrderPopup();
+                          }}
+                        >
+                          💰 Cobrar Mesa
+                        </button>
+                      )}
 
-                    {/* Botón Aplicar Descuento - solo para pedidos entregados */}
-                    {onApplyDiscount && permissions.canDiscount && activeOrderPopup.orders.some(order => order.estado === 'entregado') && (
-                      <button
-                        className={styles.discountButton}
-                        onClick={() => {
-                          const deliveredOrders = activeOrderPopup.orders.filter(order => order.estado === 'entregado');
-                          onApplyDiscount(activeOrderPopup.tableId, deliveredOrders);
-                          handleCloseOrderPopup();
-                        }}
-                      >
-                        💸 Descuento
-                      </button>
-                    )}
+                      {/* Botón Cerrar Mesa - prominente si hay pedidos entregados */}
+                      {onCloseTable && permissions.canCloseTable && activeOrderPopup.orders.some(order => order.estado === 'entregado') && (
+                        <button
+                          className={styles.closeTableButton}
+                          onClick={() => {
+                            const deliveredOrders = activeOrderPopup.orders.filter(order => order.estado === 'entregado');
+                            onCloseTable(activeOrderPopup.tableId, deliveredOrders);
+                            handleCloseOrderPopup();
+                          }}
+                        >
+                          🏪 Cerrar Mesa
+                        </button>
+                      )}
+                    </div>
 
-                    {/* Botón Cerrar Mesa - solo para pedidos entregados */}
-                    {onCloseTable && permissions.canCloseTable && activeOrderPopup.orders.some(order => order.estado === 'entregado') && (
-                      <button
-                        className={styles.closeTableButton}
-                        onClick={() => {
-                          const deliveredOrders = activeOrderPopup.orders.filter(order => order.estado === 'entregado');
-                          onCloseTable(activeOrderPopup.tableId, deliveredOrders);
-                          handleCloseOrderPopup();
-                        }}
-                      >
-                        🏪 Cerrar Mesa
-                      </button>
-                    )}
+                    {/* Segunda fila: Botones secundarios */}
+                    <div className={styles.secondaryActions}>
+                      {/* Botón Reimprimir Ticket */}
+                      {onReprintTicket && permissions.canReprint && activeOrderPopup.orders.length > 0 && (
+                        <button
+                          className={styles.reprintButton}
+                          onClick={() => {
+                            onReprintTicket(activeOrderPopup.tableId, activeOrderPopup.orders);
+                            handleCloseOrderPopup();
+                          }}
+                        >
+                          🖨️ Reimprimir
+                        </button>
+                      )}
 
-                    {/* Botón Procesar Pago - para pedidos pendientes de pago */}
-                    {onViewTable && permissions.canProcessPayment && activeOrderPopup.orders.some(order => order.estado === 'pendiente_pago') && (
-                      <button
-                        className={styles.processPaymentButton}
-                        onClick={() => {
-                          const payableOrders = activeOrderPopup.orders.filter(order => order.estado === 'pendiente_pago');
-                          onViewTable(activeOrderPopup.tableId, payableOrders);
-                          handleCloseOrderPopup();
-                        }}
-                      >
-                        💰 Cobrar Mesa
-                      </button>
-                    )}
+                      {/* Botón Aplicar Descuento */}
+                      {onApplyDiscount && permissions.canDiscount && activeOrderPopup.orders.some(order => order.estado === 'entregado') && (
+                        <button
+                          className={styles.discountButton}
+                          onClick={() => {
+                            const deliveredOrders = activeOrderPopup.orders.filter(order => order.estado === 'entregado');
+                            onApplyDiscount(activeOrderPopup.tableId, deliveredOrders);
+                            handleCloseOrderPopup();
+                          }}
+                        >
+                          💸 Descuento
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -568,12 +632,12 @@ const InteractiveMapController = ({
                   <p>No hay pedidos activos para esta mesa.</p>
                 </div>
               )}
-               </div>
-             </div>
-           </div>
-         )}
-      </div>
-    );
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default InteractiveMapController;

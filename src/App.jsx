@@ -23,7 +23,7 @@ import {
   auth 
 } from './firebase';
 import { assignTableToNewReservation } from './shared/services/tableManagementService';
-import { UNIFIED_DEFAULT_BLOCKED_TABLES as DEFAULT_BLOCKED_TABLES, UNIFIED_TABLES_LAYOUT as TABLES_LAYOUT } from './utils/tablesLayout';
+import { UNIFIED_TABLES_LAYOUT as TABLES_LAYOUT, DEFAULT_WALKIN_TABLES } from './utils/tablesLayout';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 import { formatDateToString } from './utils';
@@ -194,9 +194,9 @@ function App() {
       const blockedTablesForDate = await handleLoadBlockedTables(fecha, turno);
       const blockedSet = new Set(blockedTablesForDate || []);
       
-      // Si no hay bloqueos guardados, usar los predeterminados
+      // Si no hay bloqueos guardados específicamente, usar configuración predeterminada
       if (blockedSet.size === 0) {
-        Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(id => blockedSet.add(id));
+        DEFAULT_WALKIN_TABLES.forEach(id => blockedSet.add(id));
       }
       
       // Obtener reservas existentes para esta fecha/turno
@@ -529,9 +529,10 @@ function App() {
     try {
       // Si es actualización de solo mesaAsignada (admin), buscar la reserva original y combinar datos
       let fullData = updatedData;
+      const original = data.reservas.find(r => r.id === reservationId);
+      if (!original) throw new Error('Reserva original no encontrada');
+      
       if (adminOverride && Object.keys(updatedData).length === 1 && updatedData.mesaAsignada) {
-        const original = data.reservas.find(r => r.id === reservationId);
-        if (!original) throw new Error('Reserva original no encontrada');
         fullData = { ...original, mesaAsignada: updatedData.mesaAsignada };
       }
 
@@ -539,6 +540,65 @@ function App() {
 
       if (!isValidDate(fechaString, fullData.turno, adminOverride)) {
         throw new Error('Por favor selecciona una fecha válida (desde hoy hasta 1 mes en el futuro).');
+      }
+
+      // 🆕 VERIFICACIÓN DE CAMBIO DE TURNO AUTOMÁTICA
+      const turnoChanged = original.turno !== fullData.turno;
+      const fechaChanged = original.fecha !== fechaString;
+      
+      if ((turnoChanged || fechaChanged) && original.mesaAsignada && original.mesaAsignada !== 'Sin asignar') {
+        console.log('🔄 Detectado cambio de turno/fecha, verificando disponibilidad de mesa:', original.mesaAsignada);
+        
+        try {
+          // Importar dinámicamente el servicio de gestión de mesas
+          const { calculateRealTableStates, assignTableAutomatically } = await import('./shared/services/tableManagementService');
+          
+          // Cargar bloqueos para el nuevo turno/fecha
+          const blockedTablesForNewSlot = await handleLoadBlockedTables(fechaString, fullData.turno);
+          const blockedTables = new Set(blockedTablesForNewSlot || []);
+          
+          // Filtrar reservas del nuevo turno/fecha (excluyendo la que estamos editando)
+          const reservasNuevoTurno = data.reservas.filter(r => 
+            r.fecha === fechaString && 
+            r.turno === fullData.turno &&
+            r.id !== reservationId
+          );
+          
+          // Calcular estados de mesas para el nuevo turno
+          const tableStates = calculateRealTableStates(
+            reservasNuevoTurno,
+            [], // Sin pedidos
+            blockedTables,
+            fechaString,
+            fullData.turno
+          );
+          
+          // Verificar si la mesa actual está disponible
+          const currentTableState = tableStates.get(parseInt(original.mesaAsignada));
+          const isCurrentTableAvailable = currentTableState?.canReceiveReservations;
+          
+          if (isCurrentTableAvailable) {
+            console.log('✅ Mesa actual disponible en nuevo turno, manteniéndola:', original.mesaAsignada);
+            // Mantener la mesa actual
+            fullData.mesaAsignada = original.mesaAsignada;
+          } else {
+            console.log('❌ Mesa actual no disponible, reasignando automáticamente...');
+            // Reasignar automáticamente
+            const nuevaMesa = assignTableAutomatically(fullData, tableStates);
+            
+            if (nuevaMesa) {
+              fullData.mesaAsignada = nuevaMesa;
+              console.log('✅ Mesa reasignada automáticamente:', nuevaMesa);
+            } else {
+              console.log('⚠️ No hay mesas disponibles para reasignación automática');
+              fullData.mesaAsignada = 'Sin asignar';
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error en verificación de cambio de turno:', error);
+          // En caso de error, mantener la mesa original o marcar sin asignar
+          fullData.mesaAsignada = 'Sin asignar';
+        }
       }
 
       const slots = getAvailableSlotsForEdit(
@@ -616,13 +676,10 @@ function App() {
         horario: selectedHorario
       };
 
-      // Usar bloqueos específicos del turno si están disponibles, sino usar los predeterminados
+      // Usar bloqueos específicos del turno si están disponibles, sino usar predeterminados
       let blockedTables = currentBlocked;
       if (!blockedTables) {
-        blockedTables = new Set();
-        Object.values(DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
-          blockedTables.add(tableId);
-        });
+        blockedTables = new Set(DEFAULT_WALKIN_TABLES); // Usar configuración predeterminada
       }
 
       // Filtrar reservas del mismo turno y fecha para verificar conflictos

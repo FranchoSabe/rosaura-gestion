@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { DEFAULT_WALKIN_TABLES } from './utils/tablesLayout';
 
 // Helper for debug logging
 const debugLog = (...args) => {
@@ -1860,18 +1861,21 @@ export const loadTableBlocksForDateTurno = async (fecha, turno) => {
     } else {
       debugLog(`📋 No hay configuración personalizada para ${fecha}-${turno}, usando predeterminada`);
       return {
-        blockedTables: new Set(),
+        blockedTables: new Set(DEFAULT_WALKIN_TABLES || []),
         exceptions: new Set(),
-        lastUpdated: null
+        lastUpdated: null,
+        isDefault: true // Bandera para indicar que es configuración predeterminada
       };
     }
   } catch (error) {
     console.error("❌ Error al cargar configuración de mesas:", error);
-    // En caso de error, devolver configuración vacía para no romper la app
+    // En caso de error, devolver configuración predeterminada para no romper la app
     return {
-      blockedTables: new Set(),
+      blockedTables: new Set(DEFAULT_WALKIN_TABLES || []),
       exceptions: new Set(),
-      lastUpdated: null
+      lastUpdated: null,
+      isDefault: true,
+      error: true
     };
   }
 };

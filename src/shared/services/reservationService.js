@@ -21,7 +21,7 @@ import {
 import {
   UNIFIED_TABLES_LAYOUT,
   UNIFIED_RESERVATION_ORDER,
-  UNIFIED_DEFAULT_BLOCKED_TABLES
+  DEFAULT_WALKIN_TABLES
 } from '../../utils/tablesLayout';
 import { isTurnoClosed } from '../constants/operatingDays';
 import { parsePhoneNumber } from 'react-phone-number-input';
@@ -292,12 +292,14 @@ export const calculateAvailableSlots = async (
       try {
         const blockedTablesForDate = await loadBlockedTables(fecha, turno);
         blockedTables = new Set(blockedTablesForDate || []);
+        // Si no hay bloqueos configurados específicamente, usar predeterminados
         if (blockedTables.size === 0) {
-          Object.values(UNIFIED_DEFAULT_BLOCKED_TABLES).flat().forEach(id => blockedTables.add(id));
+          DEFAULT_WALKIN_TABLES.forEach(id => blockedTables.add(id));
         }
       } catch (error) {
-        console.error('Error al cargar bloqueos, usando predeterminados:', error);
-        Object.values(UNIFIED_DEFAULT_BLOCKED_TABLES).flat().forEach(id => blockedTables.add(id));
+        console.error('Error al cargar bloqueos del mapa:', error);
+        // En caso de error, usar configuración predeterminada
+        blockedTables = new Set(DEFAULT_WALKIN_TABLES);
       }
     }
 

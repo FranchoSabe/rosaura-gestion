@@ -50,11 +50,7 @@ export const TABLE_STATES = {
 
 // =================== CONFIGURACIÓN ===================
 
-// Mesas bloqueadas para reservas (preservar para walk-ins)
-export const DEFAULT_RESERVATION_BLOCKED = {
-  mediodia: [1, 8, 9, 10],
-  noche: [1, 8, 9, 10]
-};
+// ELIMINADO: Bloqueos predeterminados - ahora se usa únicamente información del mapa
 
 // =================== FUNCIONES PRINCIPALES ===================
 
@@ -95,22 +91,8 @@ export const calculateRealTableStates = (reservations = [], orders = [], manualB
     }
   });
   
-  // 3. Aplicar bloqueos para reservas (preservar para walk-ins) - CON EXCEPCIONES
-  if (selectedTurno && DEFAULT_RESERVATION_BLOCKED[selectedTurno]) {    
-    DEFAULT_RESERVATION_BLOCKED[selectedTurno].forEach(tableId => {
-      // 🆕 LÓGICA DE EXCEPCIONES: No aplicar bloqueo si está en excepciones
-      if (tableStates.has(tableId) && !manualBlocks.has(tableId) && !exceptions.has(tableId)) {
-        tableStates.set(tableId, {
-          ...tableStates.get(tableId),
-          state: TABLE_STATES.AVAILABLE_WALKIN,
-          canReceiveReservations: false,  // ✅ NO pueden recibir reservas
-          canReceiveWalkins: true,        // ✅ SÍ pueden recibir walk-ins
-          availableFor: ['walkins'],      // ✅ Solo disponibles para walk-ins
-          type: 'reservation_blocked'
-        });
-      }
-    });
-  }
+  // 3. ELIMINADO: Bloqueos predeterminados 
+  // Ahora solo se aplican los bloqueos manuales del mapa (paso 2)
   
   // 4. Aplicar reservas del día/turno seleccionado
   if (selectedDate && selectedTurno) {
@@ -350,11 +332,12 @@ export const getTableVisualFeedback = (tableId, tableStates) => {
       
     case TABLE_STATES.AVAILABLE_WALKIN:
       return {
-        fill: '#fef3c7', // Amarillo claro
-        stroke: '#f59e0b', // Amarillo
+        fill: '#ffffff', // Blanco (normal)
+        stroke: '#dc2626', // Rojo para distinguir de mesas disponibles
         strokeWidth: 2,
-        textColor: '#92400e',
-        description: 'Disponible solo para walk-ins'
+        textColor: '#dc2626', // Texto rojo también
+        description: 'Disponible solo para walk-ins',
+        textSuffix: ' *' // Asterisco para indicar walk-in
       };
       
     case TABLE_STATES.RESERVED:

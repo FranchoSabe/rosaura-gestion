@@ -79,20 +79,13 @@ export const UNIFIED_TABLE_COMBINATIONS = {
   ]
 };
 
-// Bloqueos por defecto
-export const UNIFIED_DEFAULT_BLOCKED_TABLES = {
-  4: [4, 5], // 8 cupos walk-in
-  2: [14, 24], // 4 cupos walk-in
-  // TOTAL: 12 cupos walk-in predeterminados
-};
+// Configuración predeterminada para mesas walk-in
+// Esta configuración se aplica automáticamente cuando no hay configuración específica guardada
+export const DEFAULT_WALKIN_TABLES = [14, 24, 4, 5];
 
-// Función helper para crear Set de bloqueos por defecto
-export const getDefaultBlockedTablesSet = () => {
-  const defaultBlocked = new Set();
-  Object.values(UNIFIED_DEFAULT_BLOCKED_TABLES).flat().forEach(tableId => {
-    defaultBlocked.add(tableId);
-  });
-  return defaultBlocked;
+// Función helper para obtener configuración predeterminada de walk-ins
+export const getDefaultWalkinTablesSet = () => {
+  return new Set(DEFAULT_WALKIN_TABLES);
 };
 
 // Función helper para generar fechas disponibles (7 días desde hoy)

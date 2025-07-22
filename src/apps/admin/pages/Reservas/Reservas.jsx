@@ -18,6 +18,7 @@ import "../../../../datepicker-custom.css";
 
 import { formatPhoneForWhatsApp } from '../../../../utils/phoneUtils';
 import { formatDateToString } from '../../../../utils';
+import { DEFAULT_WALKIN_TABLES } from '../../../../utils/tablesLayout';
 import { calculateAvailableSlots, isValidReservationDate } from '../../../../shared/services/reservationService';
 import CheckInService from '../../../../shared/services/CheckInService';
 import InteractiveMapController from '../../../../shared/components/InteractiveMap/InteractiveMapController';
@@ -79,7 +80,8 @@ const Reservas = ({
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('❌ Error al cargar configuración de mesas:', error);
-      setBlockedTables(new Set());
+      // En caso de error, usar configuración predeterminada
+      setBlockedTables(new Set(DEFAULT_WALKIN_TABLES));
     }
   }, [selectedDate, selectedTurno]);
 
