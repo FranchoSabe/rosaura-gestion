@@ -1,9 +1,11 @@
 /**
  * tablesLayout.js - Layout unificado de mesas del restaurante
- * 
+ *
  * Este archivo contiene la única fuente de verdad para el layout de mesas.
  * Evita dependencias circulares al ser un archivo independiente.
  */
+
+import reservationOrder from '../config/reservationOrder.json';
 
 // Layout unificado de mesas - Versión con mesas más grandes
 export const UNIFIED_TABLES_LAYOUT = [
@@ -63,11 +65,7 @@ export const LAYOUT_DIMENSIONS = {
 };
 
 // Orden de asignación de mesas optimizado
-export const UNIFIED_RESERVATION_ORDER = {
-  2: [8, 11, 21, 1, 31, 2, 14, 24], // Optimizado para preservar walk-ins
-  4: [9, 10, 6, 12, 13, 3, 4, 5], // Optimizado para preservar walk-ins  
-  6: [7]
-};
+export const UNIFIED_RESERVATION_ORDER = reservationOrder;
 
 // Combinaciones de mesas permitidas
 export const UNIFIED_TABLE_COMBINATIONS = {
