@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 
 /**
  * Hook para manejar datos temporales del turno de caja
- * Guarda pagos procesados en sessionStorage hasta el cierre de caja
+ * Guarda pagos procesados en localStorage hasta el cierre de caja
  * Proporciona funciones para agregar, corregir y anular pagos
  */
 const useTurnData = () => {
-  // Inicializar datos del turno desde sessionStorage o crear nuevos
+  // Inicializar datos del turno desde localStorage o crear nuevos
   const [turnData, setTurnData] = useState(() => {
     try {
-      const savedData = sessionStorage.getItem('currentTurnData');
+      const savedData = localStorage.getItem('currentTurnData');
       if (savedData) {
         const parsed = JSON.parse(savedData);
         // Verificar que los datos sean del turno actual
@@ -18,7 +18,7 @@ const useTurnData = () => {
         const currentTurn = currentHour < 16 ? 'mediodia' : 'noche';
         
         if (parsed.fecha === currentDate && parsed.turno === currentTurn) {
-          console.log('📂 Recuperando datos del turno desde sessionStorage:', {
+          console.log('📂 Recuperando datos del turno desde localStorage:', {
             fecha: parsed.fecha,
             turno: parsed.turno,
             pagos: parsed.pagosProcesados?.length || 0
@@ -26,12 +26,12 @@ const useTurnData = () => {
           return parsed;
         } else {
           console.log('🔄 Datos de turno anterior encontrados, iniciando nuevo turno');
-          sessionStorage.removeItem('currentTurnData');
+          localStorage.removeItem('currentTurnData');
         }
       }
     } catch (error) {
       console.error('Error al recuperar datos del turno:', error);
-      sessionStorage.removeItem('currentTurnData');
+      localStorage.removeItem('currentTurnData');
     }
 
     // Crear nuevos datos del turno
@@ -67,10 +67,10 @@ const useTurnData = () => {
     return newTurnData;
   });
 
-  // Guardar en sessionStorage cada vez que cambien los datos
+  // Guardar en localStorage cada vez que cambien los datos
   useEffect(() => {
     try {
-      sessionStorage.setItem('currentTurnData', JSON.stringify(turnData));
+      localStorage.setItem('currentTurnData', JSON.stringify(turnData));
     } catch (error) {
       console.error('Error al guardar datos del turno:', error);
     }
@@ -224,7 +224,7 @@ const useTurnData = () => {
   // Cerrar turno y limpiar datos temporales
   const closeTurn = useCallback(() => {
     console.log('🔒 Cerrando turno y limpiando datos temporales');
-    sessionStorage.removeItem('currentTurnData');
+    localStorage.removeItem('currentTurnData');
     
     // Reiniciar datos para el próximo turno
     const currentDate = new Date().toISOString().split('T')[0];
