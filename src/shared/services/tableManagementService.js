@@ -11,7 +11,17 @@
  * ELIMINA la fragmentación de lógicas y centraliza en un solo lugar.
  */
 
-import { UNIFIED_TABLES_LAYOUT, UNIFIED_RESERVATION_ORDER } from '../../utils/tablesLayout';
+import { UNIFIED_TABLES_LAYOUT } from '../../utils/tablesLayout';
+import reservationOrderConfig from '../../config/reservationOrder.json';
+
+let UNIFIED_RESERVATION_ORDER = reservationOrderConfig;
+
+export const initTableManagementService = (customOrder = reservationOrderConfig) => {
+  UNIFIED_RESERVATION_ORDER = customOrder;
+};
+
+// Cargar configuración por defecto al inicializar el módulo
+initTableManagementService();
 
 // =================== ESTADOS DE MESA ===================
 
@@ -690,5 +700,6 @@ export default {
   getTableVisualFeedback,
   toggleTableBlock,
   getTableAvailabilityStats,
-  TABLE_STATES
-}; 
+  TABLE_STATES,
+  initTableManagementService
+};
