@@ -23,13 +23,14 @@ import {
   rejectWaitingReservation,
   auth 
 } from './firebase';
-import { assignTableToNewReservation, DEFAULT_BLOCKED_TABLES, TABLES_LAYOUT } from './utils/mesaLogic';
+import { assignTableToNewReservation } from './shared/services/tableManagementService';
+import { UNIFIED_DEFAULT_BLOCKED_TABLES as DEFAULT_BLOCKED_TABLES, UNIFIED_TABLES_LAYOUT as TABLES_LAYOUT } from './utils/tablesLayout';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 import { formatDateToString } from './utils';
 import { db } from './firebase';
 import { isTurnoClosed, getAvailableHours } from './shared/constants/operatingDays';
-import { calculateAvailableSlots, isValidReservationDate } from './shared/services/reservationLogic';
+import { calculateAvailableSlots, isValidReservationDate } from './shared/services/reservationService';
 import { createReservation } from './shared/services/reservationService';
 
 // --- CONFIGURACIÓN Y DATOS ---

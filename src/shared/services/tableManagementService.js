@@ -680,12 +680,43 @@ const calculateAvailabilityScore = (currentState, tableCapacity, requiredCapacit
   return Math.max(0, Math.min(100, score));
 };
 
+// =================== UTILIDADES ADICIONALES ===================
+
+// Alias para mantener compatibilidad con la antigua util "assignTableToNewReservation"
+export const assignTableToNewReservation = assignTableAutomatically;
+
+// Versión simplificada de auto-asignación masiva usada en vistas de preview
+export const calculateAutoAssignments = (reservas, currentBlocked = new Set()) => {
+  const assignments = {};
+  const tableStates = calculateRealTableStates(reservas, [], currentBlocked);
+  const sorted = [...reservas].sort((a, b) => a.horario.localeCompare(b.horario));
+
+  sorted.forEach(reserva => {
+    if (assignments[reserva.id]) return;
+    const mesa = assignTableAutomatically(reserva, tableStates);
+    if (mesa) {
+      assignments[reserva.id] = mesa;
+      const ids = typeof mesa === 'string' && mesa.includes('+') ? mesa.split('+') : [mesa];
+      ids.forEach(id => {
+        const ts = tableStates.get(parseInt(id));
+        if (ts) {
+          tableStates.set(parseInt(id), { ...ts, canReceiveReservations: false, state: TABLE_STATES.RESERVED });
+        }
+      });
+    }
+  });
+
+  return { assignments, blockedTables: currentBlocked, quotaChanges: { hasChanges: false } };
+};
+
 // =================== EXPORTS ===================
 
 export default {
   calculateRealTableStates,
   getAvailableTablesForAssignment,
   assignTableAutomatically,
+  assignTableToNewReservation,
+  calculateAutoAssignments,
   validateTableAvailability,
   getTableVisualFeedback,
   toggleTableBlock,

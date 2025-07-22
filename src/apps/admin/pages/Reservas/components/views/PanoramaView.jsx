@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Calendar, Users, Phone, Clock, X } from 'lucide-react';
 import { UNIFIED_TABLES_LAYOUT } from '../../../../../../utils/tablesLayout';
-import { calculateAutoAssignments } from '../../../../../../utils/mesaLogic';
+import { calculateAutoAssignments } from '../../../../../../shared/services/tableManagementService';
 import { formatDateToString } from '../../../../../../utils';
 import { isDayClosed } from '../../../../../../shared/constants/operatingDays';
 import styles from './PanoramaView.module.css';
