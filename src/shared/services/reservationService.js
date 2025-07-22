@@ -12,7 +12,18 @@
  */
 
 import { addClient, addReservation, addWaitingReservation } from '../../firebase';
-import { calculateRealTableStates, assignTableAutomatically, validateTableAvailability } from './tableManagementService';
+import {
+  calculateRealTableStates,
+  assignTableAutomatically,
+  validateTableAvailability,
+  assignTableToNewReservation
+} from './tableManagementService';
+import {
+  UNIFIED_TABLES_LAYOUT,
+  UNIFIED_RESERVATION_ORDER,
+  UNIFIED_DEFAULT_BLOCKED_TABLES
+} from '../../utils/tablesLayout';
+import { isTurnoClosed } from '../constants/operatingDays';
 import { parsePhoneNumber } from 'react-phone-number-input';
 import { formatDateToString } from '../../utils';
 
@@ -255,10 +266,223 @@ const prepareClientData = async (clienteData) => {
   };
 };
 
+// =================== LÓGICA DE DISPONIBILIDAD Y ASIGNACIONES ===================
+
+export const DEFAULT_HORARIOS = {
+  mediodia: ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00'],
+  noche: ['19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30']
+};
+
+export const calculateAvailableSlots = async (
+  fecha,
+  turno,
+  personas = null,
+  excludeReservationId = null,
+  existingReservations = [],
+  loadBlockedTables = null,
+  isAdmin = false
+) => {
+  try {
+    const fechaObj = new Date(fecha + 'T00:00:00');
+
+    if (!isAdmin && isTurnoClosed(fechaObj.getDay(), turno)) {
+      return [];
+    }
+
+    let blockedTables = new Set();
+    if (loadBlockedTables) {
+      try {
+        const blockedTablesForDate = await loadBlockedTables(fecha, turno);
+        blockedTables = new Set(blockedTablesForDate || []);
+        if (blockedTables.size === 0) {
+          Object.values(UNIFIED_DEFAULT_BLOCKED_TABLES).flat().forEach(id => blockedTables.add(id));
+        }
+      } catch (error) {
+        console.error('Error al cargar bloqueos, usando predeterminados:', error);
+        Object.values(UNIFIED_DEFAULT_BLOCKED_TABLES).flat().forEach(id => blockedTables.add(id));
+      }
+    }
+
+    const reservasDelDia = existingReservations.filter(
+      r => r.fecha === fecha && r.turno === turno && r.id !== excludeReservationId
+    );
+
+    const capacidadDisponible = calculateCapacityByTables(blockedTables);
+    const reservasPorCategoria = countReservationsByCategory(reservasDelDia);
+
+    const hayCapacidad = personas
+      ? checkCapacityForSize(personas, reservasPorCategoria, capacidadDisponible)
+      : true;
+
+    if (isAdmin || hayCapacidad) {
+      return DEFAULT_HORARIOS[turno].map(horario => {
+        const reservasHorario = reservasDelDia.filter(r => r.horario === horario);
+        const cuposOcupados = reservasHorario.reduce((t, r) => t + (r.personas || 0), 0);
+        const maxCupos = calculateMaxCuposForHorario(capacidadDisponible);
+        return {
+          horario,
+          cuposDisponibles: Math.max(0, maxCupos - cuposOcupados),
+          disponible: isAdmin || maxCupos - cuposOcupados >= (personas || 1)
+        };
+      });
+    }
+    return [];
+  } catch (error) {
+    console.error('Error calculating available slots:', error);
+    return [];
+  }
+};
+
+export const assignTableAutomaticallyLegacy = (
+  reservationData,
+  existingReservations = [],
+  blockedTables = new Set()
+) => {
+  try {
+    return assignTableToNewReservation(reservationData, existingReservations, blockedTables);
+  } catch (error) {
+    console.error('Error en asignación automática:', error);
+    return null;
+  }
+};
+
+export const isValidReservationDate = (fecha, turno, isAdmin = false) => {
+  if (isAdmin) return true;
+  const fechaObj = new Date(fecha + 'T00:00:00');
+  const today = new Date();
+  const maxDate = new Date();
+  maxDate.setMonth(maxDate.getMonth() + 1);
+  return fechaObj >= today && fechaObj <= maxDate && !isTurnoClosed(fechaObj.getDay(), turno);
+};
+
+export const autoAssignAllPendingReservations = async (
+  reservations,
+  fecha,
+  turno,
+  blockedTables,
+  onUpdateReservation,
+  showNotification
+) => {
+  try {
+    const reservasSinMesa = reservations.filter(
+      r =>
+        r.fecha === fecha &&
+        r.turno === turno &&
+        (!r.mesaAsignada || r.mesaAsignada === 'Sin asignar') &&
+        r.estadoCheckIn !== 'confirmado'
+    );
+
+    if (reservasSinMesa.length === 0) {
+      showNotification?.('info', 'No hay reservas pendientes de asignación');
+      return;
+    }
+
+    let asignadas = 0;
+    let noAsignadas = [];
+
+    for (const reserva of reservasSinMesa) {
+      const mesaAsignada = assignTableAutomaticallyLegacy(reserva, reservations, blockedTables);
+      if (mesaAsignada) {
+        await onUpdateReservation(reserva.id, { mesaAsignada }, true);
+        asignadas++;
+      } else {
+        noAsignadas.push(reserva.cliente?.nombre || 'Sin nombre');
+      }
+    }
+
+    if (asignadas > 0) {
+      showNotification?.('success', `${asignadas} reservas asignadas automáticamente`);
+    }
+    if (noAsignadas.length > 0) {
+      showNotification?.(
+        'warning',
+        `${noAsignadas.length} reservas no pudieron asignarse: ${noAsignadas.join(', ')}`
+      );
+    }
+  } catch (error) {
+    console.error('Error en autoasignación:', error);
+    showNotification?.('error', 'Error al autoasignar reservas');
+  }
+};
+
+export const clearAllTableAssignments = async (
+  reservations,
+  fecha,
+  turno,
+  onUpdateReservation,
+  showNotification
+) => {
+  try {
+    const reservasConMesa = reservations.filter(
+      r =>
+        r.fecha === fecha &&
+        r.turno === turno &&
+        r.mesaAsignada &&
+        r.estadoCheckIn !== 'confirmado'
+    );
+
+    if (reservasConMesa.length === 0) {
+      showNotification?.('info', 'No hay asignaciones para limpiar');
+      return;
+    }
+
+    for (const reserva of reservasConMesa) {
+      await onUpdateReservation(reserva.id, { mesaAsignada: null }, true);
+    }
+
+    showNotification?.('success', `${reservasConMesa.length} asignaciones limpiadas`);
+  } catch (error) {
+    console.error('Error al limpiar asignaciones:', error);
+    showNotification?.('error', 'Error al limpiar asignaciones');
+  }
+};
+
+function calculateCapacityByTables(blockedTables) {
+  const capacidad = { pequena: 0, mediana: 0, grande: 0 };
+  UNIFIED_TABLES_LAYOUT.forEach(mesa => {
+    if (!blockedTables.has(mesa.id)) {
+      if (mesa.capacity <= 2) capacidad.pequena++;
+      else if (mesa.capacity <= 4) capacidad.mediana++;
+      else capacidad.grande++;
+    }
+  });
+  const mesa2Available = !blockedTables.has(2);
+  const mesa3Available = !blockedTables.has(3);
+  if (mesa2Available && mesa3Available) {
+    capacidad.grande++;
+  }
+  return capacidad;
+}
+
+function countReservationsByCategory(reservas) {
+  const count = { pequena: 0, mediana: 0, grande: 0 };
+  reservas.forEach(reserva => {
+    if (reserva.personas <= 2) count.pequena++;
+    else if (reserva.personas <= 4) count.mediana++;
+    else count.grande++;
+  });
+  return count;
+}
+
+function checkCapacityForSize(personas, reservasPorCategoria, capacidadDisponible) {
+  if (personas <= 2) return reservasPorCategoria.pequena < capacidadDisponible.pequena;
+  if (personas <= 4) return reservasPorCategoria.mediana < capacidadDisponible.mediana;
+  return reservasPorCategoria.grande < capacidadDisponible.grande;
+}
+
+function calculateMaxCuposForHorario(capacidadDisponible) {
+  return capacidadDisponible.pequena * 2 + capacidadDisponible.mediana * 4 + capacidadDisponible.grande * 6;
+}
+
 // =================== EXPORTS ===================
 
 export default {
   createReservation,
   validateReservationData,
-  prepareClientData
-}; 
+  prepareClientData,
+  calculateAvailableSlots,
+  assignTableAutomaticallyLegacy,
+  isValidReservationDate,
+  autoAssignAllPendingReservations,
+  clearAllTableAssignments
+};

@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ClipboardList, Plus, Clock, CheckCircle, XCircle, AlertCircle, Users, DollarSign, ChefHat, MapPin, Sun, Moon, FileText, ChevronDown, ChevronUp } from 'lucide-react';
-import { 
-  subscribeToOrders, 
+import {
+  subscribeToOrders,
   subscribeToProducts,
   subscribeToReservations,
-  addOrder, 
   updateOrder,
-  updateOrderStatus,
-  updateTableStatus,
   updateReservation,
-  addCashRegister
+  addCashRegister,
+  updateTableStatus
 } from '../../../../firebase.js';
+import OrderService from '../../../../shared/services/OrderService';
 import { Modal } from '../../../../shared/components/ui/Modal';
 // Importaciones de initializeData removidas - no necesarias para sistema real
 import InteractiveMapController from '../../../../shared/components/InteractiveMap/InteractiveMapController';
@@ -66,7 +65,6 @@ const Pedidos = ({
   // Hook para manejo de datos temporales del turno
   const {
     turnData,
-    addPayment,
     correctPayment,
     voidPayment,
     closeTurn,
@@ -397,7 +395,7 @@ const Pedidos = ({
       
       // CAMBIAR ESTADOS DE PEDIDOS A 'pendiente_pago'
       for (const order of deliveredOrders) {
-        await updateOrderStatus(order.id, 'pendiente_pago');
+        await OrderService.changeOrderStatus(order.id, 'pendiente_pago');
       }
       
       // Mostrar simulador de impresión
@@ -447,8 +445,8 @@ const Pedidos = ({
       const totalPorPedido = deliveredOrders.length > 0 ? (discountData.finalTotal || 0) / deliveredOrders.length : 0;
       
       await Promise.all(
-        deliveredOrders.map(order => 
-          updateOrderStatus(order.id, 'pendiente_pago', {
+        deliveredOrders.map(order =>
+          OrderService.changeOrderStatus(order.id, 'pendiente_pago', {
             descuentoAplicado: descuentoPorPedido,
             razonDescuento: discountData.reason || '',
             totalConDescuento: totalPorPedido
@@ -558,7 +556,7 @@ const Pedidos = ({
         );
         
         if (shouldCancel) {
-          await updateOrderStatus(orderId, 'cancelado');
+          await OrderService.changeOrderStatus(orderId, 'cancelado');
           showNotification(`Pedido ${orderToUpdate.orderId} cancelado`, 'warning');
           return;
         } else {
@@ -595,75 +593,11 @@ const Pedidos = ({
 
   // Manejar procesamiento de pago (cobrar) - SISTEMA DUAL: Firebase + Temporal
   const handlePaymentComplete = useCallback(async (paymentData) => {
-    let pagoTemporalId = null;
-    
     try {
-      console.log('💰 PROCESANDO PAGO (Sistema Dual):', paymentData);
-      
-      // PASO 1: GUARDAR EN FIREBASE (inmediato para seguridad)
-      const firebaseSuccess = await Promise.all(
-        paymentData.orderIds.map(orderId => 
-          updateOrderStatus(orderId, 'cerrado', {
-            metodoPago: paymentData.paymentMethod,
-            montoRecibido: paymentData.receivedAmount,
-            cambio: paymentData.change,
-            descuentoAplicado: paymentData.discount || 0,
-            razonDescuento: paymentData.discountReason || '',
-            totalFinal: paymentData.total,
-            fechaCobrado: new Date(),
-            empleadoCobro: paymentData.employee
-          })
-        )
-      );
-      
-      // PASO 2: AGREGAR A DATOS TEMPORALES DEL TURNO
-      const pagoTemporal = {
-        orderIds: paymentData.orderIds,
-        mesa: paymentData.tableId,
-        metodoPago: paymentData.paymentMethod,
-        total: paymentData.total,
-        montoRecibido: paymentData.receivedAmount,
-        cambio: paymentData.change,
-        descuentoAplicado: paymentData.discount || 0,
-        razonDescuento: paymentData.discountReason || '',
-        empleado: paymentData.employee,
-        guardadoFirebase: true,  // ✅ Confirmación de guardado exitoso
-        timestampPago: new Date().toISOString()
-      };
-      
-      pagoTemporalId = addPayment(pagoTemporal);
-      
-      // PASO 3: LIBERAR MESA Y LIMPIAR RESERVAS
-      if (paymentData.tableId) {
-        await updateTableStatus(paymentData.tableId, 'libre');
-        
-        // Limpiar reserva asociada a la mesa si existe
-        const reservationForTable = reservations.find(reservation => 
-          reservation.mesaReal === paymentData.tableId && 
-          reservation.estadoCheckIn === 'confirmado'
-        );
-        
-        if (reservationForTable) {
-          console.log('🔄 Limpiando reserva asociada a mesa:', paymentData.tableId);
-          await updateReservation(reservationForTable.id, {
-            estadoCheckIn: 'completado',
-            fechaCompletado: new Date(),
-            mesaReal: null,
-            pagoCompletado: true
-          });
-          console.log('✅ Reserva completada y mesa liberada');
-        }
-      }
-      
-      console.log('✅ Pago procesado exitosamente:', {
-        firebase: '✅ Guardado',
-        temporal: `✅ ID: ${pagoTemporalId}`,
-        mesa: paymentData.tableId,
-        total: paymentData.total
-      });
-      
+      await OrderService.processPayment(paymentData, { reservations });
+
       showNotification(
-        `Pago procesado y guardado en caja temporal - Mesa ${paymentData.tableId} - $${paymentData.total.toLocaleString('es-AR')}`, 
+        `Pago procesado y guardado en caja temporal - Mesa ${paymentData.tableId} - $${paymentData.total.toLocaleString('es-AR')}`,
         'success'
       );
       
@@ -681,37 +615,9 @@ const Pedidos = ({
       
     } catch (error) {
       console.error('❌ Error al procesar pago:', error);
-      
-      // Si falla Firebase pero tenemos datos básicos, guardar al menos localmente
-      if (!pagoTemporalId && paymentData.orderIds && paymentData.tableId) {
-        const pagoTemporal = {
-          orderIds: paymentData.orderIds,
-          mesa: paymentData.tableId,
-          metodoPago: paymentData.paymentMethod,
-          total: paymentData.total,
-          montoRecibido: paymentData.receivedAmount,
-          cambio: paymentData.change,
-          descuentoAplicado: paymentData.discount || 0,
-          empleado: paymentData.employee,
-          guardadoFirebase: false,  // ❌ Marcado como no guardado
-          error: error.message,
-          timestampPago: new Date().toISOString()
-        };
-        
-        pagoTemporalId = addPayment(pagoTemporal);
-        
-        showNotification(
-          `⚠️ Pago guardado localmente - Verificar conexión a internet - Mesa ${paymentData.tableId}`, 
-          'warning'
-        );
-        
-        // No cerrar modal para que el usuario pueda intentar de nuevo
-        return;
-      }
-      
-      throw error; // Re-lanzar el error para que el modal lo maneje
+      showNotification('Error al procesar pago', 'error');
     }
-  }, [showNotification, reservations, addPayment]);
+  }, [showNotification, reservations]);
 
   // Sistema siempre inicializado para operación real
   useEffect(() => {
@@ -864,13 +770,8 @@ const Pedidos = ({
   // Manejar cambio de estado automatizado
   const handleStatusChange = async (orderId, newStatus, context = {}) => {
     try {
-      console.log('🔄 INICIO handleStatusChange:', orderId, 'a:', newStatus, 'context:', context);
-      console.log('📡 Llamando a updateOrderStatus...');
-      
-      await updateOrderStatus(orderId, newStatus);
-      
-      console.log('✅ updateOrderStatus COMPLETADO - Estado actualizado en Firebase:', orderId, '→', newStatus);
-      
+      await OrderService.changeOrderStatus(orderId, newStatus);
+
       // Automatización de estados siguientes
       if (context.autoProgress) {
         setTimeout(async () => {
@@ -889,7 +790,7 @@ const Pedidos = ({
                 // Automáticamente pasar a pendiente_pago después de 5 minutos
                 setTimeout(async () => {
                   try {
-                    await updateOrderStatus(orderId, 'pendiente_pago');
+                    await OrderService.changeOrderStatus(orderId, 'pendiente_pago');
                     showNotification('💰 Mesa lista para cobrar', 'warning');
                   } catch (error) {
                     console.error('Error al actualizar estado automático:', error);
@@ -929,43 +830,19 @@ const Pedidos = ({
   // Manejar creación de pedido
   const handleCreateOrder = async (orderData) => {
     try {
-      // Generar ID único para el pedido
-      const orderId = `PED-${Date.now()}`;
-      
-      // Datos completos del pedido
-      const completeOrder = {
-        ...orderData,
-        id: orderId,
-        orderId: orderId,
-        fechaCreacion: new Date(),
-        fechaActualizacion: new Date(),
-        notas: orderData.notas || ''
-      };
+      const orderId = await OrderService.createOrder(orderData);
 
-      // Crear el pedido en la base de datos
-      console.log('🔄 CREANDO PEDIDO para mesa:', orderData.mesa, 'Estado inicial:', completeOrder.estado);
-      await addOrder(completeOrder);
-      console.log('✅ PEDIDO CREADO en Firebase');
-      
-      // Actualizar estado de la mesa
-      console.log('🔄 ACTUALIZANDO estado de mesa:', orderData.mesa, '→ ocupada');
-      await updateTableStatus(orderData.mesa, 'ocupada');
-      console.log('✅ ESTADO DE MESA ACTUALIZADO en Firebase');
-      
-      // Cerrar modal inmediatamente
       setShowOrderModal(false);
       setSelectedTable(null);
       setEditingOrder(null);
-      
-      // Automatización: Mostrar popup inmediatamente después de crear pedido
+
       showNotification('✅ Pedido enviado a cocina', 'success');
-      
-      // Después de un pequeño delay, mostrar el popup de la mesa
+
       setTimeout(() => {
         console.log('🔄 Mostrando popup automático para mesa:', orderData.mesa);
         showTablePopup(orderData.mesa);
-      }, 500); // 500ms para permitir que se actualice el estado
-      
+      }, 500);
+
     } catch (error) {
       console.error('Error al crear pedido:', error);
       showNotification('Error al crear pedido: ' + error.message, 'error');

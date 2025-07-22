@@ -18,7 +18,8 @@ import "../../../../datepicker-custom.css";
 
 import { formatPhoneForWhatsApp } from '../../../../utils/phoneUtils';
 import { formatDateToString } from '../../../../utils';
-import { calculateAvailableSlots } from '../../../../shared/services/reservationLogic';
+import { calculateAvailableSlots, isValidReservationDate } from '../../../../shared/services/reservationService';
+import CheckInService from '../../../../shared/services/CheckInService';
 import InteractiveMapController from '../../../../shared/components/InteractiveMap/InteractiveMapController';
 import CreateReservationModal from '../../../../shared/components/modals/CreateReservationModal';
 import EditReservationModal from '../../../../shared/components/modals/EditReservationModal';
@@ -150,25 +151,12 @@ const Reservas = ({
     setIsCreateModalOpen(true);
   }, []);
 
-  // Función para verificar si una reserva tiene check-in
-  const hasCheckedIn = useCallback((reserva) => {
-    return reserva.estadoCheckIn === 'confirmado';
-  }, []);
+  const hasCheckedIn = CheckInService.hasCheckedIn;
 
-  // Función para manejar check-in
   const handleCheckIn = useCallback(async (reserva) => {
-    try {
-      await updateReservationCheckIn(reserva.id, {
-        estadoCheckIn: 'confirmado',
-        horaLlegada: new Date()
-      });
-      showNotification('Check-in realizado correctamente', 'success');
-      setCheckInMode(false);
-      setSelectedReservationForCheckIn(null);
-    } catch (error) {
-      console.error('Error en check-in:', error);
-      showNotification('Error al realizar check-in', 'error');
-    }
+    await CheckInService.performCheckIn(reserva, showNotification);
+    setCheckInMode(false);
+    setSelectedReservationForCheckIn(null);
   }, [showNotification]);
 
   // ============== FUNCIONES DE GESTIÓN DE RESERVAS ==============
