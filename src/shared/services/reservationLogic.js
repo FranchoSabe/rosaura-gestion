@@ -63,33 +63,36 @@ export const calculateAvailableSlots = async (fecha, turno, personas = null, exc
     }
 
     // 3. Filtrar reservas del día/turno (excluyendo la reserva que se está editando)
-    const reservasDelDia = existingReservations.filter(
+    const dayReservations = existingReservations.filter(
       r => r.fecha === fecha && r.turno === turno && r.id !== excludeReservationId
     );
 
     // 4. Calcular capacidad disponible basada en mesas no bloqueadas
-    const capacidadDisponible = calculateCapacityByTables(blockedTables);
+    const availableCapacity = calculateCapacityByTables(blockedTables);
 
     // 5. Contar reservas existentes por categoría
-    const reservasPorCategoria = countReservationsByCategory(reservasDelDia);
+    const reservationsByCategory = countReservationsByCategory(dayReservations);
 
     // 6. Verificar si hay capacidad para el tamaño solicitado
-    const hayCapacidad = personas ? 
-      checkCapacityForSize(personas, reservasPorCategoria, capacidadDisponible) :
-      true; // Si no se especifica tamaño, mostrar todos los horarios
+    const hasCapacity = personas
+      ? checkCapacityForSize(personas, reservationsByCategory, availableCapacity)
+      : true; // Si no se especifica tamaño, mostrar todos los horarios
 
     // 7. Retornar horarios disponibles
-    if (isAdmin || hayCapacidad) {
+    if (isAdmin || hasCapacity) {
       // Para admin o si hay capacidad, retornar todos los horarios con información de cupos
       return DEFAULT_HORARIOS[turno].map(horario => {
-        const reservasHorario = reservasDelDia.filter(r => r.horario === horario);
-        const cuposOcupados = reservasHorario.reduce((total, r) => total + (r.personas || 0), 0);
-        const maxCupos = calculateMaxCuposForHorario(capacidadDisponible);
+        const reservationsByHour = dayReservations.filter(r => r.horario === horario);
+        const occupiedSlots = reservationsByHour.reduce(
+          (total, r) => total + (r.personas || 0),
+          0
+        );
+        const maxSlots = calculateMaxCuposForHorario(availableCapacity);
         
         return {
           horario,
-          cuposDisponibles: Math.max(0, maxCupos - cuposOcupados),
-          disponible: isAdmin || (maxCupos - cuposOcupados) >= (personas || 1)
+          cuposDisponibles: Math.max(0, maxSlots - occupiedSlots),
+          disponible: isAdmin || maxSlots - occupiedSlots >= (personas || 1)
         };
       });
     } else {
@@ -134,41 +137,56 @@ export const isValidReservationDate = (fecha, turno, isAdmin = false) => {
 /**
  * FUNCIÓN UNIFICADA: Autoasignar todas las reservas pendientes
  */
-export const autoAssignAllPendingReservations = async (reservations, fecha, turno, blockedTables, onUpdateReservation, showNotification) => {
+export const autoAssignAllPendingReservations = async (
+  reservations,
+  fecha,
+  turno,
+  blockedTables,
+  onUpdateReservation,
+  showNotification
+) => {
   try {
-    const reservasSinMesa = reservations.filter(r => 
-      r.fecha === fecha && 
-      r.turno === turno && 
-      (!r.mesaAsignada || r.mesaAsignada === 'Sin asignar') &&
-      r.estadoCheckIn !== 'confirmado'
+    const reservationsWithoutTable = reservations.filter(
+      r =>
+        r.fecha === fecha &&
+        r.turno === turno &&
+        (!r.mesaAsignada || r.mesaAsignada === 'Sin asignar') &&
+        r.estadoCheckIn !== 'confirmado'
     );
 
-    if (reservasSinMesa.length === 0) {
+    if (reservationsWithoutTable.length === 0) {
       showNotification?.('info', 'No hay reservas pendientes de asignación');
       return;
     }
 
-    let asignadas = 0;
-    let noAsignadas = [];
+    let assignedCount = 0;
+    let unassigned = [];
 
-    for (const reserva of reservasSinMesa) {
-      const mesaAsignada = assignTableAutomatically(reserva, reservations, blockedTables);
-      
-      if (mesaAsignada) {
-        await onUpdateReservation(reserva.id, { mesaAsignada }, true);
-        asignadas++;
+    for (const reservation of reservationsWithoutTable) {
+      const assignedTable = assignTableAutomatically(
+        reservation,
+        reservations,
+        blockedTables
+      );
+
+      if (assignedTable) {
+        await onUpdateReservation(reservation.id, { mesaAsignada: assignedTable }, true);
+        assignedCount++;
       } else {
-        noAsignadas.push(reserva.cliente?.nombre || 'Sin nombre');
+        unassigned.push(reservation.cliente?.nombre || 'Sin nombre');
       }
     }
 
     // Mostrar resultado
-    if (asignadas > 0) {
-      showNotification?.('success', `${asignadas} reservas asignadas automáticamente`);
+    if (assignedCount > 0) {
+      showNotification?.('success', `${assignedCount} reservas asignadas automáticamente`);
     }
-    
-    if (noAsignadas.length > 0) {
-      showNotification?.('warning', `${noAsignadas.length} reservas no pudieron asignarse: ${noAsignadas.join(', ')}`);
+
+    if (unassigned.length > 0) {
+      showNotification?.(
+        'warning',
+        `${unassigned.length} reservas no pudieron asignarse: ${unassigned.join(', ')}`
+      );
     }
 
   } catch (error) {
@@ -182,23 +200,27 @@ export const autoAssignAllPendingReservations = async (reservations, fecha, turn
  */
 export const clearAllTableAssignments = async (reservations, fecha, turno, onUpdateReservation, showNotification) => {
   try {
-    const reservasConMesa = reservations.filter(r => 
-      r.fecha === fecha && 
-      r.turno === turno && 
-      r.mesaAsignada &&
-      r.estadoCheckIn !== 'confirmado' // No limpiar si ya hizo check-in
+    const reservationsWithTable = reservations.filter(
+      r =>
+        r.fecha === fecha &&
+        r.turno === turno &&
+        r.mesaAsignada &&
+        r.estadoCheckIn !== 'confirmado'
     );
 
-    if (reservasConMesa.length === 0) {
+    if (reservationsWithTable.length === 0) {
       showNotification?.('info', 'No hay asignaciones para limpiar');
       return;
     }
 
-    for (const reserva of reservasConMesa) {
-      await onUpdateReservation(reserva.id, { mesaAsignada: null }, true);
+    for (const reservation of reservationsWithTable) {
+      await onUpdateReservation(reservation.id, { mesaAsignada: null }, true);
     }
 
-    showNotification?.('success', `${reservasConMesa.length} asignaciones limpiadas`);
+    showNotification?.(
+      'success',
+      `${reservationsWithTable.length} asignaciones limpiadas`
+    );
 
   } catch (error) {
     console.error('Error al limpiar asignaciones:', error);
@@ -212,35 +234,35 @@ export const clearAllTableAssignments = async (reservations, fecha, turno, onUpd
  * Calcular capacidad disponible basada en mesas no bloqueadas
  */
 function calculateCapacityByTables(blockedTables) {
-  const capacidad = { pequena: 0, mediana: 0, grande: 0 };
+  const capacity = { pequena: 0, mediana: 0, grande: 0 };
   
   UNIFIED_TABLES_LAYOUT.forEach(mesa => {
     if (!blockedTables.has(mesa.id)) {
-      if (mesa.capacity <= 2) capacidad.pequena++;
-      else if (mesa.capacity <= 4) capacidad.mediana++;
-      else capacidad.grande++;
+      if (mesa.capacity <= 2) capacity.pequena++;
+      else if (mesa.capacity <= 4) capacity.mediana++;
+      else capacity.grande++;
     }
   });
   
   // Verificar si la combinación Mesa 2+3 está disponible
-  const mesa2Available = !blockedTables.has(2);
-  const mesa3Available = !blockedTables.has(3);
-  if (mesa2Available && mesa3Available) {
-    capacidad.grande++; // Añadir capacidad por la combinación 2+3
+  const table2Available = !blockedTables.has(2);
+  const table3Available = !blockedTables.has(3);
+  if (table2Available && table3Available) {
+    capacity.grande++; // Añadir capacidad por la combinación 2+3
   }
-  
-  return capacidad;
+
+  return capacity;
 }
 
 /**
  * Contar reservas existentes por categoría
  */
-function countReservationsByCategory(reservas) {
+function countReservationsByCategory(reservations) {
   const count = { pequena: 0, mediana: 0, grande: 0 };
-  
-  reservas.forEach(reserva => {
-    if (reserva.personas <= 2) count.pequena++;
-    else if (reserva.personas <= 4) count.mediana++;
+
+  reservations.forEach(reservation => {
+    if (reservation.personas <= 2) count.pequena++;
+    else if (reservation.personas <= 4) count.mediana++;
     else count.grande++;
   });
   
@@ -250,23 +272,25 @@ function countReservationsByCategory(reservas) {
 /**
  * Verificar si hay capacidad para un tamaño específico
  */
-function checkCapacityForSize(personas, reservasPorCategoria, capacidadDisponible) {
+function checkCapacityForSize(personas, reservationsByCategory, availableCapacity) {
   if (personas <= 2) {
-    return reservasPorCategoria.pequena < capacidadDisponible.pequena;
+    return reservationsByCategory.pequena < availableCapacity.pequena;
   } else if (personas <= 4) {
-    return reservasPorCategoria.mediana < capacidadDisponible.mediana;
+    return reservationsByCategory.mediana < availableCapacity.mediana;
   } else {
-    return reservasPorCategoria.grande < capacidadDisponible.grande;
+    return reservationsByCategory.grande < availableCapacity.grande;
   }
 }
 
 /**
  * Calcular cupos máximos para un horario específico
  */
-function calculateMaxCuposForHorario(capacidadDisponible) {
-  return (capacidadDisponible.pequena * 2) + 
-         (capacidadDisponible.mediana * 4) + 
-         (capacidadDisponible.grande * 6);
+function calculateMaxCuposForHorario(availableCapacity) {
+  return (
+    availableCapacity.pequena * 2 +
+    availableCapacity.mediana * 4 +
+    availableCapacity.grande * 6
+  );
 }
 
 // =================== EXPORTS PARA COMPATIBILIDAD ===================

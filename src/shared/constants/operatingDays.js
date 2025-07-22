@@ -85,11 +85,11 @@ export const OPERATING_CONFIG = {
   // Método para cambiar configuración temporalmente
   enableMondays: () => {
     // En producción esto podría actualizarse en base de datos
-    console.log('Lunes habilitados temporalmente');
+    // console.log('Lunes habilitados temporalmente');
   },
   
   disableMondays: () => {
     // En producción esto podría actualizarse en base de datos
-    console.log('Lunes deshabilitados');
+    // console.log('Lunes deshabilitados');
   }
-}; 
+};
