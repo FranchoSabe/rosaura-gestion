@@ -2,6 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, getDoc, setDoc, query, where } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
+// Helper for debug logging
+const debugLog = (...args) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(...args);
+  }
+};
+
 // Configuración de Firebase usando variables de entorno
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -33,7 +40,7 @@ const generateReservationId = () => {
 export const addReservation = async (reservationData) => {
   try {
     const reservationId = generateReservationId();
-    console.log('Generando nueva reserva:', {
+    debugLog('Generando nueva reserva:', {
       reservationId,
       ...reservationData
     });
@@ -46,11 +53,11 @@ export const addReservation = async (reservationData) => {
       status: 'active'
     };
 
-    console.log('Datos a guardar:', dataToSave);
+    debugLog('Datos a guardar:', dataToSave);
 
     const docRef = await addDoc(collection(db, "reservas"), dataToSave);
 
-    console.log('Reserva guardada en Firebase:', {
+    debugLog('Reserva guardada en Firebase:', {
       id: docRef.id,
       reservationId: dataToSave.reservationId,
       fecha: dataToSave.fecha,
@@ -107,7 +114,7 @@ export const updateClientNotes = async (clientId, notes) => {
 
 export const updateClient = async (clientData) => {
   try {
-    console.log('Actualizando cliente:', clientData);
+    debugLog('Actualizando cliente:', clientData);
     
     const { consolidatedIds, ...dataToUpdate } = clientData;
     const updateData = {
@@ -123,7 +130,7 @@ export const updateClient = async (clientData) => {
       });
       
       await Promise.all(updatePromises);
-      console.log(`Cliente actualizado en ${consolidatedIds.length} registros`);
+      debugLog(`Cliente actualizado en ${consolidatedIds.length} registros`);
     } else {
       // Si no hay consolidatedIds, actualizar solo el registro principal
       throw new Error('No se encontraron IDs de cliente para actualizar');
@@ -138,12 +145,12 @@ export const updateClient = async (clientData) => {
 
 export const deleteClient = async (clientId) => {
   try {
-    console.log('Eliminando cliente:', clientId);
+    debugLog('Eliminando cliente:', clientId);
     
     const clientRef = doc(db, "clientes", clientId);
     await deleteDoc(clientRef);
 
-    console.log('Cliente eliminado con éxito');
+    debugLog('Cliente eliminado con éxito');
     return true;
   } catch (error) {
     console.error("Error al eliminar cliente:", error);
@@ -186,7 +193,7 @@ export const subscribeToReservations = (callback) => {
       id: doc.id,
       ...doc.data()
     }));
-    console.log(`🚨 CARGA COMPLETA: ${reservations.length} reservas históricas cargadas`);
+    debugLog(`🚨 CARGA COMPLETA: ${reservations.length} reservas históricas cargadas`);
     callback(reservations);
   });
 };
@@ -207,14 +214,14 @@ export const subscribeToReservationsByDate = (callback, targetDate) => {
       ...doc.data()
     }));
     
-    console.log(`📅 Reservas del día ${targetDate}: ${reservations.length} documentos`);
+    debugLog(`📅 Reservas del día ${targetDate}: ${reservations.length} documentos`);
     callback(reservations);
   }, (error) => {
     console.error('❌ Error en suscripción de reservas:', error);
     // Fallback: cargar todas las reservas y filtrar del lado cliente
     return subscribeToReservations((allReservations) => {
       const filtered = allReservations.filter(r => r.fecha === targetDate);
-      console.log(`📅 Reservas del día ${targetDate} (filtradas): ${filtered.length} documentos`);
+      debugLog(`📅 Reservas del día ${targetDate} (filtradas): ${filtered.length} documentos`);
       callback(filtered);
     });
   });
@@ -232,7 +239,7 @@ export const subscribeToClients = (callback) => {
 
 export const updateReservation = async (documentId, reservationData) => {
   try {
-    console.log('Actualizando reserva:', { documentId, reservationData });
+    debugLog('Actualizando reserva:', { documentId, reservationData });
     
     const docRef = doc(db, "reservas", documentId);
     await updateDoc(docRef, {
@@ -240,7 +247,7 @@ export const updateReservation = async (documentId, reservationData) => {
       updatedAt: new Date()
     });
 
-    console.log('Reserva actualizada con éxito');
+    debugLog('Reserva actualizada con éxito');
     return true;
   } catch (error) {
     console.error("Error al actualizar reserva:", error);
@@ -250,12 +257,12 @@ export const updateReservation = async (documentId, reservationData) => {
 
 export const deleteReservation = async (documentId) => {
   try {
-    console.log('Eliminando reserva:', documentId);
+    debugLog('Eliminando reserva:', documentId);
     
     const docRef = doc(db, "reservas", documentId);
     await deleteDoc(docRef);
 
-    console.log('Reserva eliminada con éxito');
+    debugLog('Reserva eliminada con éxito');
     return true;
   } catch (error) {
     console.error("Error al eliminar reserva:", error);
@@ -268,7 +275,7 @@ export const searchReservation = async (searchData) => {
     const { reservationId } = searchData;
     const searchId = (reservationId || '').toUpperCase().trim();
     
-    console.log('Buscando reserva con ID:', searchId);
+    debugLog('Buscando reserva con ID:', searchId);
     
     if (!searchId) {
       throw new Error('Se requiere el código de reserva');
@@ -284,7 +291,7 @@ export const searchReservation = async (searchData) => {
       };
     });
 
-    console.log('Todas las reservas:', allReservations.map(r => ({
+    debugLog('Todas las reservas:', allReservations.map(r => ({
       id: r.id,
       reservationId: r.reservationId,
       fecha: r.fecha
@@ -293,11 +300,11 @@ export const searchReservation = async (searchData) => {
     const reservations = allReservations
       .filter(reserva => {
         if (!reserva.reservationId) {
-          console.log('Reserva sin ID encontrada:', reserva);
+          debugLog('Reserva sin ID encontrada:', reserva);
           return false;
         }
         const coincide = reserva.reservationId === searchId;
-        console.log('Comparando:', {
+        debugLog('Comparando:', {
           buscado: searchId,
           actual: reserva.reservationId,
           coincide
@@ -309,14 +316,14 @@ export const searchReservation = async (searchData) => {
         today.setHours(0, 0, 0, 0);
         const reservaDate = new Date(reserva.fecha);
         const esValida = reservaDate >= today;
-        console.log('Validando fecha:', {
+        debugLog('Validando fecha:', {
           fecha: reserva.fecha,
           esValida
         });
         return esValida;
       });
 
-    console.log('Reservas encontradas después de filtrar:', reservations);
+    debugLog('Reservas encontradas después de filtrar:', reservations);
     return reservations[0] || null;
   } catch (error) {
     console.error("Error al buscar reserva:", error);
@@ -330,7 +337,7 @@ export const searchReservation = async (searchData) => {
 export const addWaitingReservation = async (reservationData) => {
   try {
     const waitingId = generateReservationId();
-    console.log('Agregando a lista de espera:', {
+    debugLog('Agregando a lista de espera:', {
       waitingId,
       ...reservationData
     });
@@ -343,11 +350,11 @@ export const addWaitingReservation = async (reservationData) => {
       notified: false
     };
 
-    console.log('Datos a guardar en lista de espera:', dataToSave);
+    debugLog('Datos a guardar en lista de espera:', dataToSave);
 
     const docRef = await addDoc(collection(db, "lista_espera"), dataToSave);
 
-    console.log('Reserva agregada a lista de espera:', {
+    debugLog('Reserva agregada a lista de espera:', {
       id: docRef.id,
       waitingId: dataToSave.waitingId,
       fecha: dataToSave.fecha,
@@ -407,7 +414,7 @@ export const subscribeToWaitingReservations = (callback) => {
 // Función para convertir una reserva en espera a reserva confirmada
 export const confirmWaitingReservation = async (waitingReservationId, waitingData) => {
   try {
-    console.log('Confirmando reserva desde lista de espera:', waitingReservationId);
+    debugLog('Confirmando reserva desde lista de espera:', waitingReservationId);
     
     // 1. Crear la reserva confirmada
     const { id, reservationId } = await addReservation({
@@ -423,7 +430,7 @@ export const confirmWaitingReservation = async (waitingReservationId, waitingDat
     const waitingDocRef = doc(db, "lista_espera", waitingReservationId);
     await deleteDoc(waitingDocRef);
 
-    console.log('Reserva confirmada desde lista de espera:', { id, reservationId });
+    debugLog('Reserva confirmada desde lista de espera:', { id, reservationId });
     return { id, reservationId };
   } catch (error) {
     console.error("Error al confirmar reserva desde lista de espera:", error);
@@ -434,12 +441,12 @@ export const confirmWaitingReservation = async (waitingReservationId, waitingDat
 // Función para eliminar una reserva de la lista de espera
 export const deleteWaitingReservation = async (waitingReservationId) => {
   try {
-    console.log('Eliminando reserva de lista de espera:', waitingReservationId);
+    debugLog('Eliminando reserva de lista de espera:', waitingReservationId);
     
     const waitingDocRef = doc(db, "lista_espera", waitingReservationId);
     await deleteDoc(waitingDocRef);
 
-    console.log('Reserva eliminada de lista de espera');
+    debugLog('Reserva eliminada de lista de espera');
     return true;
   } catch (error) {
     console.error("Error al eliminar reserva de lista de espera:", error);
@@ -502,7 +509,7 @@ export const rejectWaitingReservation = async (waitingReservationId, reason = ''
 // Función para agregar un proveedor
 export const addProvider = async (providerData) => {
   try {
-    console.log('Agregando proveedor:', providerData);
+    debugLog('Agregando proveedor:', providerData);
 
     const dataToSave = {
       ...providerData,
@@ -512,11 +519,11 @@ export const addProvider = async (providerData) => {
       ultimoPedido: null
     };
 
-    console.log('Datos a guardar:', dataToSave);
+    debugLog('Datos a guardar:', dataToSave);
 
     const docRef = await addDoc(collection(db, "proveedores"), dataToSave);
 
-    console.log('Proveedor guardado en Firebase:', {
+    debugLog('Proveedor guardado en Firebase:', {
       id: docRef.id,
       nombre: dataToSave.nombre,
       categoria: dataToSave.categoria
@@ -566,7 +573,7 @@ export const subscribeToProviders = (callback, errorCallback) => {
 // Función para actualizar un proveedor
 export const updateProvider = async (providerId, providerData) => {
   try {
-    console.log('Actualizando proveedor:', { providerId, providerData });
+    debugLog('Actualizando proveedor:', { providerId, providerData });
     
     const providerRef = doc(db, "proveedores", providerId);
     await updateDoc(providerRef, {
@@ -574,7 +581,7 @@ export const updateProvider = async (providerId, providerData) => {
       updatedAt: new Date()
     });
 
-    console.log('Proveedor actualizado con éxito');
+    debugLog('Proveedor actualizado con éxito');
     return true;
   } catch (error) {
     console.error("Error al actualizar proveedor:", error);
@@ -585,12 +592,12 @@ export const updateProvider = async (providerId, providerData) => {
 // Función para eliminar un proveedor
 export const deleteProvider = async (providerId) => {
   try {
-    console.log('Eliminando proveedor:', providerId);
+    debugLog('Eliminando proveedor:', providerId);
     
     const providerRef = doc(db, "proveedores", providerId);
     await deleteDoc(providerRef);
 
-    console.log('Proveedor eliminado con éxito');
+    debugLog('Proveedor eliminado con éxito');
     return true;
   } catch (error) {
     console.error("Error al eliminar proveedor:", error);
@@ -618,7 +625,7 @@ export const updateProviderStatus = async (providerId, status) => {
 // Función para agregar un producto a un proveedor
 export const addProviderProduct = async (providerId, productData) => {
   try {
-    console.log('Agregando producto a proveedor:', { providerId, productData });
+    debugLog('Agregando producto a proveedor:', { providerId, productData });
 
     const dataToSave = {
       ...productData,
@@ -629,7 +636,7 @@ export const addProviderProduct = async (providerId, productData) => {
 
     const docRef = await addDoc(collection(db, "productos_proveedores"), dataToSave);
 
-    console.log('Producto agregado:', {
+    debugLog('Producto agregado:', {
       id: docRef.id,
       nombre: dataToSave.nombre,
       providerId: providerId
@@ -663,7 +670,7 @@ export const getProviderProducts = async (providerId) => {
 // Función para crear un pedido a un proveedor
 export const createProviderOrder = async (orderData) => {
   try {
-    console.log('Creando pedido a proveedor:', orderData);
+    debugLog('Creando pedido a proveedor:', orderData);
 
     const dataToSave = {
       ...orderData,
@@ -682,7 +689,7 @@ export const createProviderOrder = async (orderData) => {
       updatedAt: new Date()
     });
 
-    console.log('Pedido creado:', {
+    debugLog('Pedido creado:', {
       id: docRef.id,
       providerId: orderData.providerId,
       total: dataToSave.total
@@ -726,7 +733,7 @@ export const addProduct = async (productData) => {
     };
 
     const docRef = await addDoc(collection(db, 'productos'), dataToSave);
-    console.log('Producto agregado exitosamente:', docRef.id);
+    debugLog('Producto agregado exitosamente:', docRef.id);
     return docRef.id;
   } catch (error) {
     console.error("Error al agregar producto:", error);
@@ -791,7 +798,7 @@ export const updateProduct = async (productId, productData) => {
     
     const productRef = doc(db, 'productos', productId);
     await updateDoc(productRef, dataToUpdate);
-    console.log('Producto actualizado exitosamente:', productId);
+    debugLog('Producto actualizado exitosamente:', productId);
   } catch (error) {
     console.error("Error al actualizar producto:", error);
     throw error;
@@ -803,7 +810,7 @@ export const deleteProduct = async (productId) => {
   try {
     const productRef = doc(db, 'productos', productId);
     await deleteDoc(productRef);
-    console.log('Producto eliminado exitosamente:', productId);
+    debugLog('Producto eliminado exitosamente:', productId);
   } catch (error) {
     console.error("Error al eliminar producto:", error);
     throw error;
@@ -818,7 +825,7 @@ export const updateProductAvailability = async (productId, disponible) => {
       disponible: disponible,
       fechaModificacion: new Date()
     });
-    console.log('Disponibilidad de producto actualizada:', productId);
+    debugLog('Disponibilidad de producto actualizada:', productId);
   } catch (error) {
     console.error("Error al actualizar disponibilidad:", error);
     throw error;
@@ -831,7 +838,7 @@ export const clearAllProducts = async () => {
     const productsSnapshot = await getDocs(collection(db, 'productos'));
     const deletePromises = productsSnapshot.docs.map(doc => deleteDoc(doc.ref));
     await Promise.all(deletePromises);
-    console.log('Todos los productos han sido eliminados');
+    debugLog('Todos los productos han sido eliminados');
     return true;
   } catch (error) {
     console.error("Error al limpiar productos:", error);
@@ -867,7 +874,7 @@ export const addOrder = async (orderData) => {
     };
 
     const docRef = await addDoc(collection(db, 'pedidos'), dataToSave);
-    console.log('✅ Pedido guardado:', { id: docRef.id, orderId: dataToSave.orderId, mesa: dataToSave.mesa, estado: dataToSave.estado });
+    debugLog('✅ Pedido guardado:', { id: docRef.id, orderId: dataToSave.orderId, mesa: dataToSave.mesa, estado: dataToSave.estado });
     return { docId: docRef.id, orderId: dataToSave.orderId };
   } catch (error) {
     console.error("Error al agregar pedido:", error);
@@ -939,7 +946,7 @@ export const updateOrder = async (orderId, orderData) => {
     
     const orderRef = doc(db, 'pedidos', orderId);
     await updateDoc(orderRef, dataToUpdate);
-    console.log('Pedido actualizado exitosamente:', orderId);
+    debugLog('Pedido actualizado exitosamente:', orderId);
   } catch (error) {
     console.error("Error al actualizar pedido:", error);
     throw error;
@@ -949,8 +956,8 @@ export const updateOrder = async (orderId, orderData) => {
 // Función para actualizar estado de pedido (con datos adicionales como método de pago y descuentos)
 export const updateOrderStatus = async (orderId, estado, additionalData = {}) => {
   try {
-    console.log('🔥 FIREBASE - updateOrderStatus INICIO:', orderId, 'nuevo estado:', estado, 'datos adicionales:', additionalData);
-    console.log('🔍 FIREBASE - Tipo de orderId:', typeof orderId, 'Longitud:', orderId?.length);
+    debugLog('🔥 FIREBASE - updateOrderStatus INICIO:', orderId, 'nuevo estado:', estado, 'datos adicionales:', additionalData);
+    debugLog('🔍 FIREBASE - Tipo de orderId:', typeof orderId, 'Longitud:', orderId?.length);
     
     // Verificar que el orderId no esté vacío
     if (!orderId) {
@@ -959,25 +966,25 @@ export const updateOrderStatus = async (orderId, estado, additionalData = {}) =>
     
     // NUEVO: Verificar si el documento existe antes de intentar actualizarlo
     const orderRef = doc(db, 'pedidos', orderId);
-    console.log('📄 FIREBASE - Referencia del documento creada:', orderRef.path);
-    console.log('📄 FIREBASE - Verificando existencia del documento...');
+    debugLog('📄 FIREBASE - Referencia del documento creada:', orderRef.path);
+    debugLog('📄 FIREBASE - Verificando existencia del documento...');
     
     const docSnap = await getDoc(orderRef);
     if (!docSnap.exists()) {
       console.error('❌ FIREBASE - DOCUMENTO NO EXISTE:', orderId);
-      console.log('🔍 FIREBASE - Listando documentos existentes...');
+      debugLog('🔍 FIREBASE - Listando documentos existentes...');
       
       // Listar los primeros 5 documentos para debug
       const querySnapshot = await getDocs(collection(db, 'pedidos'));
-      console.log('📊 FIREBASE - Documentos existentes en colección:');
+      debugLog('📊 FIREBASE - Documentos existentes en colección:');
       querySnapshot.docs.slice(0, 5).forEach(doc => {
-        console.log(`  - ID: ${doc.id}, orderId: ${doc.data().orderId}, estado: ${doc.data().estado}`);
+        debugLog(`  - ID: ${doc.id}, orderId: ${doc.data().orderId}, estado: ${doc.data().estado}`);
       });
       
       throw new Error(`Documento no encontrado: ${orderId}`);
     }
     
-    console.log('✅ FIREBASE - Documento encontrado:', docSnap.data().orderId || 'sin orderId');
+    debugLog('✅ FIREBASE - Documento encontrado:', docSnap.data().orderId || 'sin orderId');
     const updateData = {
       estado: estado,
       fechaActualizacion: new Date(),
@@ -1003,12 +1010,12 @@ export const updateOrderStatus = async (orderId, estado, additionalData = {}) =>
         break;
     }
     
-    console.log('📝 FIREBASE - Datos a actualizar:', JSON.stringify(updateData, null, 2));
+    debugLog('📝 FIREBASE - Datos a actualizar:', JSON.stringify(updateData, null, 2));
     
-    console.log('🔄 FIREBASE - Ejecutando updateDoc...');
+    debugLog('🔄 FIREBASE - Ejecutando updateDoc...');
     try {
       await updateDoc(orderRef, updateData);
-      console.log('🎯 FIREBASE - updateDoc ejecutado sin errores');
+      debugLog('🎯 FIREBASE - updateDoc ejecutado sin errores');
     } catch (updateError) {
       console.error('❌ FIREBASE - Error específico en updateDoc:', updateError);
       console.error('❌ FIREBASE - Código de error:', updateError.code);
@@ -1016,7 +1023,7 @@ export const updateOrderStatus = async (orderId, estado, additionalData = {}) =>
       throw updateError;
     }
     
-    console.log('✅ FIREBASE - Estado de pedido actualizado exitosamente:', orderId, estado);
+    debugLog('✅ FIREBASE - Estado de pedido actualizado exitosamente:', orderId, estado);
   } catch (error) {
     console.error("❌ FIREBASE - Error al actualizar estado:", error);
     throw error;
@@ -1028,7 +1035,7 @@ export const deleteOrder = async (orderId) => {
   try {
     const orderRef = doc(db, 'pedidos', orderId);
     await deleteDoc(orderRef);
-    console.log('Pedido eliminado exitosamente:', orderId);
+    debugLog('Pedido eliminado exitosamente:', orderId);
   } catch (error) {
     console.error("Error al eliminar pedido:", error);
     throw error;
@@ -1057,7 +1064,7 @@ export const updateTableStatus = async (tableNumber, status, orderId = null) => 
     
     // Usar setDoc con merge para crear o actualizar
     await setDoc(tableRef, dataToUpdate, { merge: true });
-    console.log('Estado de mesa actualizado:', tableNumber, status);
+    debugLog('Estado de mesa actualizado:', tableNumber, status);
   } catch (error) {
     console.error("Error al actualizar estado de mesa:", error);
     throw error;
@@ -1181,7 +1188,7 @@ export const reassignReservation = async (reservationId, newMesaAsignada) => {
       updatedAt: new Date()
     });
 
-    console.log(`Reserva ${reservationId} reasignada automáticamente a mesa ${newMesaAsignada}`);
+    debugLog(`Reserva ${reservationId} reasignada automáticamente a mesa ${newMesaAsignada}`);
     return true;
   } catch (error) {
     console.error("Error al reasignar reserva:", error);
@@ -1304,9 +1311,9 @@ export const updateReservationCheckIn = async (reservationId, mesaReal) => {
     // 🔄 UNIFICACIÓN CRÍTICA: Si el cliente se sentó en una mesa diferente a la asignada,
     // limpiar mesaAsignada para que quede solo mesaReal
     if (reservationData.mesaAsignada && reservationData.mesaAsignada !== mesaReal) {
-      console.log(`🔄 UNIFICANDO MESAS: Cliente se sentó en mesa ${mesaReal} (era ${reservationData.mesaAsignada})`);
+      debugLog(`🔄 UNIFICANDO MESAS: Cliente se sentó en mesa ${mesaReal} (era ${reservationData.mesaAsignada})`);
       updateData.mesaAsignada = null; // ✅ Limpiar mesa preasignada
-      console.log(`✅ Mesa preasignada ${reservationData.mesaAsignada} liberada automáticamente`);
+      debugLog(`✅ Mesa preasignada ${reservationData.mesaAsignada} liberada automáticamente`);
     }
 
     // Actualizar la reserva con check-in
@@ -1324,7 +1331,7 @@ export const updateReservationCheckIn = async (reservationId, mesaReal) => {
       }
     }
 
-    console.log(`Check-in exitoso: Reserva ${reservationId} en mesa ${mesaReal}`);
+    debugLog(`Check-in exitoso: Reserva ${reservationId} en mesa ${mesaReal}`);
     
     return {
       success: true,
@@ -1357,7 +1364,7 @@ export const connectOrderToClient = async (orderId, clienteId, reservationId) =>
       updatedAt: new Date()
     });
 
-    console.log(`Pedido ${orderId} conectado con cliente ${clienteId}`);
+    debugLog(`Pedido ${orderId} conectado con cliente ${clienteId}`);
     return true;
   } catch (error) {
     console.error("Error al conectar pedido con cliente:", error);
@@ -1397,7 +1404,7 @@ export const getReservationsPendingCheckIn = async (fecha, turno) => {
  */
 export const cleanupTableAssignments = async () => {
   try {
-    console.log('🔧 Iniciando limpieza de asignaciones de mesa...');
+    debugLog('🔧 Iniciando limpieza de asignaciones de mesa...');
     
     const reservasRef = collection(db, "reservas");
     const q = query(
@@ -1424,7 +1431,7 @@ export const cleanupTableAssignments = async () => {
       }
     });
     
-    console.log(`🔍 Encontradas ${inconsistentReservations.length} reservas con inconsistencias`);
+    debugLog(`🔍 Encontradas ${inconsistentReservations.length} reservas con inconsistencias`);
     
     // Limpiar inconsistencias
     for (const reservation of inconsistentReservations) {
@@ -1436,14 +1443,14 @@ export const cleanupTableAssignments = async () => {
           cleanedUpDate: new Date()
         });
         
-        console.log(`✅ Limpiado: ${reservation.clientName} - Mesa ${reservation.mesaAsignada} → ${reservation.mesaReal}`);
+        debugLog(`✅ Limpiado: ${reservation.clientName} - Mesa ${reservation.mesaAsignada} → ${reservation.mesaReal}`);
         cleanedCount++;
       } catch (error) {
         console.error(`❌ Error limpiando reserva ${reservation.id}:`, error);
       }
     }
     
-    console.log(`🔧 Limpieza completada: ${cleanedCount} reservas unificadas`);
+    debugLog(`🔧 Limpieza completada: ${cleanedCount} reservas unificadas`);
     
     return {
       success: true,
@@ -1464,7 +1471,7 @@ export const cleanupTableAssignments = async () => {
  */
 export const checkTableConsistency = async (fecha = null, turno = null) => {
   try {
-    console.log('🔍 Verificando consistencia de asignaciones de mesa...');
+    debugLog('🔍 Verificando consistencia de asignaciones de mesa...');
     
     const reservasRef = collection(db, "reservas");
     let q;
@@ -1510,7 +1517,7 @@ export const checkTableConsistency = async (fecha = null, turno = null) => {
       }
     });
     
-    console.log('📊 Reporte de consistencia:', report);
+    debugLog('📊 Reporte de consistencia:', report);
     return report;
     
   } catch (error) {
@@ -1525,7 +1532,7 @@ export const checkTableConsistency = async (fecha = null, turno = null) => {
  */
 export const clearAllData = async () => {
   try {
-    console.log('🧹 Iniciando limpieza total de base de datos...');
+    debugLog('🧹 Iniciando limpieza total de base de datos...');
     
     const collections = [
       { name: 'reservas', displayName: 'Reservas' },
@@ -1546,7 +1553,7 @@ export const clearAllData = async () => {
     // Limpiar cada colección
     for (const collectionConfig of collections) {
       try {
-        console.log(`🗑️ Limpiando colección: ${collectionConfig.displayName}...`);
+        debugLog(`🗑️ Limpiando colección: ${collectionConfig.displayName}...`);
         
         const snapshot = await getDocs(collection(db, collectionConfig.name));
         const deletePromises = [];
@@ -1562,7 +1569,7 @@ export const clearAllData = async () => {
         const deletedCount = snapshot.size;
         results.deletedCounts[collectionConfig.name] = deletedCount;
         
-        console.log(`✅ ${collectionConfig.displayName}: ${deletedCount} registros eliminados`);
+        debugLog(`✅ ${collectionConfig.displayName}: ${deletedCount} registros eliminados`);
         
       } catch (error) {
         console.error(`❌ Error limpiando ${collectionConfig.displayName}:`, error);
@@ -1576,7 +1583,7 @@ export const clearAllData = async () => {
     // Resumen final
     const totalDeleted = Object.values(results.deletedCounts).reduce((sum, count) => sum + count, 0);
     
-    console.log('🧹 Limpieza completada:', {
+    debugLog('🧹 Limpieza completada:', {
       totalDeleted,
       byCollection: results.deletedCounts,
       errorsCount: results.errors.length
@@ -1604,7 +1611,7 @@ export const clearAllData = async () => {
  */
 export const clearSelectedData = async (collectionsToClean = ['reservas', 'pedidos']) => {
   try {
-    console.log('🧹 Iniciando limpieza selectiva de:', collectionsToClean);
+    debugLog('🧹 Iniciando limpieza selectiva de:', collectionsToClean);
     
     const results = {
       success: true,
@@ -1614,7 +1621,7 @@ export const clearSelectedData = async (collectionsToClean = ['reservas', 'pedid
     
     for (const collectionName of collectionsToClean) {
       try {
-        console.log(`🗑️ Limpiando colección: ${collectionName}...`);
+        debugLog(`🗑️ Limpiando colección: ${collectionName}...`);
         
         const snapshot = await getDocs(collection(db, collectionName));
         const deletePromises = [];
@@ -1628,7 +1635,7 @@ export const clearSelectedData = async (collectionsToClean = ['reservas', 'pedid
         const deletedCount = snapshot.size;
         results.deletedCounts[collectionName] = deletedCount;
         
-        console.log(`✅ ${collectionName}: ${deletedCount} registros eliminados`);
+        debugLog(`✅ ${collectionName}: ${deletedCount} registros eliminados`);
         
       } catch (error) {
         console.error(`❌ Error limpiando ${collectionName}:`, error);
@@ -1664,7 +1671,7 @@ export const clearSelectedData = async (collectionsToClean = ['reservas', 'pedid
 // Función para guardar arqueo de caja
 export const addCashRegister = async (cashRegisterData) => {
   try {
-    console.log('Guardando arqueo de caja:', cashRegisterData);
+    debugLog('Guardando arqueo de caja:', cashRegisterData);
 
     const dataToSave = {
       ...cashRegisterData,
@@ -1674,7 +1681,7 @@ export const addCashRegister = async (cashRegisterData) => {
 
     const docRef = await addDoc(collection(db, 'arqueos_caja'), dataToSave);
     
-    console.log('Arqueo de caja guardado exitosamente:', {
+    debugLog('Arqueo de caja guardado exitosamente:', {
       id: docRef.id,
       fecha: dataToSave.fecha,
       turno: dataToSave.turno,
@@ -1782,7 +1789,7 @@ export const getCashRegistersByDateRange = async (fechaInicio, fechaFin) => {
  */
 export const saveTableBlocksForDateTurno = async (fecha, turno, blockedTables = [], exceptions = []) => {
   try {
-    console.log('🔥 FIREBASE saveTableBlocksForDateTurno INICIADA:', {
+    debugLog('🔥 FIREBASE saveTableBlocksForDateTurno INICIADA:', {
       fecha,
       turno,
       blockedTables,
@@ -1792,10 +1799,10 @@ export const saveTableBlocksForDateTurno = async (fecha, turno, blockedTables = 
     });
     
     const docId = `${fecha}-${turno}`;
-    console.log('📄 DocID generado:', docId);
+    debugLog('📄 DocID generado:', docId);
     
     const tableConfigRef = doc(db, 'mesas_cupos', docId);
-    console.log('📝 Referencia de documento creada');
+    debugLog('📝 Referencia de documento creada');
     
     const configData = {
       fecha,
@@ -1806,12 +1813,12 @@ export const saveTableBlocksForDateTurno = async (fecha, turno, blockedTables = 
       createdBy: 'admin' // TODO: Agregar usuario actual cuando tengamos auth
     };
     
-    console.log('📋 Datos a guardar:', configData);
-    console.log('🔥 Intentando escribir en Firestore...');
+    debugLog('📋 Datos a guardar:', configData);
+    debugLog('🔥 Intentando escribir en Firestore...');
     
     await setDoc(tableConfigRef, configData, { merge: true });
     
-    console.log(`✅ Configuración de mesas guardada EXITOSAMENTE para ${fecha}-${turno}:`, {
+    debugLog(`✅ Configuración de mesas guardada EXITOSAMENTE para ${fecha}-${turno}:`, {
       blockedTables: configData.blockedTables,
       exceptions: configData.exceptions
     });
@@ -1840,7 +1847,7 @@ export const loadTableBlocksForDateTurno = async (fecha, turno) => {
     
     if (docSnapshot.exists()) {
       const data = docSnapshot.data();
-      console.log(`📋 Configuración de mesas cargada para ${fecha}-${turno}:`, {
+      debugLog(`📋 Configuración de mesas cargada para ${fecha}-${turno}:`, {
         blockedTables: data.blockedTables || [],
         exceptions: data.exceptions || []
       });
@@ -1851,7 +1858,7 @@ export const loadTableBlocksForDateTurno = async (fecha, turno) => {
         lastUpdated: data.updatedAt?.toDate() || null
       };
     } else {
-      console.log(`📋 No hay configuración personalizada para ${fecha}-${turno}, usando predeterminada`);
+      debugLog(`📋 No hay configuración personalizada para ${fecha}-${turno}, usando predeterminada`);
       return {
         blockedTables: new Set(),
         exceptions: new Set(),
@@ -1879,7 +1886,7 @@ export const deleteTableBlocksForDateTurno = async (fecha, turno) => {
     const docId = `${fecha}-${turno}`;
     const tableConfigRef = doc(db, 'mesas_cupos', docId);
     await deleteDoc(tableConfigRef);
-    console.log(`🗑️ Configuración de mesas eliminada para ${fecha}-${turno}`);
+    debugLog(`🗑️ Configuración de mesas eliminada para ${fecha}-${turno}`);
     return { success: true };
   } catch (error) {
     console.error("❌ Error al eliminar configuración de mesas:", error);

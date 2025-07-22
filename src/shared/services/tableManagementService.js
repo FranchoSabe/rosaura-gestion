@@ -16,6 +16,13 @@ import reservationOrderConfig from '../../config/reservationOrder.json';
 
 let UNIFIED_RESERVATION_ORDER = reservationOrderConfig;
 
+// Helper for debug logging
+const debugLog = (...args) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(...args);
+  }
+};
+
 export const initTableManagementService = (customOrder = reservationOrderConfig) => {
   UNIFIED_RESERVATION_ORDER = customOrder;
 };
@@ -196,7 +203,7 @@ export const calculateRealTableStates = (reservations = [], orders = [], manualB
       walkinOnly: Array.from(tableStates.values()).filter(s => s.state === 'available-walkin').length,
       blocked: Array.from(tableStates.values()).filter(s => s.state === 'blocked').length
     };
-    console.log(`📊 Mesas: ${summary.available} libres | ${summary.walkinOnly} walk-in | ${summary.reserved} reservadas | ${summary.occupied} ocupadas | ${summary.blocked} bloqueadas`);
+    debugLog(`📊 Mesas: ${summary.available} libres | ${summary.walkinOnly} walk-in | ${summary.reserved} reservadas | ${summary.occupied} ocupadas | ${summary.blocked} bloqueadas`);
   }
   
   return tableStates;
@@ -489,7 +496,7 @@ export const checkTableAvailability = (fecha, turno, reservations = [], orders =
     onlyAvailable = false          // Solo devolver mesas disponibles
   } = options;
 
-  console.log('🎯 checkTableAvailability - Master function ejecutándose:', {
+  debugLog('🎯 checkTableAvailability - Master function ejecutándose:', {
     fecha, turno, 
     totalReservations: reservations.length,
     totalOrders: orders.length,
@@ -515,7 +522,9 @@ export const checkTableAvailability = (fecha, turno, reservations = [], orders =
     // Obtener estado actual
     const currentState = tableStates.get(tableId);
     if (!currentState) {
-      console.warn(`🚨 Mesa ${tableId} no tiene estado definido`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(`🚨 Mesa ${tableId} no tiene estado definido`);
+      }
       return;
     }
     
@@ -567,7 +576,7 @@ export const checkTableAvailability = (fecha, turno, reservations = [], orders =
     availability.set(tableId, availabilityInfo);
   });
   
-  console.log('✅ checkTableAvailability completado:', {
+  debugLog('✅ checkTableAvailability completado:', {
     totalTables: availability.size,
     available: Array.from(availability.values()).filter(a => a.isAvailable).length,
     onlyReservations: Array.from(availability.values()).filter(a => a.isAvailableForReservations && !a.isAvailableForWalkins).length,
