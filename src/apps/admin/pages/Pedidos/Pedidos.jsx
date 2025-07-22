@@ -65,6 +65,7 @@ const Pedidos = ({
   // Hook para manejo de datos temporales del turno
   const {
     turnData,
+    addPayment,
     correctPayment,
     voidPayment,
     closeTurn,
@@ -596,6 +597,19 @@ const Pedidos = ({
     try {
       await OrderService.processPayment(paymentData, { reservations });
 
+      addPayment({
+        mesa: paymentData.tableId,
+        metodoPago: paymentData.paymentMethod,
+        total: paymentData.total,
+        montoRecibido: paymentData.receivedAmount,
+        cambio: paymentData.change,
+        descuentoAplicado: paymentData.discount,
+        razonDescuento: paymentData.discountReason,
+        orderIds: paymentData.orderIds,
+        empleado: paymentData.employee,
+        guardadoFirebase: false
+      });
+
       showNotification(
         `Pago procesado y guardado en caja temporal - Mesa ${paymentData.tableId} - $${paymentData.total.toLocaleString('es-AR')}`,
         'success'
@@ -617,7 +631,7 @@ const Pedidos = ({
       console.error('❌ Error al procesar pago:', error);
       showNotification('Error al procesar pago', 'error');
     }
-  }, [showNotification, reservations]);
+  }, [showNotification, reservations, addPayment]);
 
   // Sistema siempre inicializado para operación real
   useEffect(() => {
