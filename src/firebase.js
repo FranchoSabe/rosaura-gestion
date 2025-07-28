@@ -1897,3 +1897,23 @@ export const deleteTableBlocksForDateTurno = async (fecha, turno) => {
     throw error;
   }
 };
+
+// === Gestión de usuarios ===
+/**
+ * Obtener usuario por PIN
+ * @param {string} pin - PIN numérico del usuario
+ * @returns {Promise<Object|null>} Usuario o null si no existe
+ */
+export const getUsuarioByPin = async (pin) => {
+  try {
+    const usuariosRef = collection(db, 'usuarios');
+    const q = query(usuariosRef, where('pin', '==', pin));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return null;
+    const docSnap = snapshot.docs[0];
+    return { id: docSnap.id, ...docSnap.data() };
+  } catch (error) {
+    console.error('Error obteniendo usuario por PIN:', error);
+    throw error;
+  }
+};
