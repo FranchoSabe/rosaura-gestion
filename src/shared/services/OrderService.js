@@ -7,6 +7,10 @@ export const createOrder = async (orderData) => {
   const cleanData = { ...orderData };
   delete cleanData.id;
 
+  // Asegurar que los campos opcionales existan
+  if (!('mozoId' in cleanData)) cleanData.mozoId = null;
+  if (!('reservaId' in cleanData)) cleanData.reservaId = null;
+
   const { docId } = await addOrder(cleanData);
 
   if (orderData.mesa) {
@@ -37,7 +41,7 @@ export const processPayment = async (paymentData, { reservations = [] } = {}) =>
         razonDescuento: paymentData.discountReason || '',
         totalFinal: paymentData.total,
         fechaCobrado: new Date(),
-        empleadoCobro: paymentData.employee,
+        usuarioCierre: paymentData.employee,
       })
     )
   );

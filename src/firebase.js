@@ -871,7 +871,10 @@ export const addOrder = async (orderData) => {
       // Respetar el estado que viene en orderData, o usar 'pendiente' como fallback
       estado: orderData.estado || 'pendiente',
       fechaCreacion: new Date(),
-      fechaActualizacion: new Date()
+      fechaActualizacion: new Date(),
+      // Datos opcionales de mozo y reserva
+      mozoId: orderData.mozoId || null,
+      reservaId: orderData.reservaId || null
     };
 
     const docRef = await addDoc(collection(db, 'pedidos'), dataToSave);

@@ -1380,7 +1380,9 @@ const OrderModal = ({ products, selectedTable, order, onSave, onClose, onViewTab
         total: calculateTotal()
       },
       empleado: 'admin',
-      estado: 'cocina' // Crear pedidos directamente en cocina
+      estado: 'cocina', // Crear pedidos directamente en cocina
+      mozoId: order?.mozoId || null,
+      reservaId: order?.reservaId || null
     };
 
     onSave(orderData);
@@ -1561,7 +1563,9 @@ const OrderModal = ({ products, selectedTable, order, onSave, onClose, onViewTab
                     total: calculateTotal()
                   },
                   empleado: 'admin',
-                  estado: 'cocina' // Enviar directo a cocina
+                  estado: 'cocina', // Enviar directo a cocina
+                  mozoId: order?.mozoId || null,
+                  reservaId: order?.reservaId || null
                 };
                 onSave(orderData);
               }}
