@@ -52,6 +52,11 @@ service cloud.firestore {
       allow update, delete: if isStaff();
     }
 
+  match /usuarios/{usuarioId} {
+    allow read: if true;         // or `isStaff()` if restricted
+    allow write: if isStaff();   // optional, depending on needs
+  }
+
     // Reglas para lista de espera
     match /lista_espera/{waitingId} {
       // Cualquiera puede crear una reserva en lista de espera
