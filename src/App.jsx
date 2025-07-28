@@ -25,7 +25,7 @@ import {
 } from './firebase';
 import { assignTableToNewReservation } from './shared/services/tableManagementService';
 import { UNIFIED_TABLES_LAYOUT as TABLES_LAYOUT, DEFAULT_WALKIN_TABLES } from './utils/tablesLayout';
-import { signOut } from 'firebase/auth';
+import { signOut, signInWithEmailAndPassword } from 'firebase/auth';
 
 import { formatDateToString } from './utils';
 import { db } from './firebase';
@@ -348,6 +348,19 @@ function App() {
       if (!usuario) {
         return 'PIN incorrecto';
       }
+
+      const creds =
+        usuario.role === 'admin'
+          ? {
+              email: import.meta.env.VITE_ADMIN_EMAIL,
+              password: import.meta.env.VITE_ADMIN_PASSWORD,
+            }
+          : {
+              email: import.meta.env.VITE_MOZO_EMAIL,
+              password: import.meta.env.VITE_MOZO_PASSWORD,
+            };
+
+      await signInWithEmailAndPassword(auth, creds.email, creds.password);
 
       setAuthState({ usuarioId: usuario.usuarioId, role: usuario.role });
       return null;
