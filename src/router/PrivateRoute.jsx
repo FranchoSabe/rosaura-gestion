@@ -7,7 +7,7 @@ import { Navigate } from 'react-router-dom';
  */
 const PrivateRoute = ({ children, auth }) => {
   // Si no hay autenticación, redirigir al login
-  if (!auth || !auth.user) {
+  if (!auth || !(auth.usuarioId || auth.user)) {
     return <Navigate to="/client/login" replace />;
   }
 

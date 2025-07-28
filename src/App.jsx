@@ -20,11 +20,12 @@ import {
   markWaitingAsNotified,
   contactWaitingClient,
   rejectWaitingReservation,
-  auth 
+  getUsuarioByPin,
+  auth
 } from './firebase';
 import { assignTableToNewReservation } from './shared/services/tableManagementService';
 import { UNIFIED_TABLES_LAYOUT as TABLES_LAYOUT, DEFAULT_WALKIN_TABLES } from './utils/tablesLayout';
-import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 
 import { formatDateToString } from './utils';
 import { db } from './firebase';
@@ -341,30 +342,18 @@ function App() {
     return isValidReservationDate(fecha, turno || 'mediodia', adminOverride);
   };
 
-  const handleLogin = async (username, password) => {
+  const handleLogin = async (pin) => {
     try {
-      let email;
-      let role;
-
-      // Determinar el rol basado en el nombre de usuario
-      if (username === 'admin') {
-        email = import.meta.env.VITE_ADMIN_EMAIL;
-        role = 'admin';
-      } else if (username === 'mozo') {
-        email = import.meta.env.VITE_MOZO_EMAIL;
-        role = 'mozo';
-      } else {
-        return "Usuario no válido";
+      const usuario = await getUsuarioByPin(pin);
+      if (!usuario) {
+        return 'PIN incorrecto';
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      setAuthState({ user: username, role });
-      return null; // Login exitoso
+      setAuthState({ usuarioId: usuario.usuarioId, role: usuario.role });
+      return null;
     } catch (error) {
-      console.error("Error de login:", error);
-      return "Usuario o contraseña incorrectos";
+      console.error('Error de login:', error);
+      return 'Error al iniciar sesión';
     }
   };
 
